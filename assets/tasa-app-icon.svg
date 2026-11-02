@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="400" height="400"><title>TASA app icon, square</title><rect width="100" height="100" fill="#2A8C8C"/><g transform="translate(12 14) scale(0.6667)">
+<circle cx="50" cy="38" r="8" fill="#FFF7E8"/><rect x="41" y="46" width="18" height="22" rx="8" fill="#FFF7E8"/>
+<path d="M22 52 L46 74 L104 34" fill="none" stroke="#EE6A4D" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g transform="translate(46 50) rotate(47.71)" fill="#FFF7E8"><rect x="-2" y="-2.6" width="8" height="5.2" rx="2.6"/><rect x="0" y="-1.7" width="34.1" height="3.4" rx="1.2"/><path d="M32.1 -1.7 C37.7 -5.2 48.8 -5.6 55.4 -3.8 Q57.0 0 55.4 3.8 C48.8 5.6 37.7 5.2 32.1 1.7 Z"/></g>
+<path d="M8 93 q8 -5 16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0" fill="none" stroke="#FFF7E8" stroke-width="6.5" stroke-linecap="round"/></g></svg>
