@@ -3,548 +3,275 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="TASA: õppimise planeerija lapsele. Näidis.">
+<title>TASA, õppimise planeerija lapsele</title>
+<meta name="description" content="TASA on tasuta õppimise planeerija lastele, kellel on raske koduülesannetega alustada. Võtab ülesanded e-päevikust, näitab ainult tänast ja jagab töö 25-minutilisteks sammudeks.">
 <meta name="theme-color" content="#2A8C8C">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCI+PHRpdGxlPlRBU0EgYXBwIGljb24sIHNxdWFyZTwvdGl0bGU+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMyQThDOEMiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMiAxNCkgc2NhbGUoMC42NjY3KSI+CjxjaXJjbGUgY3g9IjUwIiBjeT0iMzgiIHI9IjgiIGZpbGw9IiNGRkY3RTgiLz48cmVjdCB4PSI0MSIgeT0iNDYiIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiIgcng9IjgiIGZpbGw9IiNGRkY3RTgiLz4KPHBhdGggZD0iTTIyIDUyIEw0NiA3NCBMMTA0IDM0IiBmaWxsPSJub25lIiBzdHJva2U9IiNFRTZBNEQiIHN0cm9rZS13aWR0aD0iMTciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0NiA1MCkgcm90YXRlKDQ3LjcxKSIgZmlsbD0iI0ZGRjdFOCI+PHJlY3QgeD0iLTIiIHk9Ii0yLjYiIHdpZHRoPSI4IiBoZWlnaHQ9IjUuMiIgcng9IjIuNiIvPjxyZWN0IHg9IjAiIHk9Ii0xLjciIHdpZHRoPSIzNC4xIiBoZWlnaHQ9IjMuNCIgcng9IjEuMiIvPjxwYXRoIGQ9Ik0zMi4xIC0xLjcgQzM3LjcgLTUuMiA0OC44IC01LjYgNTUuNCAtMy44IFE1Ny4wIDAgNTUuNCAzLjggQzQ4LjggNS42IDM3LjcgNS4yIDMyLjEgMS43IFoiLz48L2c+CjxwYXRoIGQ9Ik04IDkzIHE4IC01IDE2IDAgdDE2IDAgdDE2IDAgdDE2IDAgdDE2IDAgdDE2IDAgdDE2IDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRjdFOCIgc3Ryb2tlLXdpZHRoPSI2LjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvZz48L3N2Zz4K">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="icon" type="image/svg+xml" href="assets/tasa-app-icon.svg">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="alternate" hreflang="et" href="./">
+<link rel="alternate" hreflang="en" href="en/">
+<meta property="og:title" content="TASA: tasa sõuad, kaugele jõuad">
+<meta property="og:description" content="Tasuta õppimise planeerija lapsele. Ainult tänane, üks samm korraga.">
+<meta property="og:image" content="assets/demo-tana.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
-<title>TASA näidisrakendus</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
-<style>
-/* Layout: one phone-width column (the child's app), bottom tab bar, sheets slide up. Järv palette. */
-:root{
-  --lake:#2A8C8C; --lake-ink:#1D6B6B; --lake-soft:#DDEFEC;
-  --sun:#F7B32B; --sun-soft:#FDEFC9;
-  --boat:#EE6A4D; --boat-ink:#B4452C; --boat-soft:#FBE3DC;
-  --violet-ink:#5B4BB5; --violet-soft:#E9E5FB;
-  --ink:#1F2A44; --muted:#5B6478; --line:#E6E0D2;
-  --paper:#FFF7E8; --card:#FFFFFF; --track:#EDE6D6;
-  --on-lake:#FFFFFF; --toast:#1F2A44; --on-toast:#FFF7E8;
-  --shadow:0 1px 2px rgba(31,42,68,.06),0 6px 18px rgba(31,42,68,.06);
-  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
-  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --r:18px;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --lake:#3FA7A5; --lake-ink:#7ED3CF; --lake-soft:#173B3D;
-  --sun:#F7B32B; --sun-soft:#3E3317;
-  --boat:#F07C61; --boat-ink:#FF9C83; --boat-soft:#43231D;
-  --violet-ink:#B9AEFF; --violet-soft:#2C2750;
-  --ink:#F4EEDF; --muted:#A9B0C2; --line:#2E3854;
-  --paper:#141B2E; --card:#1D2640; --track:#2B3552;
-  --on-lake:#0F1626; --toast:#F4EEDF; --on-toast:#141B2E;
-  --shadow:0 1px 2px rgba(0,0,0,.3);
-  color-scheme:dark}}
-:root[data-theme="dark"]{
-  --lake:#3FA7A5; --lake-ink:#7ED3CF; --lake-soft:#173B3D;
-  --sun:#F7B32B; --sun-soft:#3E3317;
-  --boat:#F07C61; --boat-ink:#FF9C83; --boat-soft:#43231D;
-  --violet-ink:#B9AEFF; --violet-soft:#2C2750;
-  --ink:#F4EEDF; --muted:#A9B0C2; --line:#2E3854;
-  --paper:#141B2E; --card:#1D2640; --track:#2B3552;
-  --on-lake:#0F1626; --toast:#F4EEDF; --on-toast:#141B2E;
-  --shadow:0 1px 2px rgba(0,0,0,.3);
-  color-scheme:dark}
-*{box-sizing:border-box}
-body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased}
-button{font:inherit;color:inherit;cursor:pointer}
-button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
-.app{max-width:480px;margin:0 auto;min-height:100vh;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 120px}
+<a class="skip" href="#sisu">Liigu sisu juurde</a>
 
-/* demo strip */
-.demo{display:flex;align-items:center;gap:10px;justify-content:space-between;margin:10px 0 4px;padding:8px 12px;border-radius:12px;background:var(--sun-soft);font-size:14px}
-.demo b{font-weight:700}
-.demo button{border:0;background:none;text-decoration:underline;font-size:14px;padding:4px;color:var(--ink)}
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="TASA avaleht">
+      <img class="logo-light" src="assets/tasa-logo.svg" alt="TASA" width="132" height="44">
+      <img class="logo-dark" src="assets/tasa-logo-white.svg" alt="TASA" width="132" height="44">
+    </a>
+    <nav class="nav" aria-label="Peamenüü">
+      <a class="opt" href="#kuidas">Kuidas töötab</a>
+      <a class="opt" href="#koolidele">Koolidele</a>
+      <a class="opt" href="#andmed">Andmekaitse</a>
+      <a href="#kontakt">Kontakt</a>
+      <a class="lang" href="en/" hreflang="en" lang="en">EN</a>
+    </nav>
+  </div>
+</header>
 
-.brand{display:flex;align-items:center;gap:8px;margin:12px 0 2px}
-.brand svg{width:38px;height:38px}
-.brand .word{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.06em;line-height:1}
-.brand .kid{margin-left:auto;font-size:14px;color:var(--muted)}
+<main id="sisu">
 
-.head{display:flex;align-items:center;gap:12px;margin-top:10px}
-.nav{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;font-size:20px;flex:none}
-.nav:disabled{opacity:.35;cursor:default}
-.head h1{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;margin:6px 0 0;flex:1}
-.sub{color:var(--muted);margin:6px 0 14px;font-size:16px}
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-text">
+      <span class="eyebrow">Õppimise planeerija lapsele</span>
+      <h1>Ainult tänane. <span class="hl">Üks samm korraga.</span></h1>
+      <p class="lead">TASA aitab last, kellel on raske koduülesannetega alustada. Ta võtab ülesanded ja tähtajad e-päevikust, jagab töö umbes 25-minutilisteks sammudeks ja näitab lapsele ainult tänast päeva.</p>
+      <span class="free">Peredele alati tasuta</span>
+      <div class="btns">
+        <a class="btn btn-main" href="demo/">Proovi näidist <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="#koolidele">Info koolidele</a>
+      </div>
+    </div>
+    <figure style="margin:0">
+      <div class="phone"><img src="assets/demo-tana.png" alt="TASA Täna-vaade: üks ülesanne „Tee seda nüüd“, 25 minutit, ja nupp Tehtud" width="390" height="800"></div>
+      <figcaption class="phone-cap">Näidis. Nimi ja ülesanded on välja mõeldud.</figcaption>
+    </figure>
+  </div>
+</section>
 
-.bar{height:12px;border-radius:99px;background:var(--track);overflow:hidden}
-.bar i{display:block;height:100%;background:var(--lake);border-radius:99px;transition:width .5s cubic-bezier(.3,1.4,.5,1)}
-.barlbl{color:var(--muted);margin:8px 0 16px;font-size:16px}
+<div class="wrap"><div class="wave" aria-hidden="true"></div></div>
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+<section class="sec" aria-labelledby="miks">
+  <div class="wrap problem">
+    <div>
+      <span class="eyebrow">Miks</span>
+      <h2 id="miks" style="margin-block:14px 20px">Terve kuu tähtajad korraga on liiga palju</h2>
+      <p>E-päevik näitab kõike: kontrolltööd, referaadid, loetavad raamatud ja homsed ülesanded. Paljudele lastele, eriti ATH-ga või individuaalõppel olevatele, on see ülekoormus. Nad ei tea, kust alustada, ja jätavad alustamata.</p>
+      <p>TASA ei asenda eKooli ega Stuudiumit. Ta võtab sealt sama info ja teeb sellest lapse jaoks ühe selge järgmise sammu.</p>
+    </div>
+    <div class="month" aria-label="November: kümme tähtaega ühes kuus, täna on 3. november">
+      <span class="wd" aria-hidden="true">E</span>
+      <span class="wd" aria-hidden="true">T</span>
+      <span class="wd" aria-hidden="true">K</span>
+      <span class="wd" aria-hidden="true">N</span>
+      <span class="wd" aria-hidden="true">R</span>
+      <span class="wd" aria-hidden="true">L</span>
+      <span class="wd" aria-hidden="true">P</span>
+      <span class="dim" aria-hidden="true">26</span>
+      <span class="dim" aria-hidden="true">27</span>
+      <span class="dim" aria-hidden="true">28</span>
+      <span class="dim" aria-hidden="true">29</span>
+      <span class="dim" aria-hidden="true">30</span>
+      <span class="dim" aria-hidden="true">31</span>
+      <span>1</span>
+      <span>2</span>
+      <span class="today">3</span>
+      <span class="due">4</span>
+      <span>5</span>
+      <span class="due">6</span>
+      <span>7</span>
+      <span>8</span>
+      <span>9</span>
+      <span class="due">10</span>
+      <span>11</span>
+      <span class="due">12</span>
+      <span class="due">13</span>
+      <span>14</span>
+      <span>15</span>
+      <span>16</span>
+      <span class="due">17</span>
+      <span>18</span>
+      <span class="due">19</span>
+      <span class="due">20</span>
+      <span>21</span>
+      <span>22</span>
+      <span>23</span>
+      <span class="due">24</span>
+      <span>25</span>
+      <span>26</span>
+      <span class="due">27</span>
+      <span>28</span>
+      <span>29</span>
+      <span>30</span>
+      <span class="dim" aria-hidden="true">1</span>
+      <span class="dim" aria-hidden="true">2</span>
+      <span class="dim" aria-hidden="true">3</span>
+      <span class="dim" aria-hidden="true">4</span>
+      <span class="dim" aria-hidden="true">5</span>
+      <span class="dim" aria-hidden="true">6</span>
+      <p class="month-cap">E-päevik: kõik novembri tähtajad korraga. TASA: ainult see üks päev.</p>
+    </div>
+  </div>
+</section>
 
-/* reward */
-.rw-top{display:flex;align-items:center;gap:14px;padding:16px 18px;width:100%;background:none;border:0;text-align:left}
-.rw-big{font-family:var(--display);font-weight:800;font-size:38px;color:var(--lake-ink);line-height:1;white-space:nowrap}
-.rw-line{flex:1;min-width:0;font-size:16px;color:var(--muted)}
-.rw-line b{color:var(--ink)}
-.rw-caret{color:var(--muted);transition:transform .2s}
-.rw.open .rw-caret{transform:rotate(180deg)}
-.rw-body{border-top:1px solid var(--line);padding:14px 18px 16px;display:grid;gap:12px;font-size:16px}
-.rw:not(.open) .rw-body{display:none}
-.row{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
-.row span:first-child{color:var(--muted)}
-.dots{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
-.dot{width:34px;height:34px;margin:0 auto;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:var(--on-lake);font-size:16px;font-weight:700}
-.dot.done{background:var(--lake);border-color:var(--lake)}
-.dot.cur{border-color:var(--lake);border-width:3px}
-.dot.done.cur{border-color:var(--lake)}
-.dl{font-size:13px;color:var(--muted);margin-top:3px}
-.rules{color:var(--muted);font-size:15px;margin:0}
-.rules b{color:var(--ink)}
+<section class="sec band" id="kuidas" aria-labelledby="kuidas-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Kuidas töötab</span>
+      <h2 id="kuidas-h">E-päevikust tänase plaanini</h2>
+    </div>
+    <ol class="steps">
+      <li><h3>Ülesanded tulevad e-päevikust</h3><p>Kodutööd, tähtajad, kontrolltööd ja hinded tulevad eKoolist või Stuudiumist ametliku liidese kaudu, kooli loal. Õpetaja ei pea midagi juurde tegema.</p></li>
+      <li><h3>Plaan teeb töö väikeseks</h3><p>Suur töö jaguneb umbes 25-minutilisteks sammudeks tähtajale eelnevate päevade peale, lähim tähtaeg ees ja päeva õppimisaja piires.</p></li>
+      <li><h3>Iga linnuke on pidu</h3><p>Laps näeb ühte kaarti „Tee seda nüüd“. Iga tehtud samm toob konfetit ja julgustava lause. Terve päev tehtud toob kõik korraga.</p></li>
+    </ol>
+  </div>
+</section>
 
-/* required strip */
-.req{display:flex;gap:10px;align-items:center;margin-top:14px;padding:10px 14px;border-radius:14px;border:1px dashed var(--violet-ink);color:var(--ink);font-size:15px}
-.req .pill{flex:none}
+<section class="sec" aria-labelledby="mida-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Mida TASA teeb</span>
+      <h2 id="mida-h">Plaan, mis mõtleb lapse eest ette</h2>
+    </div>
+    <div class="feats">
+      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg><div><h3>Kontrolltööks valmistumine</h3><p>Kordamine algab 7 päeva enne kontrolltööd, eriti matemaatikas, keemias ja füüsikas.</p></div></div>
+      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg><div><h3>Järelvastamise plaan</h3><p>Hinne alla 3 või MA muutub automaatselt järelvastamise plaaniks. Kui vanem pildistab parandatud töö, ütleb samm täpselt: „harjuta ülesandeid 1 ja 2“. TASA ei lahenda ega selgita ülesandeid lapse eest.</p></div></div>
+      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h5v18H6a2 2 0 0 1-2-2zM20 5a2 2 0 0 0-2-2h-5v18h5a2 2 0 0 0 2-2z"/></svg><div><h3>Raamat lehekülgedeks</h3><p>Sisesta raamat, praegune lehekülg ja tähtaeg. Plaan ütleb täpselt: „loe lk 41–60“.</p></div></div>
+      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg><div><h3>Eilne jääk tuleb ette</h3><p>Mis eile tegemata jäi, on täna nimekirja eesotsas. Midagi ei kao ära.</p></div></div>
+      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><h3>Kohustuslikud ajad</h3><p>Näiteks iganädalane matemaatika konsultatsioon on kalendris märgiga „Kohustuslik“.</p></div></div>
+      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg><div><h3>Lapsevanema vaade</h3><p>Vanem saab ülesande haiguse tõttu vabandada ja märkida preemia välja makstuks. Laps vanema vaadet ei näe.</p></div></div>
+    </div>
+  </div>
+</section>
 
-/* now card */
-.now{margin-top:18px;border:2px solid var(--lake);border-radius:var(--r);background:var(--card);padding:20px;box-shadow:var(--shadow)}
-.eyebrow{font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--lake-ink)}
-.now h2{font-family:var(--display);font-weight:700;font-size:28px;line-height:1.15;margin:8px 0 10px;text-wrap:balance}
-.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;color:var(--muted);font-size:15px}
-.pill{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px}
-.p-due{background:var(--boat-soft);color:var(--boat-ink)}
-.p-fix{background:var(--boat-soft);color:var(--boat-ink)}
-.p-test{background:var(--violet-soft);color:var(--violet-ink)}
-.p-req{background:var(--violet-soft);color:var(--violet-ink)}
-.p-book{background:var(--lake-soft);color:var(--lake-ink)}
-.p-proj{background:var(--sun-soft);color:var(--ink)}
-.p-old{background:var(--sun-soft);color:var(--ink)}
-.p-exc{background:var(--track);color:var(--muted)}
-.note{margin:12px 0 16px;font-size:16px}
-.btn{border:0;border-radius:14px;padding:13px 22px;font-weight:700;font-size:18px;background:var(--lake);color:var(--on-lake);display:inline-flex;align-items:center;gap:8px;transition:transform .1s}
-.btn:active{transform:scale(.96)}
-.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
-.btn.small{font-size:15px;padding:9px 14px;border-radius:12px}
-.timer{margin-left:8px;font-size:15px;color:var(--muted);background:none;border:0;text-decoration:underline;padding:6px}
+<section class="sec band" aria-labelledby="preemia-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Preemiad</span>
+      <h2 id="preemia-h">Pingutus on nähtav. Mida see tähendab, otsustab lapsevanem.</h2>
+      <p class="lead">Laps näeb oma preemiasaldot. Vanem valib, milles see on, ja paneb paika summad.</p>
+    </div>
+    <div class="rewards">
+      <div class="rw"><b>+10 min</b><span>Ekraaniaeg</span><small>iga tehtud sammu eest</small></div>
+      <div class="rw"><b>3 €</b><span>Taskuraha</span><small>iga täielikult tehtud päeva eest, terve nädal +10 €</small></div>
+      <div class="rw"><b>★ ★ ★</b><span>Aeg koos vanemaga</span><small>tähed filmiõhtuks, mille laps ise valib</small></div>
+      <div class="rw"><b>?</b><span>Lapse enda valik</span><small>laps ja vanem lepivad kokku</small></div>
+      <div class="rw off"><b>Väljas</b><span>Ilma preemiata</span><small>ainult plaan ja tähistused</small></div>
+    </div>
+  </div>
+</section>
 
-.alldone{margin-top:18px;padding:22px 20px;border-radius:var(--r);background:var(--lake);color:var(--on-lake);text-align:center}
-.alldone h2{font-family:var(--display);font-size:30px;margin:0 0 4px;line-height:1.1}
-.alldone p{margin:0}
+<section class="sec" id="koolidele" aria-labelledby="koolidele-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Kes maksab</span>
+      <h2 id="koolidele-h">Peredele tasuta. Koolile osa tugiteenusest.</h2>
+    </div>
+    <div class="split">
+      <div class="pane fam">
+        <span class="big">0 €</span>
+        <h3>Peredele</h3>
+        <ul>
+          <li>Pere ei maksa kunagi.</li>
+          <li>Lapsevanem loob konto ja annab nõusoleku.</li>
+          <li>Ei mingit e-päeviku parooli jagamist.</li>
+          <li>Töötab veebis ja telefonis, poodi minna pole vaja.</li>
+        </ul>
+      </div>
+      <div class="pane org">
+        <span class="big">4 nädalat</span>
+        <h3>Koolidele ja omavalitsustele</h3>
+        <ul>
+          <li>Piloot 5–10 perega, kelle kool ise soovitab, näiteks tugispetsialisti kaudu.</li>
+          <li>Mõõdame tehtud samme, avatud päevi, ununenud tähtaegu ja vanema kulutatud aega.</li>
+          <li>Lõpus lühike raport koolile.</li>
+          <li>Õpetajal lisatööd ei ole. Vaikimisi õpetaja lapse plaani ei näe.</li>
+        </ul>
+        <div><a class="btn btn-main" href="#kontakt">Räägime pilootist</a></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-.sec{font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:26px 2px 10px}
-.list{overflow:hidden}
-.item{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-top:1px solid var(--line)}
-.item:first-child{border-top:0}
-.chk{flex:none;width:34px;height:34px;border-radius:10px;border:2px solid var(--line);background:var(--card);display:grid;place-items:center;color:var(--on-lake);padding:0}
-.chk svg{width:20px;height:20px;opacity:0}
-.item.done .chk{background:var(--lake);border-color:var(--lake)}
-.item.done .chk svg{opacity:1}
-.item.done .chk.pop{animation:pop .35s}
-@keyframes pop{50%{transform:scale(1.25)}}
-.it{min-width:0;flex:1}
-.it .t{font-weight:700;font-size:17px}
-.item.done .t{text-decoration:line-through;color:var(--muted)}
-.item.exc .t{text-decoration:line-through;color:var(--muted)}
-.it .meta{margin-top:3px}
-.ro .chk{cursor:default}
+<section class="sec band" aria-labelledby="teadus-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Millele see toetub</span>
+      <h2 id="teadus-h">Planeerimise õpetamine on ATH puhul üks paremini tõestatud koolisekkumisi</h2>
+    </div>
+    <div class="refs">
+      <div class="ref"><h3>Organiseerimis- ja planeerimisoskuste treening</h3><p>Ülevaade ATH koolisekkumistest leidis, et organiseerimise ja planeerimise õpetamine on üks paremini tõendatud meetodeid.</p><cite>Evans, Owens, Wymbs &amp; Ray (2018), Journal of Clinical Child &amp; Adolescent Psychology</cite></div>
+      <div class="ref"><h3>HOPS: kodutööde planeerimine koolis</h3><p>280 ATH-ga põhikooliõpilast. Lühike koolis läbiviidav programm (16 kohtumist, igaüks kuni 20 minutit) vähendas kodutööde probleeme ning parandas organiseerimist ja planeerimist vanemate ja õpetajate hinnangul.</p><cite>Langberg jt, Journal of Consulting and Clinical Psychology · <a href="https://news.vcu.edu/article/for_children_with_adhd_a_brief_schoolbased_program_can_help_dramatically" rel="noopener">VCU uudis, 2017</a></cite></div>
+    </div>
+    <p class="note">TASA teeb lapse jaoks need sammud igapäevaseks: aeg on kinni, eesmärk on selge, taimer käib ja iga tehtud samm saab tähistuse.</p>
+  </div>
+</section>
 
-.preview{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--lake-soft);font-size:15px}
+<section class="sec" id="andmed" aria-labelledby="andmed-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Andmekaitse</span>
+      <h2 id="andmed-h">Lapse andmed on lapse omad</h2>
+    </div>
+    <div class="privacy">
+      <div><h3>Vanem on konto omanik</h3><p>Alla 13-aastane laps ei saa Eestis ise nõusolekut anda, seega nõusoleku annab lapsevanem.</p></div>
+      <div><h3>Paroole ei küsi</h3><p>Ainult ametlik ligipääs e-päevikule, eKooli puhul kooli loal.</p></div>
+      <div><h3>Vähim võimalik</h3><p>Diagnoose ei salvestata. ATH-sõbralikkus on disainivalik, mitte andmeväli.</p></div>
+      <div><h3>Andmed jäävad ELi</h3><p>Majutus ja AI teenused ELis, andmetöötluslepingutega ja ilma andmetel treenimiseta.</p></div>
+      <div><h3>Eksport ja kustutamine</h3><p>Vanem saab andmed alla laadida või kõik ühe nupuga kustutada.</p></div>
+      <div><h3>Järelevalve</h3><p>Lihtsas keeles privaatsusteade ja plaan rikkumiste puhuks. Järelevalvaja on Andmekaitse Inspektsioon.</p></div>
+    </div>
+  </div>
+</section>
 
-/* week */
-.wk{display:grid;gap:10px}
-.wday{padding:14px 16px}
-.wday h3{font-family:var(--display);font-size:20px;margin:0;display:flex;gap:8px;align-items:center;justify-content:space-between}
-.wday h3 small{font-family:var(--body);font-size:14px;font-weight:400;color:var(--muted)}
-.wday.today{border:2px solid var(--lake)}
-.wday ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px;font-size:15px}
-.wday li{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
-.wday li .m{color:var(--muted)}
-.flow{padding:16px;display:grid;gap:10px;font-size:15px}
-.flow ol{margin:0;padding-left:20px;display:grid;gap:6px}
+<section class="sec band" aria-labelledby="lugu-h">
+  <div class="wrap story">
+    <img class="week-card" src="assets/tasa-week.svg" alt="TASA logo: paat sõuab läbi nädala E, T, K, N, R, kaks päeva on linnukesega tehtud" width="400" height="170">
+    <div>
+      <span class="eyebrow">Lugu</span>
+      <h2 id="lugu-h" style="margin-block:14px 20px">Alguse sai see ühest perest</h2>
+      <p>Maria Hõbesalu ehitas esimese versiooni oma pojale, kellel oli raske koduülesannetega alustada. See on igapäevases kasutuses. TASA on sama mõte, tehtud nii, et see sobiks igale lapsele, kellele see võiks abiks olla.</p>
+      <p class="proverb" style="margin-top:22px">Tasa sõuad, kaugele jõuad.</p>
+    </div>
+  </div>
+</section>
 
-/* parent */
-.lock{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--violet-soft);color:var(--ink);font-size:15px;margin-top:10px}
-.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
-.seg button{border:2px solid var(--line);background:var(--card);border-radius:14px;padding:10px 12px;text-align:left;font-size:15px}
-.seg button b{display:block;font-size:16px}
-.seg button span{color:var(--muted);font-size:13px}
-.seg button[aria-pressed="true"]{border-color:var(--lake);background:var(--lake-soft)}
-.pcard{padding:16px;display:grid;gap:12px}
-.field{display:grid;gap:4px;font-size:15px}
-.field label{color:var(--muted)}
-.field input,.field select{font:inherit;font-size:17px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.prow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
-.prow:first-child{border-top:0}
-.prow .it{min-width:0}
-.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.stat{padding:14px}
-.stat b{display:block;font-family:var(--display);font-size:30px;line-height:1.1;color:var(--lake-ink);font-variant-numeric:tabular-nums}
-.stat span{font-size:14px;color:var(--muted)}
-.hist{font-size:14px;color:var(--muted);margin:0}
-.facts{margin:0;padding-left:20px;display:grid;gap:6px;font-size:15px}
+<section class="sec" id="kontakt" aria-labelledby="kontakt-h">
+  <div class="wrap">
+    <div class="contact">
+      <div style="display:grid;gap:16px">
+        <h2 id="kontakt-h">Otsime pilootkooli</h2>
+        <p>Kui olete kool, tugikeskus või omavalitsus ja teil on lapsi, kellele TASA võiks abiks olla, kirjutage. Näitame näidist 20 minutiga.</p>
+        <div class="btns"><a class="btn btn-ghost" href="demo/">Ava näidis <span aria-hidden="true">→</span></a></div>
+      </div>
+      <dl>
+        <div><dt>E-post</dt><dd><a href="mailto:maria@sildpartners.com">maria@sildpartners.com</a></dd></div>
+        <div><dt>Telefon</dt><dd><a href="tel:+37258262802">+372 5826 2802</a></dd></div>
+        <div><dt>Ettevõte</dt><dd>Sild Growth OÜ, reg. kood 14067479<br>Telliskivi 33-1, 10611 Tallinn</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
 
-/* tabbar */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
-.tabs nav{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
-.tabs a{display:grid;justify-items:center;gap:2px;padding:10px 4px 12px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:700}
-.tabs a svg{width:24px;height:24px}
-.tabs a[aria-current="page"]{color:var(--lake-ink)}
+</main>
 
-/* toast + fx */
-.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;z-index:40;background:var(--toast);color:var(--on-toast);padding:12px 22px;border-radius:99px;font-weight:700;font-size:17px;width:max-content;max-width:calc(100% - 32px);text-align:center;transition:.3s;pointer-events:none}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
-.star{position:fixed;left:50%;top:40%;z-index:31;font-size:120px;line-height:1;pointer-events:none;transform:translate(-50%,-50%) scale(0);animation:star 1.3s ease-out forwards}
-@keyframes star{20%{transform:translate(-50%,-50%) scale(1.2) rotate(-10deg)}40%{transform:translate(-50%,-50%) scale(1) rotate(6deg)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%) scale(.9)}}
-
-/* sheet */
-.scrim{position:fixed;inset:0;background:rgba(15,20,35,.45);z-index:50;display:grid;align-items:end}
-.sheet{background:var(--card);max-width:480px;width:100%;margin:0 auto;border-radius:22px 22px 0 0;padding:22px max(20px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto}
-.sheet h2{font-family:var(--display);font-size:26px;margin:0 0 8px;line-height:1.15}
-.sheet p{margin:0 0 10px}
-.sheet .facts{margin-bottom:16px}
-.tmr{text-align:center}
-.tmr .big{font-family:var(--display);font-size:72px;font-weight:800;color:var(--lake-ink);font-variant-numeric:tabular-nums;line-height:1;margin:10px 0}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
-
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="logo" viewBox="0 0 120 100">
-    <circle cx="50" cy="38" r="8" style="fill:var(--ink)"/><rect x="41" y="46" width="18" height="22" rx="8" style="fill:var(--ink)"/>
-    <path d="M22 52 L46 74 L104 34" fill="none" style="stroke:var(--boat)" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
-    <g transform="translate(46 50) rotate(47.71)" style="fill:var(--ink)"><rect x="-2" y="-2.6" width="8" height="5.2" rx="2.6"/><rect x="0" y="-1.7" width="34.1" height="3.4" rx="1.2"/><path d="M32.1 -1.7 C37.7 -5.2 48.8 -5.6 55.4 -3.8 Q57.0 0 55.4 3.8 C48.8 5.6 37.7 5.2 32.1 1.7 Z"/></g>
-    <path d="M8 93 q8 -5 16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0" fill="none" style="stroke:var(--lake)" stroke-width="6.5" stroke-linecap="round"/>
-  </symbol>
-  <symbol id="tick" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-</svg>
-
-<div class="app">
-  <div class="demo"><span><b>Näidis.</b> Kõik nimed ja ülesanded on välja mõeldud.</span><button id="aboutBtn" type="button">Mis see on?</button></div>
-  <div class="brand"><svg aria-hidden="true"><use href="#logo"/></svg><span class="word">TASA</span><span class="kid" id="kidName">Mia, 7. klass</span></div>
-  <main id="view"></main>
-</div>
-
-<div class="tabs"><nav aria-label="Vaated">
-  <a href="#tana" data-tab="tana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>Täna</a>
-  <a href="#nadal" data-tab="nadal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Nädal</a>
-  <a href="#vanem" data-tab="vanem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="10" r="2.4"/><path d="M15.5 14.6c2.6-.3 4.5 1.4 5 4.4"/></svg>Lapsevanem</a>
-</nav></div>
-
-<canvas id="fx" aria-hidden="true"></canvas>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-<div id="sheetHost"></div>
-
-<script>
-(function(){
-"use strict";
-const $=s=>document.querySelector(s);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const TICK='<svg aria-hidden="true"><use href="#tick"/></svg>';
-
-const WEEK=["E","T","K","N","R","L","P"];
-const DAYNAMES=["Esmaspäev","Teisipäev","Kolmapäev","Neljapäev","Reede","Laupäev","Pühapäev"];
-const TAGS={due:["Tähtaeg täna","p-due"],fix:["Parandada: hinne 2","p-fix"],test:["Kontrolltöö","p-test"],req:["Kohustuslik","p-req"],book:["Raamat","p-book"],proj:["Projekt","p-proj"],old:["Eilsest","p-old"]};
-
-/* ---------- fake sample data (week of 2–8 Nov) ---------- */
-const MONDAY=[
-  {s:"Matemaatika",t:"Matemaatika: töölehe ülesanded 1–3",m:25},
-  {s:"Keemia",t:"Keemia: järelevastamiseks kordamine 1/3",m:25,tag:"fix"},
-  {s:"Eesti keel",t:"Eesti keel: loe lk 21–40",m:25,tag:"book"},
-  {s:"Ajalugu",t:"Ajalugu: referaat 1/5, vali teema",m:20,tag:"proj"},
-  {s:"Inglise keel",t:"Inglise keel: tekst lk 34",m:15}
-];
-const TODAY0=[
-  {id:"a",s:"Matemaatika",t:"Matemaatika: töölehe ülesanded 4–7",m:25,tag:"due",n:"Pool töölehest on eile tehtud. Täna ülejäänud pool."},
-  {id:"b",s:"Keemia",t:"Keemia: järelevastamine, kordamine 2/3",m:25,tag:"fix",n:"Kontrolltöö hinne oli 2, nii et TASA tegi parandamise plaani. Järelevastamine neljapäeval kell 14:40. Täna: kordamislehe ülesanded 5–8."},
-  {id:"c",s:"Eesti keel",t:"Eesti keel: loe lk 41–60",m:25,tag:"book",n:"„Kevade“ on 180 lk ja vaja läbi lugeda 13. novembriks. Iga päev 20 lk, siis jõuad rahulikult."},
-  {id:"d",s:"Füüsika",t:"Füüsika: kontrolltööks kordamine 1/4",m:25,tag:"test",n:"Kontrolltöö järgmisel esmaspäeval. Täna: loe üle konspekt „Rõhk“ ja tee 3 näidisülesannet."},
-  {id:"e",s:"Inglise keel",t:"Inglise keel: sõnad 1–15",m:15,n:"Õpi sõnad kaartidega. Ütle iga sõna kõva häälega."}
-];
-const REQ_TODAY={t:"Matemaatika konsultatsioon",when:"täna 15:00–15:45, klass 204"};
-const WEEKPLAN=[
-  null,null,
-  [{t:"Keemia: kordamine 3/3",m:25,tag:"fix"},{t:"Füüsika: kordamine 2/4",m:25,tag:"test"},{t:"Eesti keel: loe lk 61–80",m:25,tag:"book"},{t:"Ajalugu: referaat 2/5, leia 3 allikat",m:25,tag:"proj"}],
-  [{t:"Keemia järelevastamine kell 14:40",m:0,tag:"req"},{t:"Füüsika: kordamine 3/4",m:25,tag:"test"},{t:"Eesti keel: loe lk 81–100",m:25,tag:"book"},{t:"Inglise keel: sõnad 16–30",m:15}],
-  [{t:"Matemaatika: uus tööleht 1–4",m:25},{t:"Ajalugu: referaat 3/5, kirjuta mustand",m:25,tag:"proj"},{t:"Eesti keel: loe lk 101–120",m:25,tag:"book"}],
-  [{t:"Füüsika: kordamine 4/4, proovitest",m:25,tag:"test"},{t:"Eesti keel: loe lk 121–140",m:25,tag:"book"}],
-  [{t:"Ajalugu: referaat 4/5, paranda mustandit",m:20,tag:"proj"}]
-];
-
-const LINES=["Boom! 🎉","Tubli!","Üks samm korras!","Sõudsid jälle natuke edasi.","Nii see käibki!","Vaata, kui hästi läheb!","Super, järgmine!"];
-
-/* ---------- state ---------- */
-let S;
-function fresh(){return{
-  tasks:TODAY0.map(x=>Object.assign({done:false,exc:false},x)),
-  mode:"raha", open:true, day:1,
-  cfg:{raha:{perDay:3,weekBonus:10},ekraan:{perStep:10,weekBonus:30},aeg:{goal:20,reward:"Kinoõhtu emaga",base:4},oma:{goal:15,reward:"Uus rattakell",base:2}},
-  paid:{raha:0,ekraan:0,stars:0}, hist:[], kid:"Mia"
-};}
-S=fresh();
-
-/* ---------- derived ---------- */
-const active=()=>S.tasks.filter(t=>!t.exc);
-const doneN=()=>active().filter(t=>t.done).length;
-const todayFull=()=>active().length>0&&active().every(t=>t.done);
-const leftMin=()=>active().filter(t=>!t.done).reduce((a,t)=>a+t.m,0);
-const stepsWeek=()=>MONDAY.length+doneN();
-function earned(){
-  const c=S.cfg;
-  const fullDays=1+(todayFull()?1:0);
-  return{
-    raha:fullDays*c.raha.perDay,
-    ekraan:stepsWeek()*c.ekraan.perStep,
-    ekraanToday:doneN()*c.ekraan.perStep,
-    stars:stepsWeek()
-  };
-}
-
-/* ---------- routing ---------- */
-const VIEWS=["tana","nadal","vanem"];
-function route(){const h=location.hash.slice(1);return VIEWS.includes(h)?h:"tana";}
-function render(){
-  const v=route();
-  document.querySelectorAll(".tabs a").forEach(a=>{if(a.dataset.tab===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
-  $("#kidName").textContent=S.kid+", 7. klass";
-  $("#view").innerHTML=v==="tana"?viewToday():v==="nadal"?viewWeek():viewParent();
-}
-window.addEventListener("hashchange",()=>{render();window.scrollTo(0,0);});
-
-/* ---------- reward card ---------- */
-function rewardCard(){
-  if(S.mode==="off")return"";
-  const e=earned(),c=S.cfg,left=active().length-doneN();
-  let big,line,rightTop,row2,rules;
-  if(S.mode==="raha"){
-    const bal=e.raha-S.paid.raha;
-    big=bal+" €";
-    line=todayFull()?"Tänane <b>+"+c.raha.perDay+" €</b> on käes!":"Veel <b>"+left+"</b> ja täna <b>+"+c.raha.perDay+" €</b>";
-    rightTop="terve nädal → <b>+"+c.raha.weekBonus+" €</b> boonus";
-    row2=["Selle kuu teenistus",e.raha+" €"];
-    rules="Kõik päeva ülesanded tehtud → <b>+"+c.raha.perDay+" €</b>. Terve nädal (E–P) tehtud → <b>+"+c.raha.weekBonus+" €</b> boonus. Summa ja reeglid paneb paika lapsevanem.";
-  }else if(S.mode==="ekraan"){
-    const bal=e.ekraan-S.paid.ekraan;
-    big=bal+" min";
-    line="Iga linnuke = <b>+"+c.ekraan.perStep+" min</b> ekraaniaega";
-    rightTop="terve nädal → <b>+"+c.ekraan.weekBonus+" min</b> boonus";
-    row2=["Täna kogutud",e.ekraanToday+" min"];
-    rules="Iga tehtud samm → <b>+"+c.ekraan.perStep+" min</b> ekraaniaega. Kogutud aeg on näha siin ja vanem kinnitab selle. Reeglid paneb paika lapsevanem.";
-  }else{
-    const k=c[S.mode],stars=k.base+e.stars-S.paid.stars,need=Math.max(0,k.goal-stars);
-    big=Math.min(stars,k.goal)+" / "+k.goal+" ⭐";
-    line=need?"Veel <b>"+need+" tähte</b> ja <b>"+esc(k.reward.toLowerCase())+"</b>":"<b>"+esc(k.reward)+"</b> on käes! 🎉";
-    rightTop="eesmärk: "+k.goal+" ⭐";
-    row2=[S.mode==="aeg"?"Valitud ühine aeg":"Lapse enda valik",esc(k.reward)];
-    rules=S.mode==="aeg"?"Iga tehtud samm → <b>+1 ⭐</b>. "+k.goal+" tähte → ühine aeg vanemaga, mille laps ise valib (kino, matk, pitsaõhtu). Reeglid paneb paika lapsevanem.":"Iga tehtud samm → <b>+1 ⭐</b>. "+k.goal+" tähte → asi, mille laps ise valis. Reeglid paneb paika lapsevanem.";
-  }
-  const dots=WEEK.map((d,i)=>{const done=i===0||(i===1&&todayFull());return'<div><div class="dot'+(done?" done":"")+(i===1?" cur":"")+'">'+(done?"✓":"")+'</div><div class="dl">'+d+'</div></div>';}).join("");
-  return'<section class="card rw'+(S.open?" open":"")+'" style="margin-top:4px">'+
-    '<button class="rw-top" type="button" data-act="toggleRw" aria-expanded="'+S.open+'"><span class="rw-big">'+big+'</span><span class="rw-line">'+line+'</span><span class="rw-caret" aria-hidden="true">▾</span></button>'+
-    '<div class="rw-body"><div class="row"><span>See nädal</span><span>'+rightTop+'</span></div><div class="dots" aria-label="Nädala päevad">'+dots+'</div>'+
-    '<div class="row"><span>'+row2[0]+'</span><span>'+row2[1]+'</span></div><p class="rules">'+rules+'</p></div></section>';
-}
-
-/* ---------- views ---------- */
-function meta(t){
-  let h=esc(t.s)+(t.m?" · "+t.m+" min":"");
-  if(t.exc)h+=' <span class="pill p-exc">Vabandatud: haige</span>';
-  else if(t.tag)h+=' <span class="pill '+TAGS[t.tag][1]+'">'+TAGS[t.tag][0]+'</span>';
-  return h;
-}
-function itemRow(t,ro){
-  return'<div class="item'+(t.done?" done":"")+(t.exc?" exc":"")+(ro?" ro":"")+'">'+
-    (ro?'<span class="chk" aria-hidden="true">'+TICK+'</span>':'<button class="chk" type="button" data-act="tick" data-id="'+t.id+'" aria-label="'+(t.done?"Võta linnuke ära: ":"Märgi tehtuks: ")+esc(t.t)+'"'+(t.exc?" disabled":"")+'>'+TICK+'</button>')+
-    '<div class="it"><div class="t">'+esc(t.t)+'</div><div class="meta">'+meta(t)+'</div></div></div>';
-}
-function dayHeader(title,sub,prevOk,nextOk){
-  return'<div class="head"><button class="nav" type="button" data-act="prev" aria-label="Eelmine päev"'+(prevOk?"":" disabled")+'>‹</button><h1>'+title+'</h1><button class="nav" type="button" data-act="next" aria-label="Järgmine päev"'+(nextOk?"":" disabled")+'>›</button></div><p class="sub">'+sub+'</p>';
-}
-function viewToday(){
-  if(S.day===0){
-    return dayHeader("Eile","Esmaspäev, 2. november",false,true)+
-      '<div class="bar"><i style="width:100%"></i></div><p class="barlbl">5 / 5 tehtud · terve päev korras ✓</p>'+
-      '<div class="sec">Eilsed sammud</div><div class="card list">'+MONDAY.map(t=>itemRow(Object.assign({done:true},t,{s:t.s}),true)).join("")+'</div>';
-  }
-  if(S.day===2){
-    const carry=S.tasks.filter(t=>!t.done&&!t.exc).map(t=>({s:t.s,t:t.t,m:t.m,tag:"old"}));
-    const items=carry.concat(WEEKPLAN[2].map(x=>Object.assign({s:x.t.split(":")[0]},x)));
-    const mins=items.reduce((a,t)=>a+t.m,0);
-    return dayHeader("Homme","Kolmapäev, 4. november · Kool 8:15–13:40",true,false)+
-      '<p class="preview">See on homne plaan. Homme näed jälle ainult seda päeva. '+(carry.length?"Tänasest pooleli jäänud sammud tulevad homme kõige ette.":"Täna on kõik tehtud, nii et homme midagi üle ei tule.")+'</p>'+
-      '<div class="sec">Homme '+items.length+' sammu · umbes '+mins+' min</div><div class="card list">'+items.map(t=>itemRow(Object.assign({done:false},t),true)).join("")+'</div>';
-  }
-  const act=active(),d=doneN(),pct=act.length?d/act.length*100:0;
-  const next=S.tasks.find(t=>!t.done&&!t.exc);
-  let h=dayHeader("Täna","Teisipäev, 3. november · Kool 8:15–14:30",true,true)+
-    '<div class="bar" role="progressbar" aria-valuenow="'+d+'" aria-valuemin="0" aria-valuemax="'+act.length+'"><i style="width:'+pct+'%"></i></div>'+
-    '<p class="barlbl">'+d+' / '+act.length+' tehtud'+(leftMin()?" · umbes "+leftMin()+" min jäänud":" · kõik tehtud!")+'</p>'+
-    rewardCard()+
-    '<div class="req"><span class="pill p-req">Kohustuslik</span><span><b>'+REQ_TODAY.t+'</b>, '+REQ_TODAY.when+'</span></div>';
-  if(next){
-    h+='<section class="now" aria-labelledby="nowT"><div class="eyebrow">Tee seda nüüd</div><h2 id="nowT">'+esc(next.t)+'</h2><div class="meta">'+meta(next)+'</div><p class="note">'+esc(next.n||"")+'</p>'+
-      '<button class="btn" type="button" data-act="tick" data-id="'+next.id+'">Tehtud '+'<svg width="20" height="20" aria-hidden="true"><use href="#tick"/></svg></button>'+
-      '<button class="timer" type="button" data-act="timer" data-id="'+next.id+'">Käivita '+next.m+' min taimer</button></section>';
-  }else{
-    h+='<section class="alldone"><h2>Päev on tehtud! 🎉</h2><p>'+doneMsg()+'</p></section>';
-  }
-  const rest=S.tasks.filter(t=>t!==next);
-  h+='<div class="sec">'+(next?"Ülejäänud tänane":"Tänased sammud")+'</div><div class="card list">'+rest.map(t=>itemRow(t,false)).join("")+'</div>';
-  return h;
-}
-function doneMsg(){
-  const c=S.cfg;
-  if(S.mode==="raha")return"+"+c.raha.perDay+" € on sinu. Puhka nüüd.";
-  if(S.mode==="ekraan")return"Täna kogusid "+earned().ekraanToday+" min ekraaniaega.";
-  if(S.mode==="off")return"Kõik sammud said tehtud. Puhka nüüd.";
-  return"Said täna "+doneN()+" tähte juurde.";
-}
-function viewWeek(){
-  const rows=WEEK.map((d,i)=>{
-    let items,state;
-    if(i===0){items=MONDAY;state="5 / 5 tehtud ✓";}
-    else if(i===1){items=S.tasks;state=doneN()+" / "+active().length+" tehtud";}
-    else{items=WEEKPLAN[i];state=items.length+" sammu";}
-    const li=items.map(t=>'<li><span>'+((i<1||t.done)?"✓ ":"")+esc(t.t)+'</span>'+(t.m?'<span class="m">'+t.m+' min</span>':'')+(t.tag?' <span class="pill '+TAGS[t.tag][1]+'">'+TAGS[t.tag][0]+'</span>':'')+'</li>').join("");
-    return'<section class="card wday'+(i===1?" today":"")+'"><h3>'+DAYNAMES[i]+' '+(i+2)+'.11'+(i===1?" · täna":"")+'<small>'+state+'</small></h3><ul>'+li+'</ul></section>';
-  }).join("");
-  return'<div class="head"><h1>Nädal</h1></div><p class="sub">2.–8. november. Laps näeb tavaliselt ainult tänast päeva. See vaade on ülevaateks.</p>'+
-    '<section class="card flow"><b>Kuidas TASA plaani teeb</b><ol>'+
-    '<li>Kodused tööd, tähtajad, kontrolltööd ja hinded tulevad e-päevikust (eKool või Stuudium, kooli loal).</li>'+
-    '<li>Suured tööd jagatakse umbes 25-minutilisteks sammudeks, lähim tähtaeg ees.</li>'+
-    '<li>Kontrolltöö ettevalmistus algab kuni 7 päeva enne. Hinne alla 3 või MA muutub kohe parandamise plaaniks.</li>'+
-    '<li>Pooleli jäänud sammud tulevad järgmisel päeval kõige ette.</li></ol></section>'+
-    '<div class="sec">See nädal</div><div class="wk">'+rows+'</div>'+
-    '<section class="card wday" style="margin-top:10px"><h3>Esmaspäev 9.11<small>järgmine nädal</small></h3><ul><li><span>Füüsika kontrolltöö</span> <span class="pill p-test">Kontrolltöö</span></li><li><span class="m">Kordamine on jagatud 4 sammuks: T, K, N ja L.</span></li></ul></section>';
-}
-function viewParent(){
-  const c=S.cfg,m=S.mode,e=earned();
-  const modes=[["raha","Taskuraha","€ täis päeva eest"],["ekraan","Ekraaniaeg","min iga sammu eest"],["aeg","Ühine aeg","tähed vanemaga koos olemiseks"],["oma","Lapse valik","tähed lapse valitud asjaks"],["off","Väljas","ainult linnukesed"]];
-  let settings="";
-  if(m==="raha")settings='<div class="two"><div class="field"><label for="f1">Täis päeva eest (€)</label><input id="f1" type="number" min="0" max="50" value="'+c.raha.perDay+'" data-cfg="raha.perDay"></div><div class="field"><label for="f2">Terve nädala boonus (€)</label><input id="f2" type="number" min="0" max="100" value="'+c.raha.weekBonus+'" data-cfg="raha.weekBonus"></div></div>';
-  if(m==="ekraan")settings='<div class="two"><div class="field"><label for="f3">Iga samm (min)</label><input id="f3" type="number" min="0" max="60" value="'+c.ekraan.perStep+'" data-cfg="ekraan.perStep"></div><div class="field"><label for="f4">Nädala boonus (min)</label><input id="f4" type="number" min="0" max="240" value="'+c.ekraan.weekBonus+'" data-cfg="ekraan.weekBonus"></div></div>';
-  if(m==="aeg"||m==="oma")settings='<div class="two"><div class="field"><label for="f5">Mitu tähte</label><input id="f5" type="number" min="1" max="100" value="'+c[m].goal+'" data-cfg="'+m+'.goal"></div><div class="field"><label for="f6">Preemia</label><input id="f6" type="text" maxlength="40" value="'+esc(c[m].reward)+'" data-cfg="'+m+'.reward"></div></div>';
-  if(m==="off")settings='<p class="hist">Laps näeb ainult edenemist ja tähistusi. Preemiakaarti ei näidata.</p>';
-
-  let payLbl="",payTxt="";
-  if(m==="raha"){payTxt="Maksmata: <b>"+(e.raha-S.paid.raha)+" €</b>";payLbl="Märgi makstuks";}
-  if(m==="ekraan"){payTxt="Kasutamata: <b>"+(e.ekraan-S.paid.ekraan)+" min</b>";payLbl="Märgi kasutatuks";}
-  if(m==="aeg"||m==="oma"){const st=c[m].base+e.stars-S.paid.stars;payTxt="Tähti: <b>"+st+" / "+c[m].goal+"</b>";payLbl=st>=c[m].goal?"Preemia antud":"";}
-
-  const pct=Math.round(stepsWeek()/(MONDAY.length+active().length)*100);
-  return'<div class="head"><h1>Lapsevanem</h1></div><p class="sub">Seda vaadet näeb ainult lapsevanem.</p>'+
-    '<div class="sec">Mis on preemia?</div><div class="seg" role="group" aria-label="Preemia liik">'+modes.map(x=>'<button type="button" data-act="mode" data-mode="'+x[0]+'" aria-pressed="'+(m===x[0])+'"><b>'+x[1]+'</b><span>'+x[2]+'</span></button>').join("")+'</div>'+
-    '<section class="card pcard" style="margin-top:10px">'+settings+(payTxt?'<div class="row" style="align-items:center"><span>'+payTxt+'</span>'+(payLbl?'<button class="btn small" type="button" data-act="pay">'+payLbl+'</button>':'<span class="hist">Veel kogumisel</span>')+'</div>':'')+
-    (S.hist.length?'<p class="hist">'+S.hist.map(esc).join("<br>")+'</p>':'')+'</section>'+
-    '<div class="sec">Tänased ülesanded</div><section class="card pcard"><p class="hist" style="margin:0">Kui laps on haige, saad ülesande vabandada. See ei loe siis päeva tulemuse sisse.</p>'+
-    S.tasks.map(t=>'<div class="prow"><div class="it"><div>'+esc(t.t)+'</div><div class="hist">'+(t.exc?"Vabandatud":t.done?"Tehtud ✓":"Tegemata")+'</div></div><button class="btn small ghost" type="button" data-act="excuse" data-id="'+t.id+'">'+(t.exc?"Taasta":"Vabanda")+'</button></div>').join("")+'</section>'+
-    '<div class="sec">See nädal</div><div class="stats">'+
-    '<div class="card stat"><b>'+pct+'%</b><span>sammudest tehtud</span></div>'+
-    '<div class="card stat"><b>2 / 2</b><span>päeva avatud</span></div>'+
-    '<div class="card stat"><b>0</b><span>tähtaega mööda</span></div>'+
-    '<div class="card stat"><b>1</b><span>parandamine plaanis</span></div></div>'+
-    '<div class="sec">Andmed ja privaatsus</div><section class="card pcard"><ul class="facts">'+
-    '<li>Lapsevanem on konto omanik ja annab nõusoleku.</li>'+
-    '<li>E-päeviku parooli ei küsita kunagi. Andmed tulevad ametliku liidese kaudu, kooli loal.</li>'+
-    '<li>Õpetajad ei näe vaikimisi midagi.</li><li>Diagnoose ei salvestata. Andmed hoitakse EL-is.</li>'+
-    '<li>Vanem saab kõik andmed alla laadida või kustutada.</li></ul></section>'+
-    '<div class="sec">Näidis</div><section class="card pcard"><div class="field"><label for="kid">Lapse nimi näidises</label><input id="kid" type="text" maxlength="20" value="'+esc(S.kid)+'"></div><button class="btn ghost small" type="button" data-act="reset" style="justify-self:start">Alusta näidist otsast</button></section>';
-}
-
-/* ---------- actions ---------- */
-let pending=null;
-document.addEventListener("click",ev=>{
-  const b=ev.target.closest("[data-act]");if(!b)return;
-  const a=b.dataset.act,id=b.dataset.id;
-  if(a==="toggleRw"){S.open=!S.open;render();}
-  else if(a==="prev"){S.day=Math.max(0,S.day-1);render();}
-  else if(a==="next"){S.day=Math.min(2,S.day+1);render();}
-  else if(a==="tick")tick(id);
-  else if(a==="timer")openTimer(id);
-  else if(a==="mode"){S.mode=b.dataset.mode;render();}
-  else if(a==="excuse"){const t=S.tasks.find(x=>x.id===id);t.exc=!t.exc;if(t.exc)t.done=false;render();}
-  else if(a==="pay")pay();
-  else if(a==="reset"){S=fresh();render();toast("Näidis algab otsast.");}
-  else if(a==="close")closeSheet();
-});
-document.addEventListener("input",ev=>{
-  const el=ev.target;
-  if(el.id==="kid"){S.kid=el.value.trim()||"Mia";$("#kidName").textContent=S.kid+", 7. klass";return;}
-  const k=el.dataset.cfg;if(!k)return;
-  const [m,f]=k.split(".");
-  S.cfg[m][f]=el.type==="number"?Math.max(0,parseInt(el.value||"0",10)):el.value;
-});
-document.addEventListener("change",ev=>{if(ev.target.dataset.cfg)render();});
-
-function pay(){
-  const e=earned(),m=S.mode;
-  if(m==="raha"){const v=e.raha-S.paid.raha;S.paid.raha=e.raha;S.hist.unshift("Makstud "+v+" € · teisipäev 3.11");}
-  else if(m==="ekraan"){const v=e.ekraan-S.paid.ekraan;S.paid.ekraan=e.ekraan;S.hist.unshift("Kasutatud "+v+" min · teisipäev 3.11");}
-  else{S.paid.stars+=S.cfg[m].goal;S.hist.unshift(S.cfg[m].reward+" antud · teisipäev 3.11");}
-  render();toast("Salvestatud.");
-}
-
-function tick(id){
-  const t=S.tasks.find(x=>x.id===id);if(!t||t.exc)return;
-  const wasFull=todayFull();
-  t.done=!t.done;
-  render();
-  if(!t.done){toast("Linnuke võetud ära.");return;}
-  const btn=document.querySelector('.chk[data-id="'+id+'"]');if(btn)btn.classList.add("pop");
-  if(todayFull()&&!wasFull){celebrateAll();toast(fullLine());}
-  else{celebrateOne();toast(stepLine());}
-}
-function stepLine(){
-  const left=active().length-doneN(),c=S.cfg,l=LINES[Math.floor(Math.random()*LINES.length)];
-  if(S.mode==="raha")return l+" Veel "+left+" ja "+c.raha.perDay+" € on sinu!";
-  if(S.mode==="ekraan")return"Kuldtäht ⭐ +"+c.ekraan.perStep+" min ekraaniaega!";
-  if(S.mode==="aeg"||S.mode==="oma"){const k=c[S.mode],need=Math.max(0,k.goal-(k.base+earned().stars-S.paid.stars));return need?"Kuldtäht ⭐ +1! Veel "+need+" ja "+k.reward.toLowerCase()+" on käes!":"Kuldtäht ⭐ +1! "+k.reward+" on käes!";}
-  return l+" Veel "+left+".";
-}
-function fullLine(){return"Kõik tehtud! Tasa sõuad, kaugele jõuad. 🚣";}
-
-/* ---------- timer sheet ---------- */
-let tmrInt=null;
-function openTimer(id){
-  const t=S.tasks.find(x=>x.id===id);let sec=t.m*60;
-  const fmt=s=>String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
-  sheet('<div class="tmr"><div class="eyebrow">Fookuse aeg</div><h2>'+esc(t.t)+'</h2><div class="big" id="tm">'+fmt(sec)+'</div><p>Pane telefon eemale. Kui aeg saab läbi, tee 5 min pausi.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" type="button" id="tmDone">Tehtud</button><button class="btn ghost" type="button" data-act="close">Sulge</button></div></div>');
-  tmrInt=setInterval(()=>{sec=Math.max(0,sec-1);const el=$("#tm");if(el)el.textContent=fmt(sec);if(!sec)clearInterval(tmrInt);},1000);
-  $("#tmDone").onclick=()=>{closeSheet();tick(id);};
-}
-function sheet(html){
-  $("#sheetHost").innerHTML='<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true">'+html+'</div></div>';
-  $("[data-scrim]").addEventListener("click",e=>{if(e.target.hasAttribute("data-scrim"))closeSheet();});
-  const f=$(".sheet button");if(f)f.focus();
-}
-function closeSheet(){clearInterval(tmrInt);$("#sheetHost").innerHTML="";}
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
-$("#aboutBtn").onclick=()=>sheet('<h2>TASA: õppimise planeerija lapsele</h2><p>TASA aitab last, kellel on raske koduste töödega alustada, näiteks ATH või individuaalõppe puhul. Laps näeb ainult tänast päeva ja ühte asja korraga.</p><ul class="facts"><li>Kodused tööd, tähtajad, kontrolltööd ja hinded tulevad e-päevikust (eKool või Stuudium), kooli loal. Õpetajatele lisatööd ei tule.</li><li>Suured tööd jagatakse umbes 25-minutilisteks sammudeks.</li><li>Iga linnuke saab tähistuse. Preemia valib lapsevanem: taskuraha, ekraaniaeg, ühine aeg, lapse enda valik või väljas.</li><li>Perele alati tasuta.</li></ul><p class="hist">See näidis kasutab väljamõeldud andmeid ega ühendu ühegi e-päevikuga. Proovi: vajuta „Tehtud“, vaata homset noolega ja muuda preemiat vaates „Lapsevanem“.</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Proovi</button>');
-
-/* ---------- toast ---------- */
-let tt;
-function toast(msg){const el=$("#toast");el.textContent=msg;el.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("show"),2600);}
-
-/* ---------- celebrations (canvas) ---------- */
-const cv=$("#fx"),cx=cv.getContext("2d");let parts=[],raf=0;
-const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-const COLS=["#2A8C8C","#F7B32B","#EE6A4D","#5B4BB5","#7ED3CF"];
-function size(){const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;cx.setTransform(d,0,0,d,0,0);}
-addEventListener("resize",size);size();
-const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
-function confetti(){const W=innerWidth;for(let i=0;i<140;i++)parts.push({k:"c",x:W/2+rnd(-40,40),y:innerHeight*.45,vx:rnd(-9,9),vy:rnd(-16,-6),g:.35,r:rnd(0,6),vr:rnd(-.3,.3),w:rnd(6,11),h:rnd(4,7),c:pick(COLS),life:160});}
-function fireworks(){for(let b=0;b<4;b++){const x=rnd(.2,.8)*innerWidth,y=rnd(.15,.45)*innerHeight,c=pick(COLS),delay=b*18;for(let i=0;i<46;i++){const a=i/46*Math.PI*2,s=rnd(2.5,5.5);parts.push({k:"f",x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,g:.06,c,life:90+delay,delay});}}}
-function emojiRain(){const E=["🎉","⭐","🚀","💪","✨","🚣","🌟"];for(let i=0;i<34;i++)parts.push({k:"e",x:rnd(0,innerWidth),y:rnd(-300,-30),vx:rnd(-.5,.5),vy:rnd(3,6),g:.04,e:pick(E),s:rnd(24,40),life:200});}
-function balloons(){for(let i=0;i<14;i++)parts.push({k:"b",x:rnd(.05,.95)*innerWidth,y:innerHeight+rnd(20,240),vx:0,vy:rnd(-3.6,-2.2),g:0,c:pick(COLS),s:rnd(18,28),ph:rnd(0,6),life:330});}
-function goldStar(){const s=document.createElement("div");s.className="star";s.textContent="⭐";document.body.appendChild(s);setTimeout(()=>s.remove(),1400);}
-const ONE=[confetti,fireworks,emojiRain,goldStar,balloons];let oneI=0;
-function celebrateOne(){if(reduce)return;ONE[oneI++%ONE.length]();loop();}
-function celebrateAll(){if(reduce)return;confetti();fireworks();emojiRain();balloons();goldStar();setTimeout(()=>{confetti();loop();},700);loop();}
-function loop(){if(raf)return;const step=()=>{cx.clearRect(0,0,innerWidth,innerHeight);parts=parts.filter(p=>p.life-->0);
-  for(const p of parts){if(p.delay&&p.delay-->0)continue;p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;
-    if(p.k==="c"){p.vx*=.99;p.r+=p.vr;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cx.restore();}
-    else if(p.k==="f"){p.vx*=.97;p.vy*=.97;cx.globalAlpha=Math.min(1,p.life/40);cx.fillStyle=p.c;cx.beginPath();cx.arc(p.x,p.y,2.6,0,7);cx.fill();cx.globalAlpha=1;}
-    else if(p.k==="e"){cx.font=p.s+"px serif";cx.fillText(p.e,p.x,p.y);}
-    else if(p.k==="b"){p.ph+=.05;const x=p.x+Math.sin(p.ph)*8;cx.strokeStyle="rgba(120,120,120,.6)";cx.lineWidth=1;cx.beginPath();cx.moveTo(x,p.y+p.s*1.2);cx.quadraticCurveTo(x+6,p.y+p.s*2,x,p.y+p.s*2.8);cx.stroke();cx.fillStyle=p.c;cx.beginPath();cx.ellipse(x,p.y,p.s*.85,p.s*1.1,0,0,7);cx.fill();cx.fillStyle="rgba(255,255,255,.35)";cx.beginPath();cx.ellipse(x-p.s*.3,p.y-p.s*.4,p.s*.18,p.s*.3,-.5,0,7);cx.fill();}}
-  if(parts.length)raf=requestAnimationFrame(step);else{raf=0;cx.clearRect(0,0,innerWidth,innerHeight);}};raf=requestAnimationFrame(step);}
-
-render();
-})();
-</script>
-
+<footer>
+  <div class="wrap">
+    <img class="logo-light" src="assets/tasa-logo.svg" alt="" width="168" height="56">
+    <img class="logo-dark" src="assets/tasa-logo-white.svg" alt="" width="168" height="56">
+    <p>TASA on Sild Growth OÜ projekt. Peredele alati tasuta.</p>
+    <p><a href="en/" hreflang="en" lang="en">In English</a></p>
+  </div>
+</footer>
 </body>
 </html>
