@@ -3,275 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>TASA, õppimise planeerija lapsele</title>
-<meta name="description" content="TASA on tasuta õppimise planeerija lastele, kellel on raske koduülesannetega alustada. Võtab ülesanded e-päevikust, näitab ainult tänast ja jagab töö 25-minutilisteks sammudeks.">
+<title>TASA</title>
+<meta name="description" content="TASA: tasa sõuad, kaugele jõuad. Õppimise planeerija lapsele.">
 <meta name="theme-color" content="#2A8C8C">
 <link rel="icon" type="image/svg+xml" href="assets/tasa-app-icon.svg">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="alternate" hreflang="et" href="./">
-<link rel="alternate" hreflang="en" href="en/">
-<meta property="og:title" content="TASA: tasa sõuad, kaugele jõuad">
-<meta property="og:description" content="Tasuta õppimise planeerija lapsele. Ainult tänane, üks samm korraga.">
-<meta property="og:image" content="assets/demo-tana.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{--lake:#2A8C8C;--lake-ink:#1D6B6B;--ink:#1F2A44;--muted:#535C70;--paper:#FFF7E8;--on-lake:#FFFFFF;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;--body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1.1rem/1.6 var(--body);display:grid;grid-template-rows:1fr auto;
+  padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+main{display:grid;place-content:center;justify-items:center;text-align:center;gap:22px;padding-block:48px}
+main img{width:min(440px,100%);height:auto}
+h1{font:800 clamp(2rem,6vw,3rem)/1.1 var(--display);margin:0;color:var(--lake-ink);text-wrap:balance}
+.en{margin:-14px 0 0;color:var(--muted)}
+.btn{display:inline-block;background:var(--lake);color:var(--on-lake);font-weight:700;text-decoration:none;padding:16px 28px;border-radius:14px;margin-top:8px}
+.btn:hover{background:var(--lake-ink)}
+.btn:focus-visible{outline:3px solid #F7B32B;outline-offset:3px}
+footer{text-align:center;color:var(--muted);font-size:.9rem;padding-block:20px calc(20px + env(safe-area-inset-bottom,0px))}
+footer a{color:inherit}
+</style>
 </head>
 <body>
-<a class="skip" href="#sisu">Liigu sisu juurde</a>
-
-<header class="top">
-  <div class="wrap">
-    <a class="brand" href="./" aria-label="TASA avaleht">
-      <img class="logo-light" src="assets/tasa-logo.svg" alt="TASA" width="132" height="44">
-      <img class="logo-dark" src="assets/tasa-logo-white.svg" alt="TASA" width="132" height="44">
-    </a>
-    <nav class="nav" aria-label="Peamenüü">
-      <a class="opt" href="#kuidas">Kuidas töötab</a>
-      <a class="opt" href="#koolidele">Koolidele</a>
-      <a class="opt" href="#andmed">Andmekaitse</a>
-      <a href="#kontakt">Kontakt</a>
-      <a class="lang" href="en/" hreflang="en" lang="en">EN</a>
-    </nav>
-  </div>
-</header>
-
-<main id="sisu">
-
-<section class="hero">
-  <div class="wrap">
-    <div class="hero-text">
-      <span class="eyebrow">Õppimise planeerija lapsele</span>
-      <h1>Ainult tänane. <span class="hl">Üks samm korraga.</span></h1>
-      <p class="lead">TASA aitab last, kellel on raske koduülesannetega alustada. Ta võtab ülesanded ja tähtajad e-päevikust, jagab töö umbes 25-minutilisteks sammudeks ja näitab lapsele ainult tänast päeva.</p>
-      <span class="free">Peredele alati tasuta</span>
-      <div class="btns">
-        <a class="btn btn-main" href="demo/">Proovi näidist <span aria-hidden="true">→</span></a>
-        <a class="btn btn-ghost" href="#koolidele">Info koolidele</a>
-      </div>
-    </div>
-    <figure style="margin:0">
-      <div class="phone"><img src="assets/demo-tana.png" alt="TASA Täna-vaade: üks ülesanne „Tee seda nüüd“, 25 minutit, ja nupp Tehtud" width="390" height="800"></div>
-      <figcaption class="phone-cap">Näidis. Nimi ja ülesanded on välja mõeldud.</figcaption>
-    </figure>
-  </div>
-</section>
-
-<div class="wrap"><div class="wave" aria-hidden="true"></div></div>
-
-<section class="sec" aria-labelledby="miks">
-  <div class="wrap problem">
-    <div>
-      <span class="eyebrow">Miks</span>
-      <h2 id="miks" style="margin-block:14px 20px">Terve kuu tähtajad korraga on liiga palju</h2>
-      <p>E-päevik näitab kõike: kontrolltööd, referaadid, loetavad raamatud ja homsed ülesanded. Paljudele lastele, eriti ATH-ga või individuaalõppel olevatele, on see ülekoormus. Nad ei tea, kust alustada, ja jätavad alustamata.</p>
-      <p>TASA ei asenda eKooli ega Stuudiumit. Ta võtab sealt sama info ja teeb sellest lapse jaoks ühe selge järgmise sammu.</p>
-    </div>
-    <div class="month" aria-label="November: kümme tähtaega ühes kuus, täna on 3. november">
-      <span class="wd" aria-hidden="true">E</span>
-      <span class="wd" aria-hidden="true">T</span>
-      <span class="wd" aria-hidden="true">K</span>
-      <span class="wd" aria-hidden="true">N</span>
-      <span class="wd" aria-hidden="true">R</span>
-      <span class="wd" aria-hidden="true">L</span>
-      <span class="wd" aria-hidden="true">P</span>
-      <span class="dim" aria-hidden="true">26</span>
-      <span class="dim" aria-hidden="true">27</span>
-      <span class="dim" aria-hidden="true">28</span>
-      <span class="dim" aria-hidden="true">29</span>
-      <span class="dim" aria-hidden="true">30</span>
-      <span class="dim" aria-hidden="true">31</span>
-      <span>1</span>
-      <span>2</span>
-      <span class="today">3</span>
-      <span class="due">4</span>
-      <span>5</span>
-      <span class="due">6</span>
-      <span>7</span>
-      <span>8</span>
-      <span>9</span>
-      <span class="due">10</span>
-      <span>11</span>
-      <span class="due">12</span>
-      <span class="due">13</span>
-      <span>14</span>
-      <span>15</span>
-      <span>16</span>
-      <span class="due">17</span>
-      <span>18</span>
-      <span class="due">19</span>
-      <span class="due">20</span>
-      <span>21</span>
-      <span>22</span>
-      <span>23</span>
-      <span class="due">24</span>
-      <span>25</span>
-      <span>26</span>
-      <span class="due">27</span>
-      <span>28</span>
-      <span>29</span>
-      <span>30</span>
-      <span class="dim" aria-hidden="true">1</span>
-      <span class="dim" aria-hidden="true">2</span>
-      <span class="dim" aria-hidden="true">3</span>
-      <span class="dim" aria-hidden="true">4</span>
-      <span class="dim" aria-hidden="true">5</span>
-      <span class="dim" aria-hidden="true">6</span>
-      <p class="month-cap">E-päevik: kõik novembri tähtajad korraga. TASA: ainult see üks päev.</p>
-    </div>
-  </div>
-</section>
-
-<section class="sec band" id="kuidas" aria-labelledby="kuidas-h">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">Kuidas töötab</span>
-      <h2 id="kuidas-h">E-päevikust tänase plaanini</h2>
-    </div>
-    <ol class="steps">
-      <li><h3>Ülesanded tulevad e-päevikust</h3><p>Kodutööd, tähtajad, kontrolltööd ja hinded tulevad eKoolist või Stuudiumist ametliku liidese kaudu, kooli loal. Õpetaja ei pea midagi juurde tegema.</p></li>
-      <li><h3>Plaan teeb töö väikeseks</h3><p>Suur töö jaguneb umbes 25-minutilisteks sammudeks tähtajale eelnevate päevade peale, lähim tähtaeg ees ja päeva õppimisaja piires.</p></li>
-      <li><h3>Iga linnuke on pidu</h3><p>Laps näeb ühte kaarti „Tee seda nüüd“. Iga tehtud samm toob konfetit ja julgustava lause. Terve päev tehtud toob kõik korraga.</p></li>
-    </ol>
-  </div>
-</section>
-
-<section class="sec" aria-labelledby="mida-h">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">Mida TASA teeb</span>
-      <h2 id="mida-h">Plaan, mis mõtleb lapse eest ette</h2>
-    </div>
-    <div class="feats">
-      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg><div><h3>Kontrolltööks valmistumine</h3><p>Kordamine algab 7 päeva enne kontrolltööd, eriti matemaatikas, keemias ja füüsikas.</p></div></div>
-      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg><div><h3>Järelvastamise plaan</h3><p>Hinne alla 3 või MA muutub automaatselt järelvastamise plaaniks. Kui vanem pildistab parandatud töö, ütleb samm täpselt: „harjuta ülesandeid 1 ja 2“. TASA ei lahenda ega selgita ülesandeid lapse eest.</p></div></div>
-      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h5v18H6a2 2 0 0 1-2-2zM20 5a2 2 0 0 0-2-2h-5v18h5a2 2 0 0 0 2-2z"/></svg><div><h3>Raamat lehekülgedeks</h3><p>Sisesta raamat, praegune lehekülg ja tähtaeg. Plaan ütleb täpselt: „loe lk 41–60“.</p></div></div>
-      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg><div><h3>Eilne jääk tuleb ette</h3><p>Mis eile tegemata jäi, on täna nimekirja eesotsas. Midagi ei kao ära.</p></div></div>
-      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><h3>Kohustuslikud ajad</h3><p>Näiteks iganädalane matemaatika konsultatsioon on kalendris märgiga „Kohustuslik“.</p></div></div>
-      <div class="feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg><div><h3>Lapsevanema vaade</h3><p>Vanem saab ülesande haiguse tõttu vabandada ja märkida preemia välja makstuks. Laps vanema vaadet ei näe.</p></div></div>
-    </div>
-  </div>
-</section>
-
-<section class="sec band" aria-labelledby="preemia-h">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">Preemiad</span>
-      <h2 id="preemia-h">Pingutus on nähtav. Mida see tähendab, otsustab lapsevanem.</h2>
-      <p class="lead">Laps näeb oma preemiasaldot. Vanem valib, milles see on, ja paneb paika summad.</p>
-    </div>
-    <div class="rewards">
-      <div class="rw"><b>+10 min</b><span>Ekraaniaeg</span><small>iga tehtud sammu eest</small></div>
-      <div class="rw"><b>3 €</b><span>Taskuraha</span><small>iga täielikult tehtud päeva eest, terve nädal +10 €</small></div>
-      <div class="rw"><b>★ ★ ★</b><span>Aeg koos vanemaga</span><small>tähed filmiõhtuks, mille laps ise valib</small></div>
-      <div class="rw"><b>?</b><span>Lapse enda valik</span><small>laps ja vanem lepivad kokku</small></div>
-      <div class="rw off"><b>Väljas</b><span>Ilma preemiata</span><small>ainult plaan ja tähistused</small></div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="koolidele" aria-labelledby="koolidele-h">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">Kes maksab</span>
-      <h2 id="koolidele-h">Peredele tasuta. Koolile osa tugiteenusest.</h2>
-    </div>
-    <div class="split">
-      <div class="pane fam">
-        <span class="big">0 €</span>
-        <h3>Peredele</h3>
-        <ul>
-          <li>Pere ei maksa kunagi.</li>
-          <li>Lapsevanem loob konto ja annab nõusoleku.</li>
-          <li>Ei mingit e-päeviku parooli jagamist.</li>
-          <li>Töötab veebis ja telefonis, poodi minna pole vaja.</li>
-        </ul>
-      </div>
-      <div class="pane org">
-        <span class="big">4 nädalat</span>
-        <h3>Koolidele ja omavalitsustele</h3>
-        <ul>
-          <li>Piloot 5–10 perega, kelle kool ise soovitab, näiteks tugispetsialisti kaudu.</li>
-          <li>Mõõdame tehtud samme, avatud päevi, ununenud tähtaegu ja vanema kulutatud aega.</li>
-          <li>Lõpus lühike raport koolile.</li>
-          <li>Õpetajal lisatööd ei ole. Vaikimisi õpetaja lapse plaani ei näe.</li>
-        </ul>
-        <div><a class="btn btn-main" href="#kontakt">Räägime pilootist</a></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="sec band" aria-labelledby="teadus-h">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">Millele see toetub</span>
-      <h2 id="teadus-h">Planeerimise õpetamine on ATH puhul üks paremini tõestatud koolisekkumisi</h2>
-    </div>
-    <div class="refs">
-      <div class="ref"><h3>Organiseerimis- ja planeerimisoskuste treening</h3><p>Ülevaade ATH koolisekkumistest leidis, et organiseerimise ja planeerimise õpetamine on üks paremini tõendatud meetodeid.</p><cite>Evans, Owens, Wymbs &amp; Ray (2018), Journal of Clinical Child &amp; Adolescent Psychology</cite></div>
-      <div class="ref"><h3>HOPS: kodutööde planeerimine koolis</h3><p>280 ATH-ga põhikooliõpilast. Lühike koolis läbiviidav programm (16 kohtumist, igaüks kuni 20 minutit) vähendas kodutööde probleeme ning parandas organiseerimist ja planeerimist vanemate ja õpetajate hinnangul.</p><cite>Langberg jt, Journal of Consulting and Clinical Psychology · <a href="https://news.vcu.edu/article/for_children_with_adhd_a_brief_schoolbased_program_can_help_dramatically" rel="noopener">VCU uudis, 2017</a></cite></div>
-    </div>
-    <p class="note">TASA teeb lapse jaoks need sammud igapäevaseks: aeg on kinni, eesmärk on selge, taimer käib ja iga tehtud samm saab tähistuse.</p>
-  </div>
-</section>
-
-<section class="sec" id="andmed" aria-labelledby="andmed-h">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow">Andmekaitse</span>
-      <h2 id="andmed-h">Lapse andmed on lapse omad</h2>
-    </div>
-    <div class="privacy">
-      <div><h3>Vanem on konto omanik</h3><p>Alla 13-aastane laps ei saa Eestis ise nõusolekut anda, seega nõusoleku annab lapsevanem.</p></div>
-      <div><h3>Paroole ei küsi</h3><p>Ainult ametlik ligipääs e-päevikule, eKooli puhul kooli loal.</p></div>
-      <div><h3>Vähim võimalik</h3><p>Diagnoose ei salvestata. ATH-sõbralikkus on disainivalik, mitte andmeväli.</p></div>
-      <div><h3>Andmed jäävad ELi</h3><p>Majutus ja AI teenused ELis, andmetöötluslepingutega ja ilma andmetel treenimiseta.</p></div>
-      <div><h3>Eksport ja kustutamine</h3><p>Vanem saab andmed alla laadida või kõik ühe nupuga kustutada.</p></div>
-      <div><h3>Järelevalve</h3><p>Lihtsas keeles privaatsusteade ja plaan rikkumiste puhuks. Järelevalvaja on Andmekaitse Inspektsioon.</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="sec band" aria-labelledby="lugu-h">
-  <div class="wrap story">
-    <img class="week-card" src="assets/tasa-week.svg" alt="TASA logo: paat sõuab läbi nädala E, T, K, N, R, kaks päeva on linnukesega tehtud" width="400" height="170">
-    <div>
-      <span class="eyebrow">Lugu</span>
-      <h2 id="lugu-h" style="margin-block:14px 20px">Alguse sai see ühest perest</h2>
-      <p>Maria Hõbesalu ehitas esimese versiooni oma pojale, kellel oli raske koduülesannetega alustada. See on igapäevases kasutuses. TASA on sama mõte, tehtud nii, et see sobiks igale lapsele, kellele see võiks abiks olla.</p>
-      <p class="proverb" style="margin-top:22px">Tasa sõuad, kaugele jõuad.</p>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="kontakt" aria-labelledby="kontakt-h">
-  <div class="wrap">
-    <div class="contact">
-      <div style="display:grid;gap:16px">
-        <h2 id="kontakt-h">Otsime pilootkooli</h2>
-        <p>Kui olete kool, tugikeskus või omavalitsus ja teil on lapsi, kellele TASA võiks abiks olla, kirjutage. Näitame näidist 20 minutiga.</p>
-        <div class="btns"><a class="btn btn-ghost" href="demo/">Ava näidis <span aria-hidden="true">→</span></a></div>
-      </div>
-      <dl>
-        <div><dt>E-post</dt><dd><a href="mailto:maria@sildpartners.com">maria@sildpartners.com</a></dd></div>
-        <div><dt>Telefon</dt><dd><a href="tel:+37258262802">+372 5826 2802</a></dd></div>
-        <div><dt>Ettevõte</dt><dd>Sild Growth OÜ, reg. kood 14067479<br>Telliskivi 33-1, 10611 Tallinn</dd></div>
-      </dl>
-    </div>
-  </div>
-</section>
-
+<main>
+  <img src="assets/tasa-week.svg" alt="TASA" width="400" height="170">
+  <h1>Tasa sõuad, kaugele jõuad.</h1>
+  <p class="en" lang="en">Row slowly, go far.</p>
+  <a class="btn" href="demo/">Vaata näidist <span aria-hidden="true">→</span></a>
 </main>
-
-<footer>
-  <div class="wrap">
-    <img class="logo-light" src="assets/tasa-logo.svg" alt="" width="168" height="56">
-    <img class="logo-dark" src="assets/tasa-logo-white.svg" alt="" width="168" height="56">
-    <p>TASA on Sild Growth OÜ projekt. Peredele alati tasuta.</p>
-    <p><a href="en/" hreflang="en" lang="en">In English</a></p>
-  </div>
-</footer>
+<footer>Sild Growth OÜ · <a href="mailto:maria@sildpartners.com">maria@sildpartners.com</a></footer>
 </body>
 </html>
