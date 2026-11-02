@@ -248,7 +248,7 @@ const TICK='<svg aria-hidden="true"><use href="#tick"/></svg>';
 
 const WEEK=["E","T","K","N","R","L","P"];
 const DAYNAMES=["Esmaspäev","Teisipäev","Kolmapäev","Neljapäev","Reede","Laupäev","Pühapäev"];
-const TAGS={due:["Tähtaeg täna","p-due"],fix:["Parandada: hinne 2","p-fix"],test:["Kontrolltöö","p-test"],req:["Kohustuslik","p-req"],book:["Raamat","p-book"],proj:["Projekt","p-proj"],retake:["Järeltöö","p-fix"],old:["Eilsest","p-old"]};
+const TAGS={due:["Tähtaeg täna","p-due"],fix:["Parandada: hinne 2","p-fix"],test:["Kontrolltöö","p-test"],req:["Kohustuslik","p-req"],book:["Raamat","p-book"],proj:["Projekt","p-proj"],retake:["Järeltöö","p-fix"],own:["Vanem lisas","p-proj"],dl:["Tähtaeg","p-due"],old:["Eilsest","p-old"]};
 
 /* ---------- fake sample data (week of 2–8 Nov) ---------- */
 const MONDAY=[
@@ -284,7 +284,7 @@ function fresh(){return{
   open:true, day:1, unlocked:false,
   rw:{on:true,name:"Taskuraha",unit:"eur",per:"day",amount:3,goal:0,bonus:10},
   paid:0, hist:[], kid:"Mia",
-  test:null, extra:{}
+  test:null, extra:{}, manual:[], mseq:0
 };}
 S=fresh();
 const PRESETS={
@@ -409,6 +409,7 @@ function viewWeek(){
     '<li>Suured tööd jagatakse umbes 25-minutilisteks sammudeks, lähim tähtaeg ees.</li>'+
     '<li>Kontrolltöö ettevalmistus algab kuni 7 päeva enne. Kui töö läks halvasti, saab vanem lisada parandatud töö ja valesti läinud ülesanded jagatakse 2–3 päeva peale.</li>'+
     '<li>TASA kasutab ainult kooli antud ja vanema lisatud materjali. Ise ülesandeid ei koostata ega lahendata.</li>'+
+    '<li>Kui õpetaja ütleb ülesande ainult tunnis, saab vanem selle ise lisada ja TASA jagab selle samuti sammudeks.</li>'+
     '<li>Pooleli jäänud sammud tulevad järgmisel päeval kõige ette.</li></ol></section>'+
     '<div class="sec">See nädal</div><div class="wk">'+rows+'</div>'+
     '<section class="card wday" style="margin-top:10px"><h3>Esmaspäev 9.11<small>järgmine nädal</small></h3><ul>'+weekLis(nextMon,false)+'<li><span class="m">Füüsika kordamine on jagatud 4 sammuks: T, K, N ja L.</span></li></ul></section>';
@@ -461,6 +462,30 @@ function testCard(){
     '<p class="hist" style="margin:0">Laps näeb ainult samme, mitte fotot ega hinnet. Vaata vaadet „Täna“ või „Nädal“.</p>'+
     '<button class="btn small ghost" type="button" data-act="cancelTest" style="justify-self:start">Eemalda plaan</button></section>';
 }
+const DL_OPTS=[[2,"Kolmapäev 4.11"],[3,"Neljapäev 5.11"],[4,"Reede 6.11"],[5,"Laupäev 7.11"],[6,"Pühapäev 8.11"],[7,"Esmaspäev 9.11"]];
+function manualCard(){
+  const list=S.manual.map(m=>'<div class="prow"><div class="it"><div>'+esc(m.subj)+': '+esc(m.title)+'</div><div class="hist">'+m.n+(m.n===1?" samm":" sammu")+' · tähtaeg '+DAYLBL[m.dl]+'</div></div><button class="btn small ghost" type="button" data-act="delManual" data-id="'+m.id+'">Eemalda</button></div>').join("");
+  return'<section class="card pcard"><p style="margin:0">Mõni õpetaja ütleb ülesande ainult tunnis ega pane seda e-päevikusse. Lisa see siia ja TASA jagab selle sammudeks enne tähtaega, nagu kõik teised tööd.</p>'+
+    '<div class="two"><div class="field"><label for="mSubj">Aine</label><input id="mSubj" type="text" maxlength="30" value="Filmiõpetus"></div>'+
+    '<div class="field"><label for="mDl">Tähtaeg</label><select id="mDl">'+DL_OPTS.map(o=>'<option value="'+o[0]+'"'+(o[0]===4?" selected":"")+'>'+o[1]+'</option>').join("")+'</select></div></div>'+
+    '<div class="field"><label for="mTitle">Mis on vaja teha?</label><input id="mTitle" type="text" maxlength="60" value="Lühifilmi stsenaarium, 1 lk"></div>'+
+    '<div class="field"><label for="mMin">Kui kaua see umbes võtab?</label><select id="mMin"><option value="25">25 min (1 samm)</option><option value="50">50 min (2 sammu)</option><option value="75" selected>75 min (3 sammu)</option><option value="100">100 min (4 sammu)</option></select></div>'+
+    '<button class="btn small" type="button" data-act="addManual" style="justify-self:start">Lisa plaani</button>'+list+'</section>';
+}
+function addManual(){
+  const subj=$("#mSubj").value.trim()||"Muu",title=$("#mTitle").value.trim();
+  if(!title){toast("Kirjuta, mis on vaja teha.");return;}
+  const dl=+$("#mDl").value,n=(+$("#mMin").value)/25,id="m"+(++S.mseq),days=dl-1;
+  for(let i=0;i<n;i++){
+    const d=1+Math.floor(i*days/n);
+    const it={id:id+"_"+i,src:id,s:subj,t:subj+": "+title+(n>1?", samm "+(i+1)+"/"+n:""),m:25,tag:"own",done:false,exc:false,
+      n:"Ülesande andis õpetaja tunnis ja vanem lisas selle TASAsse. Tähtaeg "+DAYLBL[dl]+"."};
+    if(d===1)S.tasks.push(it);else(S.extra[d]=S.extra[d]||[]).push(it);
+  }
+  (S.extra[dl]=S.extra[dl]||[]).push({src:id,s:subj,t:subj+": "+title+" tuleb ära anda",m:0,tag:"dl"});
+  S.manual.push({id,subj,title,dl,n});render();toast("Lisatud: "+n+(n===1?" samm":" sammu")+" enne tähtaega.");
+}
+function delManual(id){S.tasks=S.tasks.filter(t=>t.src!==id);for(const k in S.extra)S.extra[k]=S.extra[k].filter(t=>t.src!==id);S.manual=S.manual.filter(m=>m.id!==id);render();}
 function viewParent(){
   if(!S.unlocked)return pinView();
   const r=S.rw,u=esc(U());
@@ -490,6 +515,7 @@ function viewParent(){
     '<p class="hist" style="margin:0">Proovi: <button class="linkbtn" type="button" data-act="preset" data-p="ekraan">Ekraaniaeg · minutit</button> <button class="linkbtn" type="button" data-act="preset" data-p="raha">Taskuraha · eur</button> <button class="linkbtn" type="button" data-act="preset" data-p="ps4">PS4 · tähte</button></p>'+pay
     :'<p class="hist" style="margin:0">Laps näeb ainult edenemist ja tähistusi.</p>')+'</section>'+
     '<div class="sec">Parandatud kontrolltöö</div>'+testCard()+
+    '<div class="sec">Ülesanne, mida e-päevikus pole</div>'+manualCard()+
     '<div class="sec">Tänased ülesanded</div><section class="card pcard"><p class="hist" style="margin:0">Kui laps on haige, saad ülesande vabandada. See ei loe siis päeva tulemuse sisse.</p>'+
     S.tasks.map(t=>'<div class="prow"><div class="it"><div>'+esc(t.t)+'</div><div class="hist">'+(t.exc?"Vabandatud":t.done?"Tehtud ✓":"Tegemata")+'</div></div><button class="btn small ghost" type="button" data-act="excuse" data-id="'+t.id+'">'+(t.exc?"Taasta":"Vabanda")+'</button></div>').join("")+'</section>'+
     '<div class="sec">Andmed ja privaatsus</div><section class="card pcard"><ul class="facts">'+
@@ -518,6 +544,8 @@ document.addEventListener("click",ev=>{
   else if(a==="photo"){S.test={stage:"read",subj:$("#tSubj").value,when:+$("#tWhen").value,wrong:[]};render();setTimeout(()=>{if(S.test&&S.test.stage==="read"){S.test.stage="check";S.test.wrong=SAMPLE_WRONG.slice();render();}},1300);}
   else if(a==="chip"){const n=+b.dataset.n,w=S.test.wrong;S.test.wrong=w.includes(n)?w.filter(x=>x!==n):w.concat(n);render();}
   else if(a==="makeplan")makePlan();
+  else if(a==="addManual")addManual();
+  else if(a==="delManual")delManual(id);
   else if(a==="cancelTest"){clearPlan();S.test=null;render();}
   else if(a==="reset"){S=fresh();render();toast("Näidis algab otsast.");}
   else if(a==="close")closeSheet();
@@ -538,16 +566,16 @@ document.addEventListener("change",ev=>{
   render();
 });
 
-function clearPlan(){S.tasks=S.tasks.filter(t=>!String(t.id).startsWith("r"));S.extra={};}
+function clearPlan(){S.tasks=S.tasks.filter(t=>t.src!=="retake");for(const k in S.extra)S.extra[k]=S.extra[k].filter(t=>t.src!=="retake");}
 function makePlan(){
   clearPlan();
   const t=S.test,plan=retakePlan();
   plan.forEach((c,i)=>{
-    const item={id:"r"+i,s:t.subj,t:t.subj+" järeltöö: harjuta "+numList(c.nums),m:25,tag:"retake",done:false,exc:false,
+    const item={id:"r"+i,src:"retake",s:t.subj,t:t.subj+" järeltöö: harjuta "+numList(c.nums),m:25,tag:"retake",done:false,exc:false,
       n:"Need ülesanded läksid kontrolltöös valesti. Tee need oma töö ja kooli materjali järgi uuesti läbi. Järeltöö "+DAYLBL[t.when]+"."};
     if(c.day===1)S.tasks.push(item);else(S.extra[c.day]=S.extra[c.day]||[]).push(item);
   });
-  (S.extra[t.when]=S.extra[t.when]||[]).push({s:t.subj,t:t.subj+" järeltöö",m:0,tag:"req"});
+  (S.extra[t.when]=S.extra[t.when]||[]).push({src:"retake",s:t.subj,t:t.subj+" järeltöö",m:0,tag:"req"});
   t.stage="done";render();toast("Plaan tehtud: "+plan.length+" päeva.");
 }
 function pay(){
