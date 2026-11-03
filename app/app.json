@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "TASA",
+    "slug": "tasa",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ee.tasaplan.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#2A8C8C",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "ee.tasaplan.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "TASA",
+      "themeColor": "#2A8C8C",
+      "backgroundColor": "#FFF7E8"
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "scheme": "tasa",
+    "backgroundColor": "#FFF7E8",
+    "primaryColor": "#2A8C8C",
+    "description": "Õppimise planeerija lapsele. Tasa sõuad, kaugele jõuad.",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF7E8"
+    }
+  }
+}

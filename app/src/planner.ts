@@ -1,0 +1,201 @@
+import { addDays, diffDays, relDate, weekdayIndex, type Day } from "./dates";
+import type { AppState, Assignment, FixedEvent, PlannedStep, Step } from "./types";
+
+export const STEP_MIN = 25;
+const MAX_STEPS = 40;
+/** Test prep starts at most this many days before the test. */
+export const TEST_PREP_DAYS = 7;
+
+export function numList(ns: number[]): string {
+  const s = [...ns].sort((a, b) => a - b);
+  if (s.length === 1) return `ülesannet ${s[0]}`;
+  return `ülesandeid ${s.slice(0, -1).join(", ")} ja ${s[s.length - 1]}`;
+}
+
+/** Split wrong problems over 2–3 days, e.g. 5 wrong → 2 + 2 + 1. */
+export function retakeChunks(wrong: number[]): number[][] {
+  const w = [...new Set(wrong)].sort((a, b) => a - b);
+  if (!w.length) return [];
+  const parts = Math.min(3, Math.max(1, Math.ceil(w.length / 2)));
+  const per = Math.ceil(w.length / parts);
+  const out: number[][] = [];
+  for (let i = 0; i < w.length; i += per) out.push(w.slice(i, i + per));
+  return out;
+}
+
+/** Turn one assignment into its fixed list of ~25-minute steps. Ids stay stable. */
+export function stepsOf(a: Assignment): Step[] {
+  const base = { aid: a.id, kind: a.kind, subject: a.subject };
+  const mk = (i: number, total: number, title: string, minutes: number, note: string): Step => ({
+    ...base,
+    id: `${a.id}#${i}`,
+    index: i,
+    total,
+    title,
+    minutes,
+    note,
+  });
+
+  if (a.kind === "book") {
+    const from = a.pageFrom ?? 1;
+    const to = Math.max(from, a.pageTo ?? from);
+    const pages = to - from + 1;
+    const days = Math.max(1, diffDays(a.createdOn, a.due));
+    const n = Math.min(days, pages, MAX_STEPS);
+    const steps: Step[] = [];
+    for (let i = 0; i < n; i++) {
+      const p0 = from + Math.floor((i * pages) / n);
+      const p1 = from + Math.floor(((i + 1) * pages) / n) - 1;
+      const pp = p0 === p1 ? `lk ${p0}` : `lk ${p0}–${p1}`;
+      steps.push(
+        mk(i, n, `${a.subject}: ${a.title}, loe ${pp}`, STEP_MIN,
+          a.note || `Kokku lk ${from}–${to}. Iga päev natuke, siis jõuad rahulikult.`),
+      );
+    }
+    return steps;
+  }
+
+  if (a.kind === "retake") {
+    const chunks = retakeChunks(a.wrong ?? []);
+    return chunks.map((c, i) =>
+      mk(i, chunks.length, `${a.subject} järeltöö: harjuta ${numList(c)}`, STEP_MIN,
+        "Need ülesanded läksid kontrolltöös valesti. Tee need oma töö ja kooli materjali järgi uuesti läbi."),
+    );
+  }
+
+  const n = Math.min(MAX_STEPS, Math.max(1, Math.ceil(a.minutes / STEP_MIN)));
+  const steps: Step[] = [];
+  for (let i = 0; i < n; i++) {
+    const m = i < n - 1 ? STEP_MIN : Math.max(5, a.minutes - STEP_MIN * (n - 1));
+    const title =
+      a.kind === "test"
+        ? `${a.subject}: kontrolltööks kordamine ${i + 1}/${n}`
+        : `${a.subject}: ${a.title}${n > 1 ? `, samm ${i + 1}/${n}` : ""}`;
+    steps.push(mk(i, n, title, m, a.note || ""));
+  }
+  return steps;
+}
+
+/** First day work on this assignment may be planned. */
+function startDay(a: Assignment, t: Day, nSteps: number): Day {
+  if (a.kind === "test") {
+    const s = addDays(a.due, -TEST_PREP_DAYS);
+    return diffDays(t, s) > 0 ? s : t;
+  }
+  if (a.kind === "retake") {
+    const s = addDays(a.due, -Math.max(1, nSteps));
+    return diffDays(t, s) > 0 ? s : t;
+  }
+  return t;
+}
+
+/** Last day work may be planned: the day before it's due (or today if that has passed). */
+function lastDay(a: Assignment, start: Day): Day {
+  const l = addDays(a.due, -1);
+  return diffDays(start, l) >= 0 ? l : start;
+}
+
+export interface Plan {
+  /** day -> steps planned for that day (today and later) */
+  byDay: Record<Day, PlannedStep[]>;
+  /** every step, by id */
+  all: Record<string, PlannedStep>;
+}
+
+/**
+ * Spread every unfinished step over the days before its deadline, nearest deadline first,
+ * keeping each day near the study-time budget. Steps already done today stay on today,
+ * so ticking never changes the rest of today's plan.
+ */
+export function buildPlan(s: Pick<AppState, "assignments" | "done" | "excused" | "budget">, t: Day): Plan {
+  const byDay: Record<Day, PlannedStep[]> = {};
+  const all: Record<string, PlannedStep> = {};
+  const put = (st: PlannedStep) => {
+    (byDay[st.day] ||= []).push(st);
+    all[st.id] = st;
+  };
+  const lastOf: Record<string, Day> = {};
+
+  const sorted = [...s.assignments].sort(
+    (a, b) => diffDays(b.due, a.due) || a.createdOn.localeCompare(b.createdOn) || a.id.localeCompare(b.id),
+  );
+  for (const a of sorted) {
+    const steps = stepsOf(a).filter((x) => !s.excused[x.id]);
+    const start = startDay(a, t, steps.length);
+    const last = lastDay(a, start);
+    lastOf[a.id] = last;
+    const doneToday = steps.filter((x) => s.done[x.id] === t);
+    const remaining = steps.filter((x) => !s.done[x.id]);
+    // Steps finished on earlier days are simply gone from the plan.
+    for (const x of doneToday) put({ ...x, day: t, due: a.due });
+    const total = doneToday.length + remaining.length;
+    if (!remaining.length) continue;
+    const D = diffDays(start, last) + 1;
+    const slots: number[] = [];
+    for (let k = 0; k < total; k++) slots.push(Math.floor((k * D) / total));
+    const mySlots = slots.slice(doneToday.length);
+    remaining.forEach((x, i) => {
+      // Doing extra today must never leave today's share smaller than 0, so slots are offsets from start.
+      put({ ...x, day: addDays(start, mySlots[i]), due: a.due });
+    });
+  }
+
+  // Budget: if a day is too full, move the latest-deadline steps to a later day if they still fit before it's due.
+  const maxDay = () => Object.keys(byDay).sort().pop() as Day;
+  const first = Object.keys(byDay).sort()[0];
+  if (first) {
+    for (let d = first; diffDays(d, maxDay()) >= 0; d = addDays(d, 1)) {
+      const list = byDay[d];
+      if (!list) continue;
+      let mins = list.reduce((m, x) => m + x.minutes, 0);
+      if (mins <= s.budget) continue;
+      const movable = list
+        .filter((x) => !(d === t && s.done[x.id] === t) && diffDays(d, lastOf[x.aid]) > 0)
+        // latest deadline first, last step of it first
+        .sort((a, b) => diffDays(a.due, b.due) || b.index - a.index);
+      for (const x of movable) {
+        if (mins <= s.budget) break;
+        const next = addDays(d, 1);
+        byDay[d] = byDay[d].filter((y) => y.id !== x.id);
+        const moved = { ...x, day: next };
+        (byDay[next] ||= []).push(moved);
+        all[x.id] = moved;
+        mins -= x.minutes;
+      }
+    }
+  }
+
+  for (const d of Object.keys(byDay)) {
+    byDay[d].sort((a, b) => diffDays(b.due, a.due) || a.aid.localeCompare(b.aid) || a.index - b.index);
+  }
+  return { byDay, all };
+}
+
+/** Fixed required events and test / retake days that fall on a given day. */
+export interface DayEvent {
+  key: string;
+  title: string;
+  when: string;
+  tag: "req" | "test" | "retake" | "due";
+}
+
+export function eventsOn(s: Pick<AppState, "assignments" | "events">, day: Day, ref: Day): DayEvent[] {
+  const out: DayEvent[] = [];
+  for (const e of s.events) {
+    const n = diffDays(e.day, day);
+    if (n === 0 || (e.weekly && n > 0 && n % 7 === 0)) {
+      out.push({ key: e.id, title: e.title, when: `${relDate(day, ref)} ${e.time}`.trim(), tag: "req" });
+    }
+  }
+  for (const a of s.assignments) {
+    if (a.due !== day) continue;
+    if (a.kind === "test") out.push({ key: a.id, title: `${a.subject} kontrolltöö`, when: relDate(day, ref), tag: "test" });
+    else if (a.kind === "retake") out.push({ key: a.id, title: `${a.subject} järeltöö`, when: relDate(day, ref), tag: "retake" });
+    else out.push({ key: a.id, title: `${a.subject}: ${a.title} tuleb ära anda`, when: relDate(day, ref), tag: "due" });
+  }
+  return out;
+}
+
+export function isWeekend(day: Day) {
+  return weekdayIndex(day) >= 5;
+}
