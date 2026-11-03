@@ -332,9 +332,9 @@ function rewardCard(){
     line=r.per==="step"?"Iga linnuke = <b>+"+r.amount+" "+u+"</b>":(todayFull()?"Tänane <b>+"+r.amount+" "+u+"</b> on käes!":"Veel <b>"+left+"</b> ja täna <b>+"+r.amount+" "+u+"</b>");
   }
   const rightTop=r.bonus>0?"terve nädal → <b>+"+r.bonus+" "+u+"</b>":(r.goal>0?"eesmärk: "+r.goal+" "+u:"");
-  const rules=(r.per==="step"?"Iga tehtud samm":"Kõik päeva ülesanded tehtud")+" → <b>+"+r.amount+" "+u+"</b>."+
+  const rules=(r.per==="step"?"Iga tehtud samm":"Kõik päeva ülesanded tehtud samal päeval")+" → <b>+"+r.amount+" "+u+"</b>."+
     (r.goal>0?" "+r.goal+" "+u+" → <b>"+nm+"</b>.":"")+
-    (r.bonus>0?" Terve nädal (E–P) tehtud → <b>+"+r.bonus+" "+u+"</b> boonus.":"")+" Reeglid paneb paika lapsevanem.";
+    (r.bonus>0?" Iga päev (E–P) samal päeval tehtud → <b>+"+r.bonus+" "+u+"</b> boonus.":"")+" Reeglid paneb paika lapsevanem.";
   const dots=WEEK.map((d,i)=>{const done=i===0||(i===1&&todayFull());return'<div><div class="dot'+(done?" done":"")+(i===1?" cur":"")+'">'+(done?"✓":"")+'</div><div class="dl">'+d+'</div></div>';}).join("");
   return'<section class="card rw'+(S.open?" open":"")+'" style="margin-top:4px">'+
     '<button class="rw-top" type="button" data-act="toggleRw" aria-expanded="'+S.open+'"><span class="rw-big">'+big+'</span><span class="rw-line">'+line+'</span><span class="rw-caret" aria-hidden="true">▾</span></button>'+
@@ -368,7 +368,7 @@ function viewToday(){
     const items=carry.concat(dayItems(2).map(x=>Object.assign({s:x.t.split(":")[0]},x)));
     const mins=items.reduce((a,t)=>a+t.m,0);
     return dayHeader("Homme","Kolmapäev, 4. november · Kool 8:15–13:40",true,false)+
-      '<p class="preview">See on homne plaan. Homme näed jälle ainult seda päeva. '+(carry.length?"Tänasest pooleli jäänud sammud tulevad homme kõige ette.":"Täna on kõik tehtud, nii et homme midagi üle ei tule.")+'</p>'+
+      '<p class="preview">See on homne plaan. Homme näed jälle ainult seda päeva. '+(carry.length?"Tänasest pooleli jäänud sammud tulevad homme kõige ette."+(S.rw.on&&S.rw.per==="day"?" Tänast päevapreemiat need enam ei too, sest see tuleb ainult samal päeval lõpetatud päeva eest.":""):"Täna on kõik tehtud, nii et homme midagi üle ei tule.")+'</p>'+
       '<div class="sec">Homme '+items.length+' sammu · umbes '+mins+' min</div><div class="card list">'+items.map(t=>itemRow(Object.assign({done:false},t),true)).join("")+'</div>';
   }
   const act=active(),d=doneN(),pct=act.length?d/act.length*100:0;
@@ -508,7 +508,7 @@ function viewParent(){
     '<label class="tog"><input type="checkbox" id="rwOn" data-rw="on"'+(r.on?" checked":"")+'> Preemia on sees</label>'+
     (r.on?'<div class="two"><div class="field"><label for="rwName">Mis on preemia?</label><input id="rwName" type="text" maxlength="30" value="'+esc(r.name)+'" data-rw="name" placeholder="nt Ekraaniaeg"></div>'+
     '<div class="field"><label for="rwUnit">Ühik</label><input id="rwUnit" type="text" maxlength="12" value="'+esc(r.unit)+'" data-rw="unit" placeholder="nt minutit"></div></div>'+
-    '<div class="two"><div class="field"><label for="rwPer">Mille eest?</label><select id="rwPer" data-rw="per"><option value="step"'+(r.per==="step"?" selected":"")+'>iga tehtud samm</option><option value="day"'+(r.per==="day"?" selected":"")+'>terve päev tehtud</option></select></div>'+
+    '<div class="two"><div class="field"><label for="rwPer">Mille eest?</label><select id="rwPer" data-rw="per"><option value="step"'+(r.per==="step"?" selected":"")+'>iga tehtud samm</option><option value="day"'+(r.per==="day"?" selected":"")+'>terve päev tehtud samal päeval</option></select></div>'+
     '<div class="field"><label for="rwAmt">Kui palju ('+u+')</label><input id="rwAmt" type="number" min="0" max="1000" value="'+r.amount+'" data-rw="amount"></div></div>'+
     '<div class="two"><div class="field"><label for="rwGoal">Eesmärk (0 = pole)</label><input id="rwGoal" type="number" min="0" max="10000" value="'+r.goal+'" data-rw="goal"></div>'+
     '<div class="field"><label for="rwBonus">Terve nädala boonus</label><input id="rwBonus" type="number" min="0" max="1000" value="'+r.bonus+'" data-rw="bonus"></div></div>'+
