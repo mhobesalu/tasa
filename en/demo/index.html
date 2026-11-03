@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="TASA: a study planner for children. Demo.">
+<meta name="theme-color" content="#2A8C8C">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCI+PHRpdGxlPlRBU0EgYXBwIGljb24sIHNxdWFyZTwvdGl0bGU+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMyQThDOEMiLz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMiAxNCkgc2NhbGUoMC42NjY3KSI+CjxjaXJjbGUgY3g9IjUwIiBjeT0iMzgiIHI9IjgiIGZpbGw9IiNGRkY3RTgiLz48cmVjdCB4PSI0MSIgeT0iNDYiIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiIgcng9IjgiIGZpbGw9IiNGRkY3RTgiLz4KPHBhdGggZD0iTTIyIDUyIEw0NiA3NCBMMTA0IDM0IiBmaWxsPSJub25lIiBzdHJva2U9IiNFRTZBNEQiIHN0cm9rZS13aWR0aD0iMTciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0NiA1MCkgcm90YXRlKDQ3LjcxKSIgZmlsbD0iI0ZGRjdFOCI+PHJlY3QgeD0iLTIiIHk9Ii0yLjYiIHdpZHRoPSI4IiBoZWlnaHQ9IjUuMiIgcng9IjIuNiIvPjxyZWN0IHg9IjAiIHk9Ii0xLjciIHdpZHRoPSIzNC4xIiBoZWlnaHQ9IjMuNCIgcng9IjEuMiIvPjxwYXRoIGQ9Ik0zMi4xIC0xLjcgQzM3LjcgLTUuMiA0OC44IC01LjYgNTUuNCAtMy44IFE1Ny4wIDAgNTUuNCAzLjggQzQ4LjggNS42IDM3LjcgNS4yIDMyLjEgMS43IFoiLz48L2c+CjxwYXRoIGQ9Ik0xNiA5MyBxNy44MyAtNSAxNS42NyAwIHQxNS42NyAwIHQxNS42NyAwIHQxNS42NyAwIHQxNS42NyAwIHQxNS42NyAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkY3RTgiIHN0cm9rZS13aWR0aD0iNi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L2c+PC9zdmc+Cg==">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>TASA demo app</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one phone-width column (the child's app), bottom tab bar, sheets slide up. Järv palette. */
+:root{
+  --lake:#2A8C8C; --lake-ink:#1D6B6B; --lake-soft:#DDEFEC;
+  --sun:#F7B32B; --sun-soft:#FDEFC9;
+  --boat:#EE6A4D; --boat-ink:#B4452C; --boat-soft:#FBE3DC;
+  --violet-ink:#5B4BB5; --violet-soft:#E9E5FB;
+  --ink:#1F2A44; --muted:#5B6478; --line:#E6E0D2;
+  --paper:#FFF7E8; --card:#FFFFFF; --track:#EDE6D6;
+  --on-lake:#FFFFFF; --toast:#1F2A44; --on-toast:#FFF7E8;
+  --shadow:0 1px 2px rgba(31,42,68,.06),0 6px 18px rgba(31,42,68,.06);
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:18px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --lake:#3FA7A5; --lake-ink:#7ED3CF; --lake-soft:#173B3D;
+  --sun:#F7B32B; --sun-soft:#3E3317;
+  --boat:#F07C61; --boat-ink:#FF9C83; --boat-soft:#43231D;
+  --violet-ink:#B9AEFF; --violet-soft:#2C2750;
+  --ink:#F4EEDF; --muted:#A9B0C2; --line:#2E3854;
+  --paper:#141B2E; --card:#1D2640; --track:#2B3552;
+  --on-lake:#0F1626; --toast:#F4EEDF; --on-toast:#141B2E;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --lake:#3FA7A5; --lake-ink:#7ED3CF; --lake-soft:#173B3D;
+  --sun:#F7B32B; --sun-soft:#3E3317;
+  --boat:#F07C61; --boat-ink:#FF9C83; --boat-soft:#43231D;
+  --violet-ink:#B9AEFF; --violet-soft:#2C2750;
+  --ink:#F4EEDF; --muted:#A9B0C2; --line:#2E3854;
+  --paper:#141B2E; --card:#1D2640; --track:#2B3552;
+  --on-lake:#0F1626; --toast:#F4EEDF; --on-toast:#141B2E;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.app{max-width:480px;margin:0 auto;min-height:100vh;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 120px}
+
+/* demo strip */
+.demo{display:flex;align-items:center;gap:10px;justify-content:space-between;margin:10px 0 4px;padding:8px 12px;border-radius:12px;background:var(--sun-soft);font-size:14px}
+.demo b{font-weight:700}
+.demo button{border:0;background:none;text-decoration:underline;font-size:14px;padding:4px;color:var(--ink)}
+
+.brand{display:flex;align-items:center;gap:8px;margin:12px 0 2px}
+.brand .lockup{height:40px;width:auto;display:block}
+.brand .word{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.06em;line-height:1}
+.brand .kid{margin-left:auto;font-size:14px;color:var(--muted)}
+
+.head{display:flex;align-items:center;gap:12px;margin-top:10px}
+.nav{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;font-size:20px;flex:none}
+.nav:disabled{opacity:.35;cursor:default}
+.head h1{font-family:var(--display);font-weight:800;font-size:40px;line-height:1;margin:6px 0 0;flex:1}
+.sub{color:var(--muted);margin:6px 0 14px;font-size:16px}
+
+.bar{height:12px;border-radius:99px;background:var(--track);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--lake);border-radius:99px;transition:width .5s cubic-bezier(.3,1.4,.5,1)}
+.barlbl{color:var(--muted);margin:8px 0 16px;font-size:16px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+
+/* reward */
+.rw-top{display:flex;align-items:center;gap:14px;padding:16px 18px;width:100%;background:none;border:0;text-align:left}
+.rw-big{font-family:var(--display);font-weight:800;font-size:34px;color:var(--lake-ink);line-height:1;white-space:nowrap}
+.rw-line{flex:1;min-width:0;font-size:16px;color:var(--muted)}
+.rw-line b{color:var(--ink)}
+.rw-caret{color:var(--muted);transition:transform .2s}
+.rw.open .rw-caret{transform:rotate(180deg)}
+.rw-body{border-top:1px solid var(--line);padding:14px 18px 16px;display:grid;gap:12px;font-size:16px}
+.rw:not(.open) .rw-body{display:none}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.row span:first-child{color:var(--muted)}
+.dots{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.dot{width:34px;height:34px;margin:0 auto;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:var(--on-lake);font-size:16px;font-weight:700}
+.dot.done{background:var(--lake);border-color:var(--lake)}
+.dot.cur{border-color:var(--lake);border-width:3px}
+.dot.done.cur{border-color:var(--lake)}
+.dl{font-size:13px;color:var(--muted);margin-top:3px}
+.rules{color:var(--muted);font-size:15px;margin:0}
+.rules b{color:var(--ink)}
+
+/* required strip */
+.req{display:flex;gap:10px;align-items:center;margin-top:14px;padding:10px 14px;border-radius:14px;border:1px dashed var(--violet-ink);color:var(--ink);font-size:15px}
+.req .pill{flex:none}
+
+/* now card */
+.now{margin-top:18px;border:2px solid var(--lake);border-radius:var(--r);background:var(--card);padding:20px;box-shadow:var(--shadow)}
+.eyebrow{font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--lake-ink)}
+.now h2{font-family:var(--display);font-weight:700;font-size:28px;line-height:1.15;margin:8px 0 10px;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;color:var(--muted);font-size:15px}
+.pill{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:99px}
+.p-due{background:var(--boat-soft);color:var(--boat-ink)}
+.p-fix{background:var(--boat-soft);color:var(--boat-ink)}
+.p-test{background:var(--violet-soft);color:var(--violet-ink)}
+.p-req{background:var(--violet-soft);color:var(--violet-ink)}
+.p-book{background:var(--lake-soft);color:var(--lake-ink)}
+.p-proj{background:var(--sun-soft);color:var(--ink)}
+.p-old{background:var(--sun-soft);color:var(--ink)}
+.p-exc{background:var(--track);color:var(--muted)}
+.note{margin:12px 0 16px;font-size:16px}
+.btn{border:0;border-radius:14px;padding:13px 22px;font-weight:700;font-size:18px;background:var(--lake);color:var(--on-lake);display:inline-flex;align-items:center;gap:8px;transition:transform .1s}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn.small{font-size:15px;padding:9px 14px;border-radius:12px}
+.timer{margin-left:8px;font-size:15px;color:var(--muted);background:none;border:0;text-decoration:underline;padding:6px}
+
+.alldone{margin-top:18px;padding:22px 20px;border-radius:var(--r);background:var(--lake);color:var(--on-lake);text-align:center}
+.alldone h2{font-family:var(--display);font-size:30px;margin:0 0 4px;line-height:1.1}
+.alldone p{margin:0}
+
+.sec{font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:26px 2px 10px}
+.list{overflow:hidden}
+.item{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.chk{flex:none;width:34px;height:34px;border-radius:10px;border:2px solid var(--line);background:var(--card);display:grid;place-items:center;color:var(--on-lake);padding:0}
+.chk svg{width:20px;height:20px;opacity:0}
+.item.done .chk{background:var(--lake);border-color:var(--lake)}
+.item.done .chk svg{opacity:1}
+.item.done .chk.pop{animation:pop .35s}
+@keyframes pop{50%{transform:scale(1.25)}}
+.it{min-width:0;flex:1}
+.it .t{font-weight:700;font-size:17px}
+.item.done .t{text-decoration:line-through;color:var(--muted)}
+.item.exc .t{text-decoration:line-through;color:var(--muted)}
+.it .meta{margin-top:3px}
+.ro .chk{cursor:default}
+
+.preview{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--lake-soft);font-size:15px}
+
+/* week */
+.wk{display:grid;gap:10px}
+.wday{padding:14px 16px}
+.wday h3{font-family:var(--display);font-size:20px;margin:0;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.wday h3 small{font-family:var(--body);font-size:14px;font-weight:400;color:var(--muted)}
+.wday.today{border:2px solid var(--lake)}
+.wday ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px;font-size:15px}
+.wday li{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.wday li .m{color:var(--muted)}
+.flow{padding:16px;display:grid;gap:10px;font-size:15px}
+.flow ol{margin:0;padding-left:20px;display:grid;gap:6px}
+
+/* parent */
+.lock{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--violet-soft);color:var(--ink);font-size:15px;margin-top:10px}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.seg button{border:2px solid var(--line);background:var(--card);border-radius:14px;padding:10px 12px;text-align:left;font-size:15px}
+.seg button b{display:block;font-size:16px}
+.seg button span{color:var(--muted);font-size:13px}
+.seg button[aria-pressed="true"]{border-color:var(--lake);background:var(--lake-soft)}
+.pcard{padding:16px;display:grid;gap:12px}
+.field{display:grid;gap:4px;font-size:15px}
+.field label{color:var(--muted)}
+.field input,.field select{font:inherit;font-size:17px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
+.prow:first-child{border-top:0}
+.prow .it{min-width:0}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{padding:14px}
+.stat b{display:block;font-family:var(--display);font-size:30px;line-height:1.1;color:var(--lake-ink);font-variant-numeric:tabular-nums}
+.stat span{font-size:14px;color:var(--muted)}
+.hist{font-size:14px;color:var(--muted);margin:0}
+.facts{margin:0;padding-left:20px;display:grid;gap:6px;font-size:15px}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{width:44px;height:44px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-weight:700;font-size:17px}
+.chips button[aria-pressed="true"]{background:var(--boat-soft);border-color:var(--boat);color:var(--boat-ink)}
+.testimg{display:block;width:100%;max-width:240px;border-radius:10px;border:1px solid var(--line)}
+.linkbtn{border:0;background:none;text-decoration:underline;color:var(--lake-ink);padding:4px 2px;font-size:15px}
+.tog{display:flex;gap:10px;align-items:center;font-weight:700}
+.tog input{width:22px;height:22px;accent-color:var(--lake)}
+.pin{max-width:340px}
+.pin input{letter-spacing:.5em;font-size:26px;text-align:center}
+.btn:disabled{opacity:.45;cursor:default}
+.head .btn{margin-top:6px}
+.rw-top{flex-wrap:wrap}
+/* tabbar */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+.tabs nav{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.tabs a{display:grid;justify-items:center;gap:2px;padding:10px 4px 12px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:700}
+.tabs a svg{width:24px;height:24px}
+.tabs a[aria-current="page"]{color:var(--lake-ink)}
+
+/* toast + fx */
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;z-index:40;background:var(--toast);color:var(--on-toast);padding:12px 22px;border-radius:99px;font-weight:700;font-size:17px;width:max-content;max-width:calc(100% - 32px);text-align:center;transition:.3s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+.star{position:fixed;left:50%;top:40%;z-index:31;font-size:120px;line-height:1;pointer-events:none;transform:translate(-50%,-50%) scale(0);animation:star 1.3s ease-out forwards}
+@keyframes star{20%{transform:translate(-50%,-50%) scale(1.2) rotate(-10deg)}40%{transform:translate(-50%,-50%) scale(1) rotate(6deg)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%) scale(.9)}}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(15,20,35,.45);z-index:50;display:grid;align-items:end}
+.sheet{background:var(--card);max-width:480px;width:100%;margin:0 auto;border-radius:22px 22px 0 0;padding:22px max(20px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto}
+.sheet h2{font-family:var(--display);font-size:26px;margin:0 0 8px;line-height:1.15}
+.sheet p{margin:0 0 10px}
+.sheet .facts{margin-bottom:16px}
+.tmr{text-align:center}
+.tmr .big{font-family:var(--display);font-size:72px;font-weight:800;color:var(--lake-ink);font-variant-numeric:tabular-nums;line-height:1;margin:10px 0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="tick" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div class="app">
+  <div class="demo"><span><b>Demo.</b> All names and tasks are made up. <a href="../../demo/" hreflang="et" lang="et" style="color:inherit">Eesti keeles</a></span><button id="aboutBtn" type="button">What is this?</button></div>
+  <div class="brand"><svg class="lockup" role="img" aria-label="TASA" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 110"><g transform="translate(0 0) scale(1)">
+<circle cx="50" cy="38" r="8" style="fill:var(--ink)"/><rect x="41" y="46" width="18" height="22" rx="8" style="fill:var(--ink)"/>
+<path d="M22 52 L46 74 L104 34" fill="none" style="stroke:var(--boat)" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<g transform="translate(46 50) rotate(47.71)" style="fill:var(--ink)"><rect x="-2" y="-2.6" width="8" height="5.2" rx="2.6"/><rect x="0" y="-1.7" width="34.1" height="3.4" rx="1.2"/><path d="M32.1 -1.7 C37.7 -5.2 48.8 -5.6 55.4 -3.8 Q57.0 0 55.4 3.8 C48.8 5.6 37.7 5.2 32.1 1.7 Z"/></g>
+<path d="M16 93 q7.95 -5 15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0 t15.89 0" fill="none" style="stroke:var(--lake)" stroke-width="6.5" stroke-linecap="round"/></g><g style="fill:var(--ink)"><path transform="translate(140.00 80.00) scale(0.07400 -0.07400)" d="M185 466V606H518Q525 595 530.5 577.0Q536 559 536 538Q536 501 519.5 483.5Q503 466 475 466ZM369 606V466H36Q29 477 23.5 495.0Q18 513 18 534Q18 572 34.5 589.0Q51 606 79 606ZM187 493H362V1Q351 -2 328.0 -5.0Q305 -8 281 -8Q229 -8 208.0 10.5Q187 29 187 75Z"/><path transform="translate(183.14 80.00) scale(0.07400 -0.07400)" d="M320 459H314Q305 431 294.0 398.0Q283 365 271.0 328.5Q259 292 248 253L226 140Q220 120 215.5 101.0Q211 82 206.5 65.0Q202 48 198.0 32.0Q194 16 190 1Q177 -3 161.0 -7.0Q145 -11 123 -11Q73 -11 48.0 6.5Q23 24 23 55Q23 69 27.0 83.0Q31 97 36 116Q44 148 60.0 198.5Q76 249 95.5 307.5Q115 366 134.5 422.0Q154 478 170.0 522.5Q186 567 194 588Q211 598 246.0 607.0Q281 616 315 616Q365 616 404.0 601.5Q443 587 453 555Q471 504 491.5 435.5Q512 367 533.5 292.5Q555 218 575.0 147.5Q595 77 610 21Q598 8 574.0 -1.0Q550 -10 517 -10Q468 -10 449.0 6.5Q430 23 421 57L396 153L376 256Q366 295 356.0 331.0Q346 367 337.0 399.5Q328 432 320 459ZM151 126 220 261H440L461 126Z"/><path transform="translate(231.54 80.00) scale(0.07400 -0.07400)" d="M251 124Q300 124 320.0 140.0Q340 156 340 176Q340 196 324.0 207.5Q308 219 279 229L237 243Q179 263 134.5 285.5Q90 308 65.0 344.0Q40 380 40 438Q40 523 105.5 574.0Q171 625 289 625Q347 625 392.0 614.0Q437 603 463.0 580.5Q489 558 489 523Q489 498 477.0 479.0Q465 460 448 447Q426 461 389.0 471.5Q352 482 308 482Q263 482 242.0 469.5Q221 457 221 438Q221 423 234.5 413.5Q248 404 273 396L326 379Q421 349 471.0 301.5Q521 254 521 174Q521 89 453.5 35.5Q386 -18 257 -18Q196 -18 147.0 -5.0Q98 8 69.0 34.0Q40 60 40 97Q40 126 57.0 146.5Q74 167 94 178Q122 156 162.5 140.0Q203 124 251 124Z"/><path transform="translate(274.32 80.00) scale(0.07400 -0.07400)" d="M320 459H314Q305 431 294.0 398.0Q283 365 271.0 328.5Q259 292 248 253L226 140Q220 120 215.5 101.0Q211 82 206.5 65.0Q202 48 198.0 32.0Q194 16 190 1Q177 -3 161.0 -7.0Q145 -11 123 -11Q73 -11 48.0 6.5Q23 24 23 55Q23 69 27.0 83.0Q31 97 36 116Q44 148 60.0 198.5Q76 249 95.5 307.5Q115 366 134.5 422.0Q154 478 170.0 522.5Q186 567 194 588Q211 598 246.0 607.0Q281 616 315 616Q365 616 404.0 601.5Q443 587 453 555Q471 504 491.5 435.5Q512 367 533.5 292.5Q555 218 575.0 147.5Q595 77 610 21Q598 8 574.0 -1.0Q550 -10 517 -10Q468 -10 449.0 6.5Q430 23 421 57L396 153L376 256Q366 295 356.0 331.0Q346 367 337.0 399.5Q328 432 320 459ZM151 126 220 261H440L461 126Z"/></g></svg><span class="kid" id="kidName">Mia, grade 7</span></div>
+  <main id="view"></main>
+</div>
+
+<div class="tabs"><nav aria-label="Views">
+  <a href="#tana" data-tab="tana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>Today</a>
+  <a href="#nadal" data-tab="nadal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Week</a>
+  <a href="#vanem" data-tab="vanem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="10" r="2.4"/><path d="M15.5 14.6c2.6-.3 4.5 1.4 5 4.4"/></svg>Parent</a>
+</nav></div>
+
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="sheetHost"></div>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const TICK='<svg aria-hidden="true"><use href="#tick"/></svg>';
+
+const WEEK=["M","T","W","T","F","S","S"];
+const DAYNAMES=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const TAGS={due:["Due today","p-due"],fix:["To fix: grade 2","p-fix"],test:["Test","p-test"],req:["Required","p-req"],book:["Book","p-book"],proj:["Project","p-proj"],retake:["Retake","p-fix"],own:["Added by parent","p-proj"],dl:["Deadline","p-due"],old:["From yesterday","p-old"]};
+
+/* ---------- fake sample data (week of 2–8 Nov) ---------- */
+const MONDAY=[
+  {s:"Maths",t:"Maths: worksheet problems 1–3",m:25},
+  {s:"Chemistry",t:"Chemistry: revision for the retake 1/3",m:25,tag:"fix"},
+  {s:"Estonian",t:"Estonian: read pages 21–40",m:25,tag:"book"},
+  {s:"History",t:"History: essay 1/5, choose a topic",m:20,tag:"proj"},
+  {s:"English",t:"English: text on page 34",m:15}
+];
+const TODAY0=[
+  {id:"a",s:"Maths",t:"Maths: worksheet problems 4–7",m:25,tag:"due",n:"Half of the worksheet was done yesterday. Today, the other half."},
+  {id:"b",s:"Chemistry",t:"Chemistry: retake, revision 2/3",m:25,tag:"fix",n:"The test grade was 2, so TASA made a plan to fix it. The retake is on Thursday at 14:40. Today: problems 5–8 on the revision sheet."},
+  {id:"c",s:"Estonian",t:"Estonian: read pages 41–60",m:25,tag:"book",n:"“Kevade” is 180 pages and has to be read by 13 November. 20 pages a day, and you will get there calmly."},
+  {id:"d",s:"Physics",t:"Physics: revision for the test 1/4",m:25,tag:"test",n:"The test is next Monday. Today: read through your notes on “Pressure” and do 3 example problems."},
+  {id:"e",s:"English",t:"English: words 1–15",m:15,n:"Learn the words with flashcards. Say each word out loud."}
+];
+const REQ_TODAY={t:"Maths consultation",when:"today 15:00–15:45, room 204"};
+const WEEKPLAN=[
+  null,null,
+  [{t:"Chemistry: revision 3/3",m:25,tag:"fix"},{t:"Physics: revision 2/4",m:25,tag:"test"},{t:"Estonian: read pages 61–80",m:25,tag:"book"},{t:"History: essay 2/5, find 3 sources",m:25,tag:"proj"}],
+  [{t:"Chemistry retake at 14:40",m:0,tag:"req"},{t:"Physics: revision 3/4",m:25,tag:"test"},{t:"Estonian: read pages 81–100",m:25,tag:"book"},{t:"English: words 16–30",m:15}],
+  [{t:"Maths: new worksheet 1–4",m:25},{t:"History: essay 3/5, write a draft",m:25,tag:"proj"},{t:"Estonian: read pages 101–120",m:25,tag:"book"}],
+  [{t:"Physics: revision 4/4, practice test",m:25,tag:"test"},{t:"Estonian: read pages 121–140",m:25,tag:"book"}],
+  [{t:"History: essay 4/5, improve the draft",m:20,tag:"proj"}]
+];
+
+const LINES=["Boom! 🎉","Well done!","One step done!","You rowed a little further.","That's how it's done!","Look how well it's going!","Great, next one!"];
+
+/* ---------- state ---------- */
+let S;
+function fresh(){return{
+  tasks:TODAY0.map(x=>Object.assign({done:false,exc:false},x)),
+  open:true, day:1, unlocked:false,
+  rw:{on:true,name:"Pocket money",unit:"euros",per:"day",amount:3,goal:0,bonus:10},
+  paid:0, hist:[], kid:"Mia",
+  test:null, extra:{}, manual:[], mseq:0
+};}
+S=fresh();
+const PRESETS={
+  ekraan:{on:true,name:"Screen time",unit:"minutes",per:"step",amount:10,goal:0,bonus:30},
+  raha:{on:true,name:"Pocket money",unit:"euros",per:"day",amount:3,goal:0,bonus:10},
+  ps4:{on:true,name:"PS4",unit:"stars",per:"step",amount:1,goal:100,bonus:0}
+};
+
+/* ---------- derived ---------- */
+const active=()=>S.tasks.filter(t=>!t.exc);
+const doneN=()=>active().filter(t=>t.done).length;
+const todayFull=()=>active().length>0&&active().every(t=>t.done);
+const leftMin=()=>active().filter(t=>!t.done).reduce((a,t)=>a+t.m,0);
+const stepsWeek=()=>MONDAY.length+doneN();
+const fullDays=()=>1+(todayFull()?1:0);
+const U=()=>S.rw.unit.trim();
+const amt=n=>n+" "+U();
+function earnedTotal(){const r=S.rw;return r.per==="step"?stepsWeek()*r.amount:fullDays()*r.amount;}
+function earnedToday(){const r=S.rw;return r.per==="step"?doneN()*r.amount:(todayFull()?r.amount:0);}
+const balance=()=>earnedTotal()-S.paid;
+function dayItems(i){return(WEEKPLAN[i]||[]).concat(S.extra[i]||[]);}
+
+/* ---------- routing ---------- */
+const VIEWS=["tana","nadal","vanem"];
+function route(){const h=location.hash.slice(1);return VIEWS.includes(h)?h:"tana";}
+function render(){
+  const v=route();
+  document.querySelectorAll(".tabs a").forEach(a=>{if(a.dataset.tab===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
+  $("#kidName").textContent=S.kid+", grade 7";
+  $("#view").innerHTML=v==="tana"?viewToday():v==="nadal"?viewWeek():viewParent();
+}
+window.addEventListener("hashchange",()=>{if(route()!=="vanem")S.unlocked=false;render();window.scrollTo(0,0);});
+
+/* ---------- reward card ---------- */
+function rewardCard(){
+  const r=S.rw; if(!r.on)return"";
+  const left=active().length-doneN(),bal=balance(),u=esc(U()),nm=esc(r.name);
+  let big,line;
+  if(r.goal>0){
+    const need=Math.max(0,r.goal-bal);
+    big=Math.min(bal,r.goal)+" / "+r.goal+" "+u;
+    line=need?"<b>"+need+" "+u+"</b> more and <b>"+nm+"</b> is yours":"<b>"+nm+"</b> is yours! 🎉";
+  }else{
+    big=bal+" "+u;
+    line=r.per==="step"?"Every tick = <b>+"+r.amount+" "+u+"</b>":(todayFull()?"Today's <b>+"+r.amount+" "+u+"</b> is yours!":"<b>"+left+"</b> more and today <b>+"+r.amount+" "+u+"</b>");
+  }
+  const rightTop=r.bonus>0?"full week → <b>+"+r.bonus+" "+u+"</b>":(r.goal>0?"goal: "+r.goal+" "+u:"");
+  const rules=(r.per==="step"?"Each finished step":"All of the day's tasks finished that same day")+" → <b>+"+r.amount+" "+u+"</b>."+
+    (r.goal>0?" "+r.goal+" "+u+" → <b>"+nm+"</b>.":"")+
+    (r.bonus>0?" Every day (Mon–Sun) finished on the day → <b>+"+r.bonus+" "+u+"</b> bonus.":"")+" The parent sets the rules.";
+  const dots=WEEK.map((d,i)=>{const done=i===0||(i===1&&todayFull());return'<div><div class="dot'+(done?" done":"")+(i===1?" cur":"")+'">'+(done?"✓":"")+'</div><div class="dl">'+d+'</div></div>';}).join("");
+  return'<section class="card rw'+(S.open?" open":"")+'" style="margin-top:4px">'+
+    '<button class="rw-top" type="button" data-act="toggleRw" aria-expanded="'+S.open+'"><span class="rw-big">'+big+'</span><span class="rw-line">'+line+'</span><span class="rw-caret" aria-hidden="true">▾</span></button>'+
+    '<div class="rw-body"><div class="row"><span>This week</span><span>'+rightTop+'</span></div><div class="dots" aria-label="Days of the week">'+dots+'</div>'+
+    '<div class="row"><span>'+nm+', earned today</span><span>'+earnedToday()+" "+u+'</span></div><p class="rules">'+rules+'</p></div></section>';
+}
+
+/* ---------- views ---------- */
+function meta(t){
+  let h=esc(t.s)+(t.m?" · "+t.m+" min":"");
+  if(t.exc)h+=' <span class="pill p-exc">Excused: ill</span>';
+  else if(t.tag)h+=' <span class="pill '+TAGS[t.tag][1]+'">'+TAGS[t.tag][0]+'</span>';
+  return h;
+}
+function itemRow(t,ro){
+  return'<div class="item'+(t.done?" done":"")+(t.exc?" exc":"")+(ro?" ro":"")+'">'+
+    (ro?'<span class="chk" aria-hidden="true">'+TICK+'</span>':'<button class="chk" type="button" data-act="tick" data-id="'+t.id+'" aria-label="'+(t.done?"Remove tick: ":"Mark as done: ")+esc(t.t)+'"'+(t.exc?" disabled":"")+'>'+TICK+'</button>')+
+    '<div class="it"><div class="t">'+esc(t.t)+'</div><div class="meta">'+meta(t)+'</div></div></div>';
+}
+function dayHeader(title,sub,prevOk,nextOk){
+  return'<div class="head"><button class="nav" type="button" data-act="prev" aria-label="Previous day"'+(prevOk?"":" disabled")+'>‹</button><h1>'+title+'</h1><button class="nav" type="button" data-act="next" aria-label="Next day"'+(nextOk?"":" disabled")+'>›</button></div><p class="sub">'+sub+'</p>';
+}
+function viewToday(){
+  if(S.day===0){
+    return dayHeader("Yesterday","Monday, 2 November",false,true)+
+      '<div class="bar"><i style="width:100%"></i></div><p class="barlbl">5 / 5 done · whole day finished ✓</p>'+
+      '<div class="sec">Yesterday\'s steps</div><div class="card list">'+MONDAY.map(t=>itemRow(Object.assign({done:true},t,{s:t.s}),true)).join("")+'</div>';
+  }
+  if(S.day===2){
+    const carry=S.tasks.filter(t=>!t.done&&!t.exc).map(t=>({s:t.s,t:t.t,m:t.m,tag:"old"}));
+    const items=carry.concat(dayItems(2).map(x=>Object.assign({s:x.t.split(":")[0]},x)));
+    const mins=items.reduce((a,t)=>a+t.m,0);
+    return dayHeader("Tomorrow","Wednesday, 4 November · School 8:15–13:40",true,false)+
+      '<p class="preview">This is tomorrow\'s plan. Tomorrow you will again see only that day. '+(carry.length?"Steps left unfinished today go to the top of tomorrow's list."+(S.rw.on&&S.rw.per==="day"?" They no longer earn today's daily reward, because that only comes for a day finished on the same day.":""):"Everything is done today, so nothing carries over to tomorrow.")+'</p>'+
+      '<div class="sec">Tomorrow: '+items.length+' steps · about '+mins+' min</div><div class="card list">'+items.map(t=>itemRow(Object.assign({done:false},t),true)).join("")+'</div>';
+  }
+  const act=active(),d=doneN(),pct=act.length?d/act.length*100:0;
+  const next=S.tasks.find(t=>!t.done&&!t.exc);
+  let h=dayHeader("Today","Tuesday, 3 November · School 8:15–14:30",true,true)+
+    '<div class="bar" role="progressbar" aria-valuenow="'+d+'" aria-valuemin="0" aria-valuemax="'+act.length+'"><i style="width:'+pct+'%"></i></div>'+
+    '<p class="barlbl">'+d+' / '+act.length+' done'+(leftMin()?" · about "+leftMin()+" min left":" · all done!")+'</p>'+
+    rewardCard()+
+    '<div class="req"><span class="pill p-req">Required</span><span><b>'+REQ_TODAY.t+'</b>, '+REQ_TODAY.when+'</span></div>';
+  if(next){
+    h+='<section class="now" aria-labelledby="nowT"><div class="eyebrow">Do this now</div><h2 id="nowT">'+esc(next.t)+'</h2><div class="meta">'+meta(next)+'</div><p class="note">'+esc(next.n||"")+'</p>'+
+      '<button class="btn" type="button" data-act="tick" data-id="'+next.id+'">Done '+'<svg width="20" height="20" aria-hidden="true"><use href="#tick"/></svg></button>'+
+      '<button class="timer" type="button" data-act="timer" data-id="'+next.id+'">Start a '+next.m+' min timer</button></section>';
+  }else{
+    h+='<section class="alldone"><h2>The day is done! 🎉</h2><p>'+doneMsg()+'</p></section>';
+  }
+  const rest=S.tasks.filter(t=>t!==next);
+  h+='<div class="sec">'+(next?"Rest of today":"Today's steps")+'</div><div class="card list">'+rest.map(t=>itemRow(t,false)).join("")+'</div>';
+  return h;
+}
+function doneMsg(){
+  const r=S.rw;
+  if(!r.on)return"All steps are done. Now have a rest.";
+  return esc(r.per==="day"?"+"+amt(r.amount)+" is yours. Now have a rest.":"Today you earned "+amt(earnedToday())+".");
+}
+function viewWeek(){
+  const rows=WEEK.map((d,i)=>{
+    let items,state;
+    if(i===0){items=MONDAY;state="5 / 5 done ✓";}
+    else if(i===1){items=S.tasks;state=doneN()+" / "+active().length+" done";}
+    else{items=dayItems(i);state=(n=>n+(n===1?" step":" steps"))(items.filter(t=>t.m).length);}
+    return'<section class="card wday'+(i===1?" today":"")+'"><h3>'+DAYNAMES[i]+' '+(i+2)+' Nov'+(i===1?" · today":"")+'<small>'+state+'</small></h3><ul>'+weekLis(items,i<1)+'</ul></section>';
+  }).join("");
+  const nextMon=[{t:"Physics test",m:0,tag:"test"}].concat(S.extra[7]||[]);
+  return'<div class="head"><h1>Week</h1></div><p class="sub">2–8 November. The child usually sees only today. This view is an overview.</p>'+
+    '<section class="card flow"><b>How TASA makes the plan</b><ol>'+
+    '<li>Homework, deadlines and tests come from the e-diary (eKool or Stuudium), with the school\'s permission.</li>'+
+    '<li>Big work is split into steps of about 25 minutes, nearest deadline first.</li>'+
+    '<li>Test revision starts up to 7 days before. If a test went badly, the parent can add the marked test, and the problems that went wrong are spread over 2–3 days.</li>'+
+    '<li>TASA only uses material from the school or the parent. It never writes or solves problems itself.</li>'+
+    '<li>If a teacher gives a task only in class, the parent can add it, and TASA splits it into steps too.</li>'+
+    '<li>Unfinished steps go to the top of the next day\'s list.</li></ol></section>'+
+    '<div class="sec">This week</div><div class="wk">'+rows+'</div>'+
+    '<section class="card wday" style="margin-top:10px"><h3>Monday 9 Nov<small>next week</small></h3><ul>'+weekLis(nextMon,false)+'<li><span class="m">Physics revision is split into 4 steps: Tue, Wed, Thu and Sat.</span></li></ul></section>';
+}
+function weekLis(items,allDone){
+  return items.map(t=>'<li><span>'+((allDone||t.done)?"✓ ":"")+esc(t.t)+'</span>'+(t.m?'<span class="m">'+t.m+' min</span>':'')+(t.tag?' <span class="pill '+TAGS[t.tag][1]+'">'+TAGS[t.tag][0]+'</span>':'')+'</li>').join("");
+}
+
+/* ---------- parent ---------- */
+function pinView(){
+  return'<div class="head"><h1>Parent</h1></div><p class="sub">This view is only for the parent. The child doesn\'t see it.</p>'+
+  '<section class="card pcard pin"><div class="field"><label for="pin">Parent PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••"></div>'+
+  '<button class="btn" type="button" data-act="unlock">Open</button><p class="hist" style="margin:0">In the demo, any 4 digits work.</p></section>';
+}
+const SAMPLE_WRONG=[1,3,4,6,7];
+function testSvg(){
+  const rows=[1,2,3,4,5,6,7,8].map(n=>{const y=78+n*26,bad=SAMPLE_WRONG.includes(n);
+    return'<text x="18" y="'+y+'" font-size="13" fill="#2b2b2b">'+n+'.</text><path d="M38 '+(y-4)+' q20 -6 40 0 t40 0 t40 0" stroke="#555" fill="none" stroke-width="1.2"/>'+
+      (bad?'<path d="M180 '+(y-12)+'l12 12M192 '+(y-12)+'l-12 12" stroke="#d23" stroke-width="2.6" stroke-linecap="round"/>':'<path d="M178 '+(y-5)+'l5 5 10-11" stroke="#d23" stroke-width="2.4" fill="none" stroke-linecap="round"/>');}).join("");
+  return'<svg class="testimg" viewBox="0 0 230 310" role="img" aria-label="Sample photo of a marked test"><rect width="230" height="310" fill="#fbfaf6"/>'+
+   '<text x="18" y="30" font-size="12.5" font-weight="700" fill="#2b2b2b">Maths test</text><text x="18" y="50" font-size="12" fill="#555">Name: Mia · 7b</text>'+
+   '<circle cx="207" cy="40" r="15" fill="none" stroke="#d23" stroke-width="2.5"/><text x="201" y="48" font-size="22" fill="#d23" font-weight="700">2</text>'+rows+'</svg>';
+}
+function numList(ns){return ns.length===1?"problem "+ns[0]:"problems "+ns.slice(0,-1).join(", ")+" and "+ns[ns.length-1];}
+function retakePlan(){
+  const t=S.test,w=t.wrong.slice().sort((a,b)=>a-b),n=w.length;
+  if(!n)return[];
+  const want=Math.min(3,Math.max(1,Math.ceil(n/2)));
+  const ds=[];for(let d=Math.max(1,t.when-want);d<t.when;d++)ds.push(d);
+  const per=Math.ceil(n/ds.length);
+  return ds.map((d,i)=>({day:d,nums:w.slice(i*per,(i+1)*per)})).filter(c=>c.nums.length);
+}
+const DAYLBL=["Mon 2 Nov","today","Wed 4 Nov","Thu 5 Nov","Fri 6 Nov","Sat 7 Nov","Sun 8 Nov","Mon 9 Nov"];
+function testCard(){
+  const t=S.test;
+  if(!t)return'<section class="card pcard"><p style="margin:0">Did a test go badly? Take a photo of the marked test. TASA only reads <b>which problems were wrong</b> and spreads them over 2–3 days before the retake.</p>'+
+    '<p class="hist" style="margin:0">TASA does not solve, explain or write new problems. The child practises with their own test and the school\'s material.</p>'+
+    '<div class="two"><div class="field"><label for="tSubj">Subject</label><select id="tSubj"><option>Maths</option><option>Physics</option><option>Chemistry</option></select></div>'+
+    '<div class="field"><label for="tWhen">Retake</label><select id="tWhen"><option value="4">Friday 6 Nov</option><option value="7">Monday 9 Nov</option></select></div></div>'+
+    '<button class="btn small" type="button" data-act="photo" style="justify-self:start">Photograph the test (demo)</button></section>';
+  if(t.stage==="read")return'<section class="card pcard test">'+testSvg()+'<p class="hist" style="margin:0" role="status">Reading which problems are marked wrong…</p></section>';
+  if(t.stage==="check")return'<section class="card pcard test">'+testSvg()+
+    '<p style="margin:0">TASA found <b>'+t.wrong.length+(t.wrong.length===1?' wrong problem':' wrong problems')+'</b>. Check them and correct if needed.</p>'+
+    '<div class="chips" role="group" aria-label="Problems that went wrong">'+[1,2,3,4,5,6,7,8].map(n=>'<button type="button" data-act="chip" data-n="'+n+'" aria-pressed="'+t.wrong.includes(n)+'">'+n+'</button>').join("")+'</div>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn small" type="button" data-act="makeplan"'+(t.wrong.length?"":" disabled")+'>Make a plan</button><button class="btn small ghost" type="button" data-act="cancelTest">Cancel</button></div>'+
+    '<p class="hist" style="margin:0">In the real app, the photo is deleted right after reading. Only the problem numbers are kept.</p></section>';
+  const plan=retakePlan();
+  return'<section class="card pcard"><p style="margin:0"><b>'+esc(t.subj)+' retake plan</b> · retake '+DAYLBL[t.when]+'</p><ul class="facts">'+
+    plan.map(c=>'<li><b>'+DAYLBL[c.day]+':</b> practise '+numList(c.nums)+' (25 min)</li>').join("")+'</ul>'+
+    '<p class="hist" style="margin:0">The child sees only the steps, not the photo or the grade. Have a look at “Today” or “Week”.</p>'+
+    '<button class="btn small ghost" type="button" data-act="cancelTest" style="justify-self:start">Remove plan</button></section>';
+}
+const DL_OPTS=[[2,"Wednesday 4 Nov"],[3,"Thursday 5 Nov"],[4,"Friday 6 Nov"],[5,"Saturday 7 Nov"],[6,"Sunday 8 Nov"],[7,"Monday 9 Nov"]];
+function manualCard(){
+  const list=S.manual.map(m=>'<div class="prow"><div class="it"><div>'+esc(m.subj)+': '+esc(m.title)+'</div><div class="hist">'+m.n+(m.n===1?" step":" steps")+' · due '+DAYLBL[m.dl]+'</div></div><button class="btn small ghost" type="button" data-act="delManual" data-id="'+m.id+'">Remove</button></div>').join("");
+  return'<section class="card pcard"><p style="margin:0">Some teachers give a task only in class and don\'t put it in the e-diary. Add it here and TASA splits it into steps before the deadline, like all other work.</p>'+
+    '<div class="two"><div class="field"><label for="mSubj">Subject</label><input id="mSubj" type="text" maxlength="30" value="Film studies"></div>'+
+    '<div class="field"><label for="mDl">Deadline</label><select id="mDl">'+DL_OPTS.map(o=>'<option value="'+o[0]+'"'+(o[0]===4?" selected":"")+'>'+o[1]+'</option>').join("")+'</select></div></div>'+
+    '<div class="field"><label for="mTitle">What needs to be done?</label><input id="mTitle" type="text" maxlength="60" value="Short film script, 1 page"></div>'+
+    '<div class="field"><label for="mMin">About how long will it take?</label><select id="mMin"><option value="25">25 min (1 step)</option><option value="50">50 min (2 steps)</option><option value="75" selected>75 min (3 steps)</option><option value="100">100 min (4 steps)</option></select></div>'+
+    '<button class="btn small" type="button" data-act="addManual" style="justify-self:start">Add to plan</button>'+list+'</section>';
+}
+function addManual(){
+  const subj=$("#mSubj").value.trim()||"Other",title=$("#mTitle").value.trim();
+  if(!title){toast("Write what needs to be done.");return;}
+  const dl=+$("#mDl").value,n=(+$("#mMin").value)/25,id="m"+(++S.mseq),days=dl-1;
+  for(let i=0;i<n;i++){
+    const d=1+Math.floor(i*days/n);
+    const it={id:id+"_"+i,src:id,s:subj,t:subj+": "+title+(n>1?", step "+(i+1)+"/"+n:""),m:25,tag:"own",done:false,exc:false,
+      n:"The teacher gave this task in class and the parent added it to TASA. Due "+DAYLBL[dl]+"."};
+    if(d===1)S.tasks.push(it);else(S.extra[d]=S.extra[d]||[]).push(it);
+  }
+  (S.extra[dl]=S.extra[dl]||[]).push({src:id,s:subj,t:subj+": "+title+" is due",m:0,tag:"dl"});
+  S.manual.push({id,subj,title,dl,n});render();toast("Added: "+n+(n===1?" step":" steps")+" before the deadline.");
+}
+function delManual(id){S.tasks=S.tasks.filter(t=>t.src!==id);for(const k in S.extra)S.extra[k]=S.extra[k].filter(t=>t.src!==id);S.manual=S.manual.filter(m=>m.id!==id);render();}
+function viewParent(){
+  if(!S.unlocked)return pinView();
+  const r=S.rw,u=esc(U());
+  const doneMin=MONDAY.reduce((a,t)=>a+t.m,0)+active().filter(t=>t.done).reduce((a,t)=>a+t.m,0);
+  const pct=Math.round(stepsWeek()/(MONDAY.length+active().length)*100);
+  let pay="";
+  if(r.on){
+    const bal=balance(),reached=r.goal>0&&bal>=r.goal;
+    pay='<div class="row" style="align-items:center"><span>'+(r.goal>0?"Collected: <b>"+bal+" / "+r.goal+" "+u+"</b>":"Not yet given: <b>"+bal+" "+u+"</b>")+'</span>'+
+      (r.goal>0&&!reached?'<span class="hist">Still collecting</span>':'<button class="btn small" type="button" data-act="pay"'+(bal>0?"":" disabled")+'>'+(r.goal>0?"Reward given":"Mark as paid")+'</button>')+'</div>'+
+      (S.hist.length?'<p class="hist">'+S.hist.map(esc).join("<br>")+'</p>':'');
+  }
+  return'<div class="head"><h1>Parent</h1><button class="btn small ghost" type="button" data-act="lock">Lock</button></div><p class="sub">The child doesn\'t see this view. You see grades in the e-diary. TASA shows effort.</p>'+
+    '<div class="sec">This week</div><div class="stats">'+
+    '<div class="card stat"><b>'+pct+'%</b><span>of steps done</span></div>'+
+    '<div class="card stat"><b>'+doneMin+'</b><span>minutes studied</span></div>'+
+    '<div class="card stat"><b>2 / 2</b><span>days opened</span></div>'+
+    '<div class="card stat"><b>0</b><span>deadlines missed</span></div></div>'+
+    '<div class="sec">Reward</div><section class="card pcard">'+
+    '<label class="tog"><input type="checkbox" id="rwOn" data-rw="on"'+(r.on?" checked":"")+'> Reward is on</label>'+
+    (r.on?'<div class="two"><div class="field"><label for="rwName">What is the reward?</label><input id="rwName" type="text" maxlength="30" value="'+esc(r.name)+'" data-rw="name" placeholder="e.g. Screen time"></div>'+
+    '<div class="field"><label for="rwUnit">Unit</label><input id="rwUnit" type="text" maxlength="12" value="'+esc(r.unit)+'" data-rw="unit" placeholder="e.g. minutes"></div></div>'+
+    '<div class="two"><div class="field"><label for="rwPer">For what?</label><select id="rwPer" data-rw="per"><option value="step"'+(r.per==="step"?" selected":"")+'>each finished step</option><option value="day"'+(r.per==="day"?" selected":"")+'>whole day finished on the same day</option></select></div>'+
+    '<div class="field"><label for="rwAmt">How much ('+u+')</label><input id="rwAmt" type="number" min="0" max="1000" value="'+r.amount+'" data-rw="amount"></div></div>'+
+    '<div class="two"><div class="field"><label for="rwGoal">Goal (0 = none)</label><input id="rwGoal" type="number" min="0" max="10000" value="'+r.goal+'" data-rw="goal"></div>'+
+    '<div class="field"><label for="rwBonus">Full week bonus</label><input id="rwBonus" type="number" min="0" max="1000" value="'+r.bonus+'" data-rw="bonus"></div></div>'+
+    '<p class="hist" style="margin:0">Try: <button class="linkbtn" type="button" data-act="preset" data-p="ekraan">Screen time · minutes</button> <button class="linkbtn" type="button" data-act="preset" data-p="raha">Pocket money · euros</button> <button class="linkbtn" type="button" data-act="preset" data-p="ps4">PS4 · stars</button></p>'+pay
+    :'<p class="hist" style="margin:0">The child sees only progress and celebrations.</p>')+'</section>'+
+    '<div class="sec">Marked test</div>'+testCard()+
+    '<div class="sec">A task that isn\'t in the e-diary</div>'+manualCard()+
+    '<div class="sec">Today\'s tasks</div><section class="card pcard"><p class="hist" style="margin:0">If the child is ill, you can excuse a task. It then doesn\'t count towards the day\'s result.</p>'+
+    S.tasks.map(t=>'<div class="prow"><div class="it"><div>'+esc(t.t)+'</div><div class="hist">'+(t.exc?"Excused":t.done?"Done ✓":"Not done")+'</div></div><button class="btn small ghost" type="button" data-act="excuse" data-id="'+t.id+'">'+(t.exc?"Restore":"Excuse")+'</button></div>').join("")+'</section>'+
+    '<div class="sec">Data and privacy</div><section class="card pcard"><ul class="facts">'+
+    '<li>The parent owns the account and gives consent.</li>'+
+    '<li>We never ask for e-diary passwords. Data comes through the official interface, with the school\'s permission.</li>'+
+    '<li>By default, teachers see nothing.</li><li>No diagnoses are stored. Data is kept in the EU.</li>'+
+    '<li>The parent can download or delete all data.</li></ul></section>'+
+    '<div class="sec">Demo</div><section class="card pcard"><div class="field"><label for="kid">Child\'s name in the demo</label><input id="kid" type="text" maxlength="20" value="'+esc(S.kid)+'"></div><button class="btn ghost small" type="button" data-act="reset" style="justify-self:start">Restart the demo</button></section>';
+}
+
+/* ---------- actions ---------- */
+function unlock(){const v=($("#pin")||{}).value||"";if(/^\d{4}$/.test(v)){S.unlocked=true;render();}else toast("Enter 4 digits.");}
+document.addEventListener("click",ev=>{
+  const b=ev.target.closest("[data-act]");if(!b||b.disabled)return;
+  const a=b.dataset.act,id=b.dataset.id;
+  if(a==="toggleRw"){S.open=!S.open;render();}
+  else if(a==="prev"){S.day=Math.max(0,S.day-1);render();}
+  else if(a==="next"){S.day=Math.min(2,S.day+1);render();}
+  else if(a==="tick")tick(id);
+  else if(a==="timer")openTimer(id);
+  else if(a==="unlock")unlock();
+  else if(a==="lock"){S.unlocked=false;render();window.scrollTo(0,0);}
+  else if(a==="preset"){S.rw=Object.assign({},PRESETS[b.dataset.p]);S.paid=0;S.hist=[];render();toast("Reward: "+S.rw.name+" ("+S.rw.unit+")");}
+  else if(a==="excuse"){const t=S.tasks.find(x=>x.id===id);t.exc=!t.exc;if(t.exc)t.done=false;render();}
+  else if(a==="pay")pay();
+  else if(a==="photo"){S.test={stage:"read",subj:$("#tSubj").value,when:+$("#tWhen").value,wrong:[]};render();setTimeout(()=>{if(S.test&&S.test.stage==="read"){S.test.stage="check";S.test.wrong=SAMPLE_WRONG.slice();render();}},1300);}
+  else if(a==="chip"){const n=+b.dataset.n,w=S.test.wrong;S.test.wrong=w.includes(n)?w.filter(x=>x!==n):w.concat(n);render();}
+  else if(a==="makeplan")makePlan();
+  else if(a==="addManual")addManual();
+  else if(a==="delManual")delManual(id);
+  else if(a==="cancelTest"){clearPlan();S.test=null;render();}
+  else if(a==="reset"){S=fresh();render();toast("The demo starts over.");}
+  else if(a==="close")closeSheet();
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="pin")unlock();});
+document.addEventListener("input",ev=>{
+  const el=ev.target;
+  if(el.id==="kid"){S.kid=el.value.trim()||"Mia";$("#kidName").textContent=S.kid+", grade 7";return;}
+  if(el.id==="pin"&&/^\d{4}$/.test(el.value)){unlock();return;}
+  const k=el.dataset.rw;if(!k||k==="on")return;
+  S.rw[k]=el.type==="number"?Math.max(0,parseInt(el.value||"0",10)):el.value;
+  if(k==="name"&&!el.value.trim())S.rw.name="Reward";
+});
+document.addEventListener("change",ev=>{
+  const el=ev.target,k=el.dataset.rw;if(!k)return;
+  if(k==="on")S.rw.on=el.checked;
+  if(k==="per")S.rw.per=el.value;
+  render();
+});
+
+function clearPlan(){S.tasks=S.tasks.filter(t=>t.src!=="retake");for(const k in S.extra)S.extra[k]=S.extra[k].filter(t=>t.src!=="retake");}
+function makePlan(){
+  clearPlan();
+  const t=S.test,plan=retakePlan();
+  plan.forEach((c,i)=>{
+    const item={id:"r"+i,src:"retake",s:t.subj,t:t.subj+" retake: practise "+numList(c.nums),m:25,tag:"retake",done:false,exc:false,
+      n:"These problems went wrong in the test. Go through them again using your own test and the school's material. Retake "+DAYLBL[t.when]+"."};
+    if(c.day===1)S.tasks.push(item);else(S.extra[c.day]=S.extra[c.day]||[]).push(item);
+  });
+  (S.extra[t.when]=S.extra[t.when]||[]).push({src:"retake",s:t.subj,t:t.subj+" retake",m:0,tag:"req"});
+  t.stage="done";render();toast("Plan made: "+plan.length+(plan.length===1?" day.":" days."));
+}
+function pay(){
+  const r=S.rw,bal=balance();
+  if(r.goal>0){S.paid+=r.goal;S.hist.unshift(r.name+" given · Tuesday 3 Nov");}
+  else{S.paid+=bal;S.hist.unshift("Given "+bal+" "+U()+" · Tuesday 3 Nov");}
+  render();toast("Saved.");
+}
+
+function tick(id){
+  const t=S.tasks.find(x=>x.id===id);if(!t||t.exc)return;
+  const wasFull=todayFull();
+  t.done=!t.done;
+  render();
+  if(!t.done){toast("Tick removed.");return;}
+  const btn=document.querySelector('.chk[data-id="'+id+'"]');if(btn)btn.classList.add("pop");
+  if(todayFull()&&!wasFull){celebrateAll();toast(fullLine());}
+  else{celebrateOne();toast(stepLine());}
+}
+function stepLine(){
+  const r=S.rw,left=active().length-doneN(),l=LINES[Math.floor(Math.random()*LINES.length)];
+  if(!r.on)return l+(left?" "+left+" to go.":"");
+  let s=r.per==="step"?"Gold star ⭐ +"+amt(r.amount)+"!":l+" "+left+" more and "+amt(r.amount)+" is yours!";
+  if(r.goal>0){const need=Math.max(0,r.goal-balance());s+=need?" "+need+" more and "+r.name+" is yours!":" "+r.name+" is yours!";}
+  return s;
+}
+function fullLine(){return"All done! Row slowly, go far. 🚣";}
+
+/* ---------- timer sheet ---------- */
+let tmrInt=null;
+function openTimer(id){
+  const t=S.tasks.find(x=>x.id===id);let sec=t.m*60;
+  const fmt=s=>String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+  sheet('<div class="tmr"><div class="eyebrow">Focus time</div><h2>'+esc(t.t)+'</h2><div class="big" id="tm">'+fmt(sec)+'</div><p>Put your phone away. When the time is up, take a 5 min break.</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" type="button" id="tmDone">Done</button><button class="btn ghost" type="button" data-act="close">Close</button></div></div>');
+  tmrInt=setInterval(()=>{sec=Math.max(0,sec-1);const el=$("#tm");if(el)el.textContent=fmt(sec);if(!sec)clearInterval(tmrInt);},1000);
+  $("#tmDone").onclick=()=>{closeSheet();tick(id);};
+}
+function sheet(html){
+  $("#sheetHost").innerHTML='<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true">'+html+'</div></div>';
+  $("[data-scrim]").addEventListener("click",e=>{if(e.target.hasAttribute("data-scrim"))closeSheet();});
+  const f=$(".sheet button");if(f)f.focus();
+}
+function closeSheet(){clearInterval(tmrInt);$("#sheetHost").innerHTML="";}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
+$("#aboutBtn").onclick=()=>sheet('<h2>TASA: a study planner for children</h2><p>TASA helps children who find it hard to get started with homework or to plan their time. The child sees only today and one thing at a time.</p><ul class="facts"><li>Homework, deadlines, tests and grades come from the e-diary (eKool or Stuudium), with the school\'s permission. Teachers don\'t need to do anything extra.</li><li>Big work is split into steps of about 25 minutes.</li><li>Every tick gets a celebration. The parent sets the reward, for example screen time in minutes, pocket money in euros, or stars for a movie night. Or no reward at all.</li><li>If a test went badly, the parent takes a photo of the marked test and the problems that went wrong are spread over 2–3 days. TASA never solves problems for the child.</li><li>Always free for families.</li></ul><p class="hist">This demo uses made-up data and doesn\'t connect to any e-diary. Try it: press “Done”, look at tomorrow with the arrow, and open the “Parent” view (PIN: any 4 digits).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Try it</button>');
+
+/* ---------- toast ---------- */
+let tt;
+function toast(msg){const el=$("#toast");el.textContent=msg;el.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("show"),2600);}
+
+/* ---------- celebrations (canvas) ---------- */
+const cv=$("#fx"),cx=cv.getContext("2d");let parts=[],raf=0;
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const COLS=["#2A8C8C","#F7B32B","#EE6A4D","#5B4BB5","#7ED3CF"];
+function size(){const d=devicePixelRatio||1;cv.width=innerWidth*d;cv.height=innerHeight*d;cx.setTransform(d,0,0,d,0,0);}
+addEventListener("resize",size);size();
+const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
+function confetti(){const W=innerWidth;for(let i=0;i<140;i++)parts.push({k:"c",x:W/2+rnd(-40,40),y:innerHeight*.45,vx:rnd(-9,9),vy:rnd(-16,-6),g:.35,r:rnd(0,6),vr:rnd(-.3,.3),w:rnd(6,11),h:rnd(4,7),c:pick(COLS),life:160});}
+function fireworks(){for(let b=0;b<4;b++){const x=rnd(.2,.8)*innerWidth,y=rnd(.15,.45)*innerHeight,c=pick(COLS),delay=b*18;for(let i=0;i<46;i++){const a=i/46*Math.PI*2,s=rnd(2.5,5.5);parts.push({k:"f",x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,g:.06,c,life:90+delay,delay});}}}
+function emojiRain(){const E=["🎉","⭐","🚀","💪","✨","🚣","🌟"];for(let i=0;i<34;i++)parts.push({k:"e",x:rnd(0,innerWidth),y:rnd(-300,-30),vx:rnd(-.5,.5),vy:rnd(3,6),g:.04,e:pick(E),s:rnd(24,40),life:200});}
+function balloons(){for(let i=0;i<14;i++)parts.push({k:"b",x:rnd(.05,.95)*innerWidth,y:innerHeight+rnd(20,240),vx:0,vy:rnd(-3.6,-2.2),g:0,c:pick(COLS),s:rnd(18,28),ph:rnd(0,6),life:330});}
+function goldStar(){const s=document.createElement("div");s.className="star";s.textContent="⭐";document.body.appendChild(s);setTimeout(()=>s.remove(),1400);}
+const ONE=[confetti,fireworks,emojiRain,goldStar,balloons];let oneI=0;
+function celebrateOne(){if(reduce)return;ONE[oneI++%ONE.length]();loop();}
+function celebrateAll(){if(reduce)return;confetti();fireworks();emojiRain();balloons();goldStar();setTimeout(()=>{confetti();loop();},700);loop();}
+function loop(){if(raf)return;const step=()=>{cx.clearRect(0,0,innerWidth,innerHeight);parts=parts.filter(p=>p.life-->0);
+  for(const p of parts){if(p.delay&&p.delay-->0)continue;p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;
+    if(p.k==="c"){p.vx*=.99;p.r+=p.vr;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cx.restore();}
+    else if(p.k==="f"){p.vx*=.97;p.vy*=.97;cx.globalAlpha=Math.min(1,p.life/40);cx.fillStyle=p.c;cx.beginPath();cx.arc(p.x,p.y,2.6,0,7);cx.fill();cx.globalAlpha=1;}
+    else if(p.k==="e"){cx.font=p.s+"px serif";cx.fillText(p.e,p.x,p.y);}
+    else if(p.k==="b"){p.ph+=.05;const x=p.x+Math.sin(p.ph)*8;cx.strokeStyle="rgba(120,120,120,.6)";cx.lineWidth=1;cx.beginPath();cx.moveTo(x,p.y+p.s*1.2);cx.quadraticCurveTo(x+6,p.y+p.s*2,x,p.y+p.s*2.8);cx.stroke();cx.fillStyle=p.c;cx.beginPath();cx.ellipse(x,p.y,p.s*.85,p.s*1.1,0,0,7);cx.fill();cx.fillStyle="rgba(255,255,255,.35)";cx.beginPath();cx.ellipse(x-p.s*.3,p.y-p.s*.4,p.s*.18,p.s*.3,-.5,0,7);cx.fill();}}
+  if(parts.length)raf=requestAnimationFrame(step);else{raf=0;cx.clearRect(0,0,innerWidth,innerHeight);}};raf=requestAnimationFrame(step);}
+
+render();
+})();
+</script>
+
+</body>
+</html>
