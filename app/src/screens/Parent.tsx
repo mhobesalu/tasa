@@ -1,0 +1,548 @@
+import React, { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { useCelebrate } from "../components/Celebrate";
+import { Btn, Card, Choice, Field, H, Muted, Row, Section, T } from "../components/ui";
+import { addDays, diffDays, relDate, shortDate, type Day } from "../dates";
+import { dayItems, rewardSummary, weekStats } from "../logic";
+import { numList, retakeChunks, stepsOf } from "../planner";
+import { useStore } from "../store";
+import { C, F } from "../theme";
+import type { Kind, RewardConfig } from "../types";
+
+export function ParentScreen({ unlocked, setUnlocked }: { unlocked: boolean; setUnlocked: (b: boolean) => void }) {
+  if (!unlocked) return <PinGate onOk={() => setUnlocked(true)} />;
+  return <ParentHome onLock={() => setUnlocked(false)} />;
+}
+
+function PinGate({ onOk }: { onOk: () => void }) {
+  const { checkPin, wipe } = useStore();
+  const [pin, setPin] = useState("");
+  const [err, setErr] = useState("");
+  const [forgot, setForgot] = useState(false);
+  const tryPin = async (v: string) => {
+    if (!/^\d{4}$/.test(v)) return;
+    if (await checkPin(v)) onOk();
+    else {
+      setErr("Vale PIN-kood. Proovi uuesti.");
+      setPin("");
+    }
+  };
+  return (
+    <View>
+      <H size={36}>Lapsevanem</H>
+      <Muted style={{ fontSize: 16 }}>See vaade on ainult lapsevanemale. Laps seda ei näe.</Muted>
+      <Card style={{ marginTop: 18 }}>
+        <T style={{ color: C.muted, fontSize: 14 }}>Vanema PIN-kood</T>
+        <TextInput
+          value={pin}
+          onChangeText={(v) => {
+            const d = v.replace(/\D/g, "").slice(0, 4);
+            setPin(d);
+            setErr("");
+            if (d.length === 4) tryPin(d);
+          }}
+          keyboardType="number-pad"
+          secureTextEntry
+          maxLength={4}
+          autoFocus
+          accessibilityLabel="Vanema PIN-kood"
+          placeholder="••••"
+          placeholderTextColor="#9AA0AE"
+          style={st.pin}
+        />
+        {err ? <T style={{ color: C.boatInk }}>{err}</T> : null}
+        <Pressable accessibilityRole="button" onPress={() => setForgot(!forgot)}>
+          <T style={{ color: C.lakeInk, textDecorationLine: "underline", fontSize: 15 }}>Unustasid PIN-koodi?</T>
+        </Pressable>
+        {forgot ? (
+          <View style={{ gap: 8 }}>
+            <Muted>
+              PIN-koodi ei saa taastada, sest see on ainult selles telefonis. Võid kõik TASA andmed sellest telefonist kustutada ja otsast alustada.
+            </Muted>
+            <Btn small kind="danger" title="Kustuta kõik ja alusta otsast" onPress={wipe} />
+          </View>
+        ) : null}
+      </Card>
+    </View>
+  );
+}
+
+const KINDS: { value: Kind | "event"; label: string }[] = [
+  { value: "homework", label: "Kodune töö" },
+  { value: "project", label: "Suur töö" },
+  { value: "test", label: "Kontrolltöö" },
+  { value: "book", label: "Raamat" },
+  { value: "retake", label: "Järeltöö" },
+  { value: "event", label: "Kohustuslik aeg" },
+];
+
+function DayPicker({ label, value, onChange, from, refDay, days = 21 }: { label: string; value: Day; onChange: (d: Day) => void; from: Day; refDay: Day; days?: number }) {
+  return (
+    <View style={{ gap: 4 }}>
+      <T style={{ color: C.muted, fontSize: 14 }}>{label}</T>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
+        {Array.from({ length: days }, (_, i) => addDays(from, i)).map((d) => {
+          const on = d === value;
+          return (
+            <Pressable
+              key={d}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+              onPress={() => onChange(d)}
+              style={[st.dayChip, on && { borderColor: C.lake, backgroundColor: C.lakeSoft }]}
+            >
+              <T bold={on} style={{ fontSize: 14 }}>{["täna", "homme"].includes(relDate(d, refDay)) ? relDate(d, refDay) : shortDate(d)}</T>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+function AddForm() {
+  const { day, addAssignment, addEvent } = useStore();
+  const fx = useCelebrate();
+  const [kind, setKind] = useState<Kind | "event">("homework");
+  const [subject, setSubject] = useState("");
+  const [title, setTitle] = useState("");
+  const [due, setDue] = useState<Day>(addDays(day, 2));
+  const [minutes, setMinutes] = useState(50);
+  const [pFrom, setPFrom] = useState("1");
+  const [pTo, setPTo] = useState("");
+  const [problems, setProblems] = useState(8);
+  const [wrong, setWrong] = useState<number[]>([]);
+  const [time, setTime] = useState("15:00–15:45");
+  const [weekly, setWeekly] = useState(true);
+
+  const reset = () => {
+    setTitle("");
+    setWrong([]);
+    setPTo("");
+  };
+
+  const submit = () => {
+    const subj = subject.trim();
+    if (kind === "event") {
+      if (!title.trim()) return fx.toast("Kirjuta, mis see on.");
+      addEvent({ title: title.trim(), day: due, time: time.trim(), weekly });
+      fx.toast("Lisatud.");
+      return reset();
+    }
+    if (!subj) return fx.toast("Kirjuta aine nimi.");
+    if (kind === "book") {
+      const a = parseInt(pFrom, 10), b = parseInt(pTo, 10);
+      if (!(a > 0 && b >= a)) return fx.toast("Kirjuta leheküljed, näiteks 41 kuni 180.");
+      addAssignment({ kind, subject: subj, title: title.trim() || "raamat", due, minutes: 0, pageFrom: a, pageTo: b });
+    } else if (kind === "retake") {
+      if (!wrong.length) return fx.toast("Vali, millised ülesanded läksid valesti.");
+      addAssignment({ kind, subject: subj, title: "järeltöö", due, minutes: 0, wrong });
+    } else {
+      if (kind !== "test" && !title.trim()) return fx.toast("Kirjuta, mis on vaja teha.");
+      addAssignment({ kind, subject: subj, title: title.trim() || "kontrolltöö", due, minutes });
+    }
+    fx.toast("Lisatud plaani.");
+    reset();
+  };
+
+  const dueLabel = { homework: "Tähtaeg", project: "Tähtaeg", test: "Kontrolltöö päev", book: "Loetud peab olema", retake: "Järeltöö päev", event: "Päev" }[kind];
+  const chunks = retakeChunks(wrong);
+
+  return (
+    <Card>
+      <Muted>
+        Lisa ülesanne, mida e-päevikus pole (näiteks õpetaja ütles selle ainult tunnis). TASA jagab selle sammudeks enne tähtaega.
+      </Muted>
+      <Choice value={kind} options={KINDS} onChange={(k) => setKind(k)} />
+      {kind !== "event" ? (
+        <Field label="Aine" value={subject} onChangeText={setSubject} placeholder="nt Filmiõpetus" maxLength={30} />
+      ) : null}
+      {kind === "homework" || kind === "project" || kind === "event" || kind === "book" ? (
+        <Field
+          label={kind === "book" ? "Raamatu nimi" : kind === "event" ? "Mis see on?" : "Mis on vaja teha?"}
+          value={title}
+          onChangeText={setTitle}
+          placeholder={kind === "book" ? "nt „Kevade“" : kind === "event" ? "nt Matemaatika konsultatsioon" : "nt Lühifilmi stsenaarium, 1 lk"}
+          maxLength={60}
+        />
+      ) : null}
+      <DayPicker label={dueLabel} value={due} onChange={setDue} from={kind === "event" ? day : addDays(day, 1)} refDay={day} days={kind === "test" || kind === "book" ? 30 : 21} />
+
+      {kind === "homework" || kind === "project" || kind === "test" ? (
+        <Choice
+          label={kind === "test" ? "Kui palju kordamist kokku?" : "Kui kaua see umbes võtab?"}
+          value={minutes}
+          onChange={setMinutes}
+          options={(kind === "homework" ? [15, 25, 50, 75, 100] : [50, 75, 100, 150, 200, 250]).map((m) => ({
+            value: m,
+            label: `${m} min`,
+          }))}
+        />
+      ) : null}
+
+      {kind === "book" ? (
+        <Row>
+          <Field label="Alates leheküljest" value={pFrom} onChangeText={(v) => setPFrom(v.replace(/\D/g, ""))} keyboardType="number-pad" maxLength={4} />
+          <Field label="Kuni leheküljeni" value={pTo} onChangeText={(v) => setPTo(v.replace(/\D/g, ""))} keyboardType="number-pad" maxLength={4} placeholder="nt 180" />
+        </Row>
+      ) : null}
+
+      {kind === "retake" ? (
+        <View style={{ gap: 8 }}>
+          <Muted>
+            Vaata parandatud tööd ja vali, millised ülesanded olid valed. Laps näeb ainult samme, mitte hinnet. TASA ei lahenda ega koosta ülesandeid: laps harjutab oma tööd ja kooli materjali.
+          </Muted>
+          <Choice
+            label="Mitu ülesannet töös oli?"
+            value={problems}
+            onChange={(n) => {
+              setProblems(n);
+              setWrong((w) => w.filter((x) => x <= n));
+            }}
+            options={[4, 6, 8, 10, 12, 15].map((n) => ({ value: n, label: String(n) }))}
+          />
+          <T style={{ color: C.muted, fontSize: 14 }}>Valesti läinud ülesanded</T>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {Array.from({ length: problems }, (_, i) => i + 1).map((n) => {
+              const on = wrong.includes(n);
+              return (
+                <Pressable
+                  key={n}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: on }}
+                  accessibilityLabel={`Ülesanne ${n}`}
+                  onPress={() => setWrong(on ? wrong.filter((x) => x !== n) : [...wrong, n])}
+                  style={[st.numChip, on && { backgroundColor: C.boatSoft, borderColor: C.boat }]}
+                >
+                  <Text style={{ fontFamily: F.bodyBold, fontSize: 17, color: on ? C.boatInk : C.ink }}>{n}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          {chunks.length ? (
+            <Muted>
+              Plaan: {chunks.map((c, i) => `${i + 1}. päev ${numList(c)}`).join("; ")}.
+            </Muted>
+          ) : null}
+          <Muted style={{ fontStyle: "italic" }}>
+            Tulekul: pildista parandatud töö ja TASA loeb ise, millised numbrid olid valed. Sina kinnitad. Foto kustutatakse kohe pärast lugemist.
+          </Muted>
+        </View>
+      ) : null}
+
+      {kind === "event" ? (
+        <>
+          <Field label="Kellaaeg" value={time} onChangeText={setTime} placeholder="nt 15:00–15:45" maxLength={20} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Switch value={weekly} onValueChange={setWeekly} trackColor={{ true: C.lake, false: C.line }} accessibilityLabel="Iga nädal" />
+            <T>Iga nädal samal päeval</T>
+          </View>
+        </>
+      ) : null}
+
+      <Btn title="Lisa plaani" onPress={submit} />
+    </Card>
+  );
+}
+
+function PlannedList() {
+  const { state, day, removeAssignment, removeEvent } = useStore();
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const list = [...state.assignments]
+    .filter((a) => diffDays(day, a.due) >= -1)
+    .sort((a, b) => a.due.localeCompare(b.due));
+  const kindLabel: Record<Kind, string> = { homework: "Kodune töö", project: "Suur töö", test: "Kontrolltöö", book: "Raamat", retake: "Järeltöö" };
+  return (
+    <Card style={{ gap: 0, paddingVertical: 6 }}>
+      {!list.length && !state.events.length ? <Muted style={{ paddingVertical: 10 }}>Plaanis pole veel midagi.</Muted> : null}
+      {list.map((a, i) => {
+        const steps = stepsOf(a).filter((x) => !state.excused[x.id]);
+        const done = steps.filter((x) => state.done[x.id]).length;
+        return (
+          <View key={a.id} style={[st.prow, i > 0 && st.rowLine]}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <T>
+                {a.subject}: {a.kind === "book" ? `${a.title}, lk ${a.pageFrom}–${a.pageTo}` : a.kind === "retake" ? `järeltöö, ${numList(a.wrong ?? [])}` : a.title}
+              </T>
+              <Muted>
+                {kindLabel[a.kind]} · {relDate(a.due, day)} · {done} / {steps.length} sammu tehtud
+                {a.source === "sample" ? " · näidis" : ""}
+              </Muted>
+            </View>
+            {confirm === a.id ? (
+              <Btn small kind="danger" title="Jah, eemalda" onPress={() => { removeAssignment(a.id); setConfirm(null); }} />
+            ) : (
+              <Btn small kind="ghost" title="Eemalda" onPress={() => setConfirm(a.id)} />
+            )}
+          </View>
+        );
+      })}
+      {state.events.map((e, i) => (
+        <View key={e.id} style={[st.prow, (i > 0 || list.length > 0) && st.rowLine]}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <T>{e.title}</T>
+            <Muted>
+              Kohustuslik · {e.weekly ? `iga ${["esmaspäev", "teisipäev", "kolmapäev", "neljapäev", "reede", "laupäev", "pühapäev"][(new Date(e.day + "T12:00").getDay() + 6) % 7]}` : shortDate(e.day)} {e.time}
+            </Muted>
+          </View>
+          <Btn small kind="ghost" title="Eemalda" onPress={() => removeEvent(e.id)} />
+        </View>
+      ))}
+    </Card>
+  );
+}
+
+function TodayExcuse() {
+  const { state, day, toggleExcuse } = useStore();
+  const items = dayItems(state, day);
+  return (
+    <Card style={{ gap: 0, paddingVertical: 6 }}>
+      <Muted style={{ paddingVertical: 8 }}>Kui laps on haige, saad sammu vabandada. See ei loe siis päeva tulemuse sisse.</Muted>
+      {!items.length ? <Muted style={{ paddingBottom: 8 }}>Täna pole samme.</Muted> : null}
+      {items.map((x) => (
+        <View key={x.id} style={[st.prow, st.rowLine]}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <T>{x.title}</T>
+            <Muted>{x.excused ? "Vabandatud" : x.done ? "Tehtud ✓" : "Tegemata"}</Muted>
+          </View>
+          <Btn small kind="ghost" title={x.excused ? "Taasta" : "Vabanda"} onPress={() => toggleExcuse(x.id)} />
+        </View>
+      ))}
+    </Card>
+  );
+}
+
+const PRESETS: Omit<RewardConfig, "since">[] = [
+  { on: true, name: "Ekraaniaeg", unit: "minutit", per: "step", amount: 10, goal: 0, bonus: 30 },
+  { on: true, name: "Taskuraha", unit: "eur", per: "day", amount: 3, goal: 0, bonus: 10 },
+  { on: true, name: "Kinoõhtu", unit: "tähte", per: "step", amount: 1, goal: 30, bonus: 0 },
+];
+
+function RewardSettings() {
+  const { state, day, saveReward, pay } = useStore();
+  const fx = useCelebrate();
+  const r = state.reward;
+  const [f, setF] = useState({ ...r, amount: String(r.amount), goal: String(r.goal), bonus: String(r.bonus) });
+  const sum = rewardSummary(state, day);
+  const num = (v: string) => Math.max(0, Math.min(10000, parseInt(v || "0", 10) || 0));
+  const save = (o?: Omit<RewardConfig, "since">) => {
+    const next = o ?? { on: f.on, name: f.name.trim() || "Preemia", unit: f.unit.trim() || "punkti", per: f.per, amount: num(f.amount), goal: num(f.goal), bonus: num(f.bonus) };
+    saveReward(next);
+    if (o) setF({ ...o, since: r.since, amount: String(o.amount), goal: String(o.goal), bonus: String(o.bonus) });
+    fx.toast("Salvestatud.");
+  };
+  const reached = r.goal > 0 && sum.balance >= r.goal;
+  return (
+    <Card>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <Switch
+          value={f.on}
+          onValueChange={(on) => {
+            setF({ ...f, on });
+            saveReward({ ...r, on });
+          }}
+          trackColor={{ true: C.lake, false: C.line }}
+          accessibilityLabel="Preemia on sees"
+        />
+        <T bold>Preemia on sees</T>
+      </View>
+      {!f.on ? <Muted>Laps näeb ainult edenemist ja tähistusi.</Muted> : (
+        <>
+          <Row>
+            <Field label="Mis on preemia?" value={f.name} onChangeText={(name) => setF({ ...f, name })} placeholder="nt Ekraaniaeg" maxLength={30} />
+            <Field label="Ühik" value={f.unit} onChangeText={(unit) => setF({ ...f, unit })} placeholder="nt minutit" maxLength={12} style={{ maxWidth: 130 }} />
+          </Row>
+          <Choice
+            label="Mille eest?"
+            value={f.per}
+            onChange={(per) => setF({ ...f, per })}
+            options={[
+              { value: "step", label: "iga tehtud samm" },
+              { value: "day", label: "terve päev tehtud samal päeval" },
+            ]}
+          />
+          <Row>
+            <Field label={`Kui palju (${f.unit || "ühikut"})`} value={f.amount} onChangeText={(amount) => setF({ ...f, amount })} keyboardType="number-pad" maxLength={5} />
+            <Field label="Eesmärk (0 = pole)" value={f.goal} onChangeText={(goal) => setF({ ...f, goal })} keyboardType="number-pad" maxLength={5} />
+            <Field label="Nädala boonus" value={f.bonus} onChangeText={(bonus) => setF({ ...f, bonus })} keyboardType="number-pad" maxLength={5} />
+          </Row>
+          <Muted>Nädala boonus tuleb, kui iga päev esmaspäevast pühapäevani said tehtud samal päeval.</Muted>
+          <Btn small title="Salvesta preemia" onPress={() => save()} />
+          <Muted>
+            Proovi:{" "}
+            {PRESETS.map((p) => (
+              <Text key={p.name} onPress={() => save(p)} style={{ color: C.lakeInk, textDecorationLine: "underline" }} accessibilityRole="button">
+                {p.name} · {p.unit}{"   "}
+              </Text>
+            ))}
+          </Muted>
+          <View style={[st.prow, st.rowLine]}>
+            <T style={{ flex: 1 }}>
+              {r.goal > 0 ? `Kogutud: ${sum.balance} / ${r.goal} ${r.unit}` : `Välja andmata: ${sum.balance} ${r.unit}`}
+            </T>
+            {r.goal > 0 && !reached ? (
+              <Muted>Veel kogumisel</Muted>
+            ) : (
+              <Btn
+                small
+                title={r.goal > 0 ? "Preemia antud" : "Märgi makstuks"}
+                disabled={sum.balance <= 0}
+                onPress={() => {
+                  const amt = r.goal > 0 ? r.goal : sum.balance;
+                  pay(amt, r.goal > 0 ? `${r.name} antud` : `Välja antud ${amt} ${r.unit}`);
+                  fx.toast("Salvestatud.");
+                }}
+              />
+            )}
+          </View>
+          {state.payouts.length ? (
+            <Muted>{state.payouts.slice(0, 5).map((p) => `${shortDate(p.day)}: ${p.note}`).join("\n")}</Muted>
+          ) : null}
+        </>
+      )}
+    </Card>
+  );
+}
+
+function Settings() {
+  const { state, parentUpdate, setPin } = useStore();
+  const fx = useCelebrate();
+  const [name, setName] = useState(state.child.name);
+  const [grade, setGrade] = useState(state.child.grade);
+  const [pin1, setPin1] = useState("");
+  return (
+    <Card>
+      <Row>
+        <Field label="Lapse nimi" value={name} onChangeText={setName} maxLength={20} />
+        <Field label="Klass" value={grade} onChangeText={setGrade} maxLength={10} style={{ maxWidth: 110 }} />
+      </Row>
+      <Choice
+        label="Õppimise aeg päevas (umbes)"
+        value={state.budget}
+        onChange={(budget) => parentUpdate((s) => ({ ...s, budget }))}
+        options={[50, 75, 100, 125, 150].map((m) => ({ value: m, label: `${m} min` }))}
+      />
+      <Btn
+        small
+        kind="ghost"
+        title="Salvesta nimi ja klass"
+        onPress={() => {
+          parentUpdate((s) => ({ ...s, child: { name: name.trim() || s.child.name, grade: grade.trim() } }));
+          fx.toast("Salvestatud.");
+        }}
+      />
+      <Row style={{ alignItems: "flex-end" }}>
+        <Field label="Uus PIN-kood (4 numbrit)" value={pin1} onChangeText={(v) => setPin1(v.replace(/\D/g, "").slice(0, 4))} keyboardType="number-pad" secureTextEntry maxLength={4} />
+        <Btn
+          small
+          kind="ghost"
+          title="Muuda PIN"
+          disabled={pin1.length !== 4}
+          onPress={async () => {
+            await setPin(pin1);
+            setPin1("");
+            fx.toast("PIN-kood muudetud.");
+          }}
+        />
+      </Row>
+    </Card>
+  );
+}
+
+function Privacy() {
+  const { wipe } = useStore();
+  const [sure, setSure] = useState(false);
+  return (
+    <Card style={{ gap: 6 }}>
+      {[
+        "Lapsevanem on konto omanik ja annab nõusoleku.",
+        "Praegu on kõik andmed ainult selles telefonis. Neid ei saadeta kuhugi.",
+        "E-päeviku parooli ei küsita kunagi. Hiljem tulevad andmed ametliku liidese kaudu, kooli loal.",
+        "Õpetajad ei näe midagi. Diagnoose ei salvestata.",
+      ].map((t) => (
+        <T key={t} style={{ fontSize: 15, lineHeight: 22 }}>• {t}</T>
+      ))}
+      {sure ? (
+        <View style={{ gap: 8, marginTop: 6 }}>
+          <T bold>Kas kustutada kõik TASA andmed sellest telefonist? Seda ei saa tagasi võtta.</T>
+          <Row>
+            <Btn small kind="danger" title="Jah, kustuta kõik" onPress={wipe} />
+            <Btn small kind="ghost" title="Ei" onPress={() => setSure(false)} />
+          </Row>
+        </View>
+      ) : (
+        <Btn small kind="ghost" title="Kustuta kõik andmed" onPress={() => setSure(true)} style={{ marginTop: 6 }} />
+      )}
+    </Card>
+  );
+}
+
+function ParentHome({ onLock }: { onLock: () => void }) {
+  const { state, day } = useStore();
+  const w = weekStats(state, day);
+  const pct = w.stepsPlanned ? Math.round((w.stepsDone / w.stepsPlanned) * 100) : 0;
+  return (
+    <View>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <H size={36}>Lapsevanem</H>
+        <Btn small kind="ghost" title="Lukusta" onPress={onLock} />
+      </View>
+      <Muted style={{ fontSize: 16 }}>Laps seda vaadet ei näe. Hindeid näed e-päevikust, TASA näitab pingutust.</Muted>
+
+      <Section>See nädal</Section>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+        <Stat n={`${pct}%`} l="sammudest tehtud" />
+        <Stat n={String(w.minutes)} l="minutit õpitud" />
+        <Stat n={String(w.daysOpened)} l="päeva avatud" />
+        <Stat n={String(w.missedDeadlines)} l="tähtaega mööda" />
+      </View>
+
+      <Section>Lisa plaani</Section>
+      <AddForm />
+
+      <Section>Plaanis</Section>
+      <PlannedList />
+
+      <Section>Tänased sammud</Section>
+      <TodayExcuse />
+
+      <Section>Preemia</Section>
+      <RewardSettings />
+
+      <Section>Seaded</Section>
+      <Settings />
+
+      <Section>Andmed ja privaatsus</Section>
+      <Privacy />
+    </View>
+  );
+}
+
+function Stat({ n, l }: { n: string; l: string }) {
+  return (
+    <Card style={{ flexBasis: "47%", flexGrow: 1, gap: 2, padding: 14 }}>
+      <Text style={{ fontFamily: F.display, fontSize: 30, color: C.lakeInk }}>{n}</Text>
+      <Muted>{l}</Muted>
+    </Card>
+  );
+}
+
+const st = StyleSheet.create({
+  pin: {
+    fontFamily: F.bodyBold,
+    fontSize: 28,
+    letterSpacing: 12,
+    textAlign: "center",
+    color: C.ink,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: C.line,
+    backgroundColor: C.paper,
+    paddingVertical: 10,
+    maxWidth: 220,
+  },
+  dayChip: { borderWidth: 2, borderColor: C.line, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8, minHeight: 44, justifyContent: "center", backgroundColor: C.card },
+  numChip: { width: 46, height: 46, borderRadius: 12, borderWidth: 2, borderColor: C.line, alignItems: "center", justifyContent: "center", backgroundColor: C.card },
+  prow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10 },
+  rowLine: { borderTopWidth: 1, borderTopColor: C.line },
+});
