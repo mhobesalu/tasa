@@ -207,3 +207,15 @@ footer img{height:56px;width:auto}
 .btn-sun{background:var(--sun);color:#1F2A44;border:0;cursor:pointer}
 .btn-sun:hover{color:#1F2A44}
 @media (max-width:560px){.f-two{grid-template-columns:1fr}}
+
+/* Legal pages (privaatsus) */
+.legal{max-width:46em;padding-block:48px 72px}
+.legal h1{font-size:clamp(2rem,5vw,2.8rem);font-weight:800;margin:0 0 8px}
+.legal h2{font-size:1.4rem;margin:2.2em 0 .5em}
+.legal p,.legal li{max-width:42em}
+.legal p{margin:0 0 1em}
+.legal ul{margin:0 0 1em;padding-left:1.3em}
+.legal .tbl{overflow-x:auto}
+.legal table{border-collapse:collapse;width:100%;margin:1em 0;background:var(--card);border-radius:12px;overflow:hidden}
+.legal th,.legal td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+.legal th{background:var(--lake-soft)}
