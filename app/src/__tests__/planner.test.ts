@@ -100,3 +100,12 @@ test("excused steps don't block the day", () => {
   s = { ...s, excused: { [y]: true }, done: { [x]: T } };
   expect(dayFull(s, T)).toBe(true);
 });
+
+test("e-diary due date means done before school: work is planned by the day before", () => {
+  // Due Thursday in the diary -> everything planned Tue/Wed, nothing on Thursday itself.
+  const p = buildPlan(st([hw("a", 2, 100), hw("b", 1, 50)]), T);
+  for (const x of Object.values(p.all)) expect(x.day < x.due).toBe(true);
+  expect(p.byDay[addDays(T, 2)]).toBeUndefined();
+  // Due tomorrow -> all of it today.
+  expect(Object.values(p.all).filter((x) => x.aid === "b").every((x) => x.day === T)).toBe(true);
+});
