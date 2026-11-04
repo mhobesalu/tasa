@@ -15,7 +15,7 @@ export function ParentScreen({ unlocked, setUnlocked }: { unlocked: boolean; set
 }
 
 function PinGate({ onOk }: { onOk: () => void }) {
-  const { checkPin, wipe } = useStore();
+  const { checkPin } = useStore();
   const [pin, setPin] = useState("");
   const [err, setErr] = useState("");
   const [forgot, setForgot] = useState(false);
@@ -55,12 +55,9 @@ function PinGate({ onOk }: { onOk: () => void }) {
           <T style={{ color: C.lakeInk, textDecorationLine: "underline", fontSize: 15 }}>Unustasid PIN-koodi?</T>
         </Pressable>
         {forgot ? (
-          <View style={{ gap: 8 }}>
-            <Muted>
-              PIN-koodi ei saa taastada, sest see on ainult selles telefonis. Võid kõik TASA andmed sellest telefonist kustutada ja otsast alustada.
-            </Muted>
-            <Btn small kind="danger" title="Kustuta kõik ja alusta otsast" onPress={wipe} />
-          </View>
+          <Muted>
+            PIN-koodi ei saa taastada, sest see on ainult selles telefonis. Lapsevanem saab TASA telefonist eemaldada ja uuesti paigaldada. Siis algab kõik otsast.
+          </Muted>
         ) : null}
       </Card>
     </View>
