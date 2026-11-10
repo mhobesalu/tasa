@@ -31,7 +31,13 @@ const END_MARK = /\s*-\d+p$/;
 // A teacher's note that is only "bring X to class" is a reminder, not a 25-min step.
 const BRING = /(võta|too|võtke|tooge)\b[^.]{0,60}\bkaasa\b/i;
 // Attached Tera material: "Tera: Kordamine KT 1https://…".
-const TERA = /^tera:\s/i;
+const TERA = /^.{0,3}tera:\s/i; // may start with the book icon read as a letter
+/** Between screenshots (see native.ts). */
+export const SHOT_BREAK = "––– pilt –––";
+// Stuudium app's bottom tab bar, which can cover a line in a screenshot.
+const TAB_BAR = /\s*tunnid\s+ülesanded\s+puudumised\s+tera\s*/i;
+// A checkbox in front of a subject, read as a letter.
+const CHECKBOX = /^[□☐▢◻◯○oO0]\s+(?=\S)/;
 
 // Lines where the list ends (Stuudium shows these under the list).
 const STOP = [
@@ -43,7 +49,13 @@ const STOP = [
   /^õppematerjalid$/i,
 ];
 // Lines to ignore wherever they are.
-const NOISE = [/^näita vanemaid/i, /^kalender$/i, /^ülesanded, kodutööd/i, /^märgi tehtuks/i, /^töö peitmiseks/i];
+const NOISE = [
+  /^stuudium\b/i,
+  /^v\d+\.\d+(\.\d+)?$/i,
+  /^\d{1,2}:\d{2}\b/, // phone clock in a screenshot
+  /^sa pole seda lehte/i,
+  /^lisa e\S*$/i, // "Lisa endale ülesanne" cut by the tab bar
+  /^näita vanemaid/i, /^kalender$/i, /^ülesanded, kodutööd/i, /^märgi tehtuks/i, /^töö peitmiseks/i];
 
 const URL = /^https?:\/\/\S+$/i;
 
@@ -125,7 +137,7 @@ function shortTitle(text: string): string {
 export function parsePasted(raw: string, t: Day): Draft[] {
   const lines = decode(raw)
     .split(/\r?\n/)
-    .map((l) => l.replace(/\s+/g, " ").trim())
+    .map((l) => l.replace(TAB_BAR, " ").replace(/\s+/g, " ").trim().replace(CHECKBOX, ""))
     .filter((l) => l.length > 0);
 
   const out: Draft[] = [];
@@ -155,6 +167,11 @@ export function parsePasted(raw: string, t: Day): Draft[] {
   };
 
   for (const line of lines) {
+    if (line === SHOT_BREAK) {
+      // A task cut off at the bottom of a screenshot shows again in the next one.
+      if (marked && cur && !cur.done) cur = null;
+      continue;
+    }
     if (STOP.some((r) => r.test(line))) break;
     if (NOISE.some((r) => r.test(line))) continue;
     const h = parseDayHeader(line, t);
@@ -184,6 +201,43 @@ export function parsePasted(raw: string, t: Day): Draft[] {
     cur = { ...parseSubjectLine(line), text: [], extra: [], done: false };
   }
   flush();
+  return out;
+}
+
+// ---- "Tegemata" list under the homework page ----
+// "KI Kompositsioon, K 07. oktoober" / "Tegemata" / "Tunni teema: …". Usually due
+// by the next lesson; work that can't be done at home becomes a järeltöö.
+
+export interface MissedWork {
+  key: string;
+  subject: string;
+  lessonDay: Day;
+  topic: string;
+}
+
+export function parseMissed(raw: string, t: Day): MissedWork[] {
+  const lines = decode(raw)
+    .split(/\r?\n/)
+    .map((l) => l.replace(TAB_BAR, " ").replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  const out: MissedWork[] = [];
+  let inList = false;
+  let cur: MissedWork | null = null;
+  for (const line of lines) {
+    if (/^tegemata$/i.test(line)) {
+      inList = true;
+      continue;
+    }
+    if (!inList || NOISE.some((r) => r.test(line)) || line === SHOT_BREAK) continue;
+    const m = line.match(/^(.+?),\s*(.+)$/);
+    const d = m ? parseDayHeader(m[2], t) : null;
+    if (m && d) {
+      cur = { key: `${d}|${m[1]}`, subject: parseSubjectLine(m[1]).subject, lessonDay: d, topic: "" };
+      if (!out.some((x) => x.key === cur!.key)) out.push(cur);
+      continue;
+    }
+    if (cur && !cur.topic) cur.topic = shortTitle(line.replace(/^tunni teema:\s*/i, ""));
+  }
   return out;
 }
 
@@ -241,11 +295,16 @@ function parseSummary(lines: string[]): { subject: string; marks: string[] }[] |
       candidate = null;
       continue;
     }
+    const toks = line.split(/\s+/);
+    if (candidate === null && rows.length && toks.every((x) => MARK.test(x))) {
+      rows[rows.length - 1].marks.push(...toks.map((x) => x.toUpperCase())); // marks wrapped to the next row
+      continue;
+    }
     if (INTRO.test(line)) {
       candidate = null;
       continue;
     }
-    if (LINK_LINES.test(line)) continue;
+    if (LINK_LINES.test(line) || line === SHOT_BREAK || NOISE.some((r) => r.test(line)) || /^[\w.-]+\.(ee|com|eu)$/i.test(line)) continue;
     // The subject is the first line of each block. In the phone copy the teachers
     // follow on their own line, so later lines are ignored.
     if (candidate === null) candidate = line;
@@ -301,6 +360,15 @@ const MSG_NOISE = [
   /^\d+ vastus(t)?$/i,
   /vaata veebis$/i,
   /\d{1,2}\.\s*\p{L}+\.?\s+kell\s+\d{1,2}[:.]\d{2}$/iu, // "Mari Maasikas 8. nov kell 17:00"
+  // Stuudium app buttons and header, as read from a screenshot
+  /^\d{1,2}:\d{2}\b/,
+  /^stuudium\b/i,
+  /^sulge\b/i,
+  /vaigista teema/i,
+  /^\W*vasta\b/i,
+  /^vastuseid veel pole$/i,
+  /lisa vestlusesse/i,
+  /^\W*\+?\W*$/,
 ];
 
 const SUBJECT_WORDS: [string, RegExp][] = [

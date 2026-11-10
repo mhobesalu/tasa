@@ -10,8 +10,10 @@ import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-cont
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { CelebrateProvider } from "./src/components/Celebrate";
 import { Logo } from "./src/components/Logo";
+import { onReminderTap, syncReminder } from "./src/native";
 import { Onboarding } from "./src/screens/Onboarding";
 import { ParentScreen } from "./src/screens/Parent";
+import { QuickAdd } from "./src/screens/QuickAdd";
 import { TodayScreen } from "./src/screens/Today";
 import { WeekScreen } from "./src/screens/Week";
 import { StoreProvider, useStore } from "./src/store";
@@ -45,6 +47,23 @@ function Shell() {
   const [tab, setTab] = useState<Tab>("today");
   const [unlocked, setUnlocked] = useState(false);
   const scroll = useRef<ScrollViewInstance>(null);
+  const [quick, setQuick] = useState(false);
+
+  // Tapping the daily reminder opens "Lisa e-päevikust" on Täna.
+  useEffect(
+    () =>
+      onReminderTap(() => {
+        setTab("today");
+        setUnlocked(false);
+        setQuick(true);
+      }),
+    [],
+  );
+  // Keep the scheduled reminder in step with the setting.
+  const rem = state.reminder;
+  useEffect(() => {
+    if (state.setupDone && rem) syncReminder(rem.on, rem.hour);
+  }, [state.setupDone, rem?.on, rem?.hour]);
 
   // Leaving the parent tab always locks it again.
   const go = (t: Tab) => {
@@ -62,7 +81,7 @@ function Shell() {
   const body = !state.setupDone ? (
     <Onboarding />
   ) : tab === "today" ? (
-    <TodayScreen />
+    <TodayScreen onAdd={() => setQuick(true)} />
   ) : tab === "week" ? (
     <WeekScreen />
   ) : (
@@ -96,6 +115,7 @@ function Shell() {
           {body}
         </ScrollView>
       </KeyboardAvoidingView>
+      {state.setupDone ? <QuickAdd open={quick} onClose={() => setQuick(false)} /> : null}
       {state.setupDone ? (
         <View style={[st.tabs, { paddingBottom: Math.max(insets.bottom, 8) }]} accessibilityRole="tablist">
           <TabBtn label="Täna" on={tab === "today"} onPress={() => go("today")} icon={(c) => (

@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { Btn, Card, Choice, Field, H, Muted, Row, Section, T } from "../components/ui";
-import { addDays, diffDays, relDate, shortDate, type Day } from "../dates";
+import { addDays, diffDays, relDate, shortDate, WEEKDAY_NAMES, WEEKDAY_SHORT, type Day } from "../dates";
 import { dayItems, rewardSummary, weekStats } from "../logic";
 import { numList, retakeChunks, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
+import { askNotifications } from "../native";
+import { knownSubjects, lessonDays, setDays } from "../timetable";
 import { PasteImport } from "./PasteImport";
 import type { Kind, RewardConfig } from "../types";
 
@@ -98,12 +100,12 @@ function DayPicker({ label, value, onChange, from, refDay, days = 21 }: { label:
   );
 }
 
-function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string } }) {
+function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?: string } }) {
   const { day, addAssignment, addEvent } = useStore();
   const fx = useCelebrate();
   const [kind, setKind] = useState<Kind | "event">(prefill?.kind ?? "homework");
   const [subject, setSubject] = useState(prefill?.subject ?? "");
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(prefill?.title ?? "");
   const [due, setDue] = useState<Day>(addDays(day, 2));
   const [minutes, setMinutes] = useState(50);
   const [pFrom, setPFrom] = useState("1");
@@ -403,7 +405,7 @@ function RewardSettings() {
 }
 
 function Settings() {
-  const { state, parentUpdate, setPin } = useStore();
+  const { state, parentUpdate, setPin, setReminder } = useStore();
   const fx = useCelebrate();
   const [name, setName] = useState(state.child.name);
   const [grade, setGrade] = useState(state.child.grade);
@@ -414,6 +416,19 @@ function Settings() {
         <Field label="Lapse nimi" value={name} onChangeText={setName} maxLength={20} />
         <Field label="Klass" value={grade} onChangeText={setGrade} maxLength={10} style={{ maxWidth: 110 }} />
       </Row>
+      <Choice
+        label="Meeldetuletus: lisa homsed kodutööd"
+        value={state.reminder?.on ? state.reminder.hour : 0}
+        onChange={async (hour) => {
+          const ok = hour === 0 ? false : await askNotifications();
+          setReminder({ on: ok, hour: hour || state.reminder?.hour || 17, asked: true });
+          if (hour && !ok) fx.toast("Teavitused on telefonis välja lülitatud. Luba need telefoni seadetes.");
+        }}
+        options={[
+          { value: 0, label: "Väljas" },
+          ...[16, 17, 18, 19].map((h) => ({ value: h, label: `kell ${h}` })),
+        ]}
+      />
       <Choice
         label="Õppimise aeg päevas (umbes)"
         value={state.budget}
@@ -476,9 +491,9 @@ function Privacy() {
 }
 
 function ParentHome({ onLock }: { onLock: () => void }) {
-  const { state, day } = useStore();
+  const { state, day, removePendingRetake } = useStore();
   const fx = useCelebrate();
-  const [prefill, setPrefill] = useState<{ kind: Kind; subject: string; n: number } | undefined>();
+  const [prefill, setPrefill] = useState<{ kind: Kind; subject: string; title?: string; n: number } | undefined>();
   const w = weekStats(state, day);
   const pct = w.stepsPlanned ? Math.round((w.stepsDone / w.stepsPlanned) * 100) : 0;
   return (
@@ -503,7 +518,33 @@ function ParentHome({ onLock }: { onLock: () => void }) {
           setPrefill((p) => ({ kind: "retake", subject, n: (p?.n ?? 0) + 1 }));
           fx.toast("Järeltöö on all valmis: vali kuupäev ja valed ülesanded.");
         }}
+        onHomework={(subject, title) => {
+          setPrefill((p) => ({ kind: "homework", subject, title, n: (p?.n ?? 0) + 1 }));
+          fx.toast("Ülesanne on all valmis: vali tähtajaks järgmine tund.");
+        }}
       />
+
+      {(state.pendingRetakes ?? []).length ? (
+        <>
+          <Section>Järeltöö vaja, kuupäev teadmata</Section>
+          <Card>
+            {(state.pendingRetakes ?? []).map((r) => (
+              <View key={r.id} style={[st.prow, { justifyContent: "space-between" }]}>
+                <T style={{ flex: 1, fontSize: 16 }}>{r.subject}</T>
+                <Btn
+                  small
+                  title="Lisa kuupäev"
+                  onPress={() => {
+                    setPrefill((p) => ({ kind: "retake", subject: r.subject, n: (p?.n ?? 0) + 1 }));
+                    fx.toast("Järeltöö on all valmis: vali kuupäev ja valed ülesanded.");
+                  }}
+                />
+                <Btn small kind="ghost" title="Eemalda" onPress={() => removePendingRetake(r.id)} />
+              </View>
+            ))}
+          </Card>
+        </>
+      ) : null}
 
       <Section>Lisa plaani</Section>
       <AddForm key={prefill?.n ?? 0} prefill={prefill} />
@@ -520,9 +561,57 @@ function ParentHome({ onLock }: { onLock: () => void }) {
       <Section>Seaded</Section>
       <Settings />
 
+      <Section>Tunniplaan</Section>
+      <Timetable />
+
       <Section>Andmed ja privaatsus</Section>
       <Privacy />
     </View>
+  );
+}
+
+function Timetable() {
+  const { state, parentUpdate } = useStore();
+  const subjects = knownSubjects(state);
+  return (
+    <Card>
+      <Muted>
+        TASA õpib tunnipäevad kodutööde tähtaegadest. Kontrolli ja paranda vajadusel: siis saab tegemata töö tähtajaks
+        järgmise tunni.
+      </Muted>
+      {subjects.length ? (
+        subjects.map((sub) => {
+          const { days, manual } = lessonDays(state, sub);
+          return (
+            <View key={sub} style={[st.prow, st.rowLine, { flexWrap: "wrap" }]}>
+              <T style={{ flex: 1, minWidth: 120, fontSize: 15 }}>
+                {sub}
+                {!manual && days.length ? <T style={{ color: C.muted, fontSize: 13 }}> (õpitud)</T> : null}
+              </T>
+              <View style={{ flexDirection: "row", gap: 4 }}>
+                {WEEKDAY_SHORT.slice(0, 5).map((w, i) => {
+                  const on = days.includes(i);
+                  return (
+                    <Pressable
+                      key={w}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: on }}
+                      accessibilityLabel={`${sub}: ${WEEKDAY_NAMES[i]}`}
+                      onPress={() => parentUpdate((s) => setDays(s, sub, on ? days.filter((x) => x !== i) : [...days, i]))}
+                      style={[st.wd, on && { backgroundColor: C.lake, borderColor: C.lake }]}
+                    >
+                      <T bold style={{ fontSize: 14, color: on ? C.white : C.ink }}>{w}</T>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })
+      ) : (
+        <Muted>Aineid veel pole. Need tulevad siia, kui lisad ülesandeid.</Muted>
+      )}
+    </Card>
   );
 }
 
@@ -553,4 +642,5 @@ const st = StyleSheet.create({
   numChip: { width: 46, height: 46, borderRadius: 12, borderWidth: 2, borderColor: C.line, alignItems: "center", justifyContent: "center", backgroundColor: C.card },
   prow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10 },
   rowLine: { borderTopWidth: 1, borderTopColor: C.line },
+  wd: { width: 34, height: 34, borderRadius: 9, borderWidth: 2, borderColor: C.line, alignItems: "center", justifyContent: "center", backgroundColor: C.card },
 });

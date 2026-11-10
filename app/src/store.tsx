@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState as RNAppState } from "react-native";
-import { today, type Day } from "./dates";
+import { addDays, today, type Day } from "./dates";
 import { freezeToday } from "./logic";
 import { buildPlan, type Plan } from "./planner";
 import { sampleData } from "./sample";
@@ -29,6 +29,13 @@ interface Ctx {
   /** Add text (e.g. a teacher's message) to an assignment's note. */
   attachNote: (id: string, text: string) => void;
   removeAssignment: (id: string) => void;
+  /** Add several at once (one undo step). Returns the new ids. */
+  addMany: (list: Omit<Assignment, "id" | "createdOn" | "source">[]) => string[];
+  removeMany: (ids: string[]) => void;
+  setReminder: (r: NonNullable<AppState["reminder"]>) => void;
+  /** Remember that a subject needs a järeltöö; the date comes later. Adds a step "agree the date". */
+  savePendingRetake: (subject: string) => void;
+  removePendingRetake: (id: string) => void;
   addEvent: (e: Omit<FixedEvent, "id">) => void;
   removeEvent: (id: string) => void;
   toggleExcuse: (stepId: string) => void;
@@ -144,12 +151,53 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
         ...s,
         seq: s.seq + 1,
         assignments: [...s.assignments, { ...a, id: `p${s.seq + 1}`, createdOn: day, source: "parent" }],
+        // a retake with a date replaces the "date not known yet" entry
+        pendingRetakes:
+          a.kind === "retake"
+            ? (s.pendingRetakes ?? []).filter((r) => r.subject.toLowerCase() !== a.subject.toLowerCase())
+            : s.pendingRetakes,
       })),
+    savePendingRetake: (subject) =>
+      parentUpdate((s) => {
+        if ((s.pendingRetakes ?? []).some((r) => r.subject.toLowerCase() === subject.toLowerCase())) return s;
+        const n = s.seq + 1;
+        return {
+          ...s,
+          seq: n + 1,
+          pendingRetakes: [...(s.pendingRetakes ?? []), { id: `r${n}`, subject, since: day }],
+          assignments: [
+            ...s.assignments,
+            {
+              id: `p${n + 1}`,
+              kind: "homework",
+              subject,
+              title: `Lepi õpetajaga kokku järeltöö aeg`,
+              due: addDays(day, 2),
+              minutes: 5,
+              createdOn: day,
+              source: "parent",
+            },
+          ],
+        };
+      }),
+    removePendingRetake: (id) =>
+      parentUpdate((s) => ({ ...s, pendingRetakes: (s.pendingRetakes ?? []).filter((r) => r.id !== id) })),
     attachNote: (id, text) =>
       parentUpdate((s) => ({
         ...s,
         assignments: s.assignments.map((a) => (a.id === id ? { ...a, note: a.note ? `${a.note}\n\n${text}` : text } : a)),
       })),
+    addMany: (list) => {
+      const ids = list.map((_, i) => `p${state.seq + i + 1}`);
+      parentUpdate((s) => ({
+        ...s,
+        seq: s.seq + list.length,
+        assignments: [...s.assignments, ...list.map((a, i) => ({ ...a, id: `p${s.seq + i + 1}`, createdOn: day, source: "parent" as const }))],
+      }));
+      return ids;
+    },
+    removeMany: (ids) => parentUpdate((s) => ({ ...s, assignments: s.assignments.filter((a) => !ids.includes(a.id)) })),
+    setReminder: (r) => setState((s) => (s ? { ...s, reminder: r } : s)),
     removeAssignment: (id) => parentUpdate((s) => ({ ...s, assignments: s.assignments.filter((a) => a.id !== id) })),
     addEvent: (e) =>
       parentUpdate((s) => ({ ...s, seq: s.seq + 1, events: [...s.events, { ...e, id: `e${s.seq + 1}` }] })),

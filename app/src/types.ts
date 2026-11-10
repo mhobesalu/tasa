@@ -82,6 +82,12 @@ export interface AppState {
   reward: RewardConfig;
   payouts: Payout[];
   seq: number;
+  /** Daily reminder to add the next day's homework (Stuudium: teachers can't add after 17:00). */
+  reminder?: { on: boolean; hour: number; asked?: boolean };
+  /** Subjects that need a järeltöö whose date isn't known yet (no grade is stored). */
+  pendingRetakes?: { id: string; subject: string; since: Day }[];
+  /** Lesson weekdays (0 = Monday) the parent set by hand, by subject (lower case). */
+  timetable?: Record<string, number[]>;
 }
 
 export interface Step {

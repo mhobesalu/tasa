@@ -1,3 +1,4 @@
+import { parseMissed } from "../importText";
 import { GRADES_SUMMARY, GRADES_SUMMARY_PHONE, GRADES_TABLE, HOMEWORK, HOMEWORK_PHONE, MSG_NOTEBOOK, MSG_RETAKE, MSG_TEST } from "../testdata/stuudium";
 import type { Assignment } from "../types";
 import { parseDayHeader, parseGrades, parseMessage, parsePasted, parseSubjectLine } from "../importText";
@@ -122,5 +123,11 @@ test("grade summary copied on the phone: teachers on their own line (even one na
     { subject: "Eesti keel I", marks: ["2"] },
     { subject: "Mat 1", marks: ["2"] },
     { subject: "Füüsika 1", marks: ["2"] },
+  ]);
+});
+
+test("the Tegemata list: subject, lesson day and topic", () => {
+  expect(parseMissed(HOMEWORK, "2026-11-10")).toEqual([
+    { key: "2026-10-07|Kunst", subject: "Kunst", lessonDay: "2026-10-07", topic: "värvid" },
   ]);
 });
