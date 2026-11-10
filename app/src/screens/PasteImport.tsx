@@ -13,7 +13,7 @@ import { C, F } from "../theme";
  * Read on the phone only. The parent checks the list before anything is added.
  */
 export function PasteImport({ onRetake }: { onRetake: (subject: string) => void }) {
-  const { state, day, addAssignment, addEvent, attachNote } = useStore();
+  const { state, day, addAssignment, addEvent, attachNote, savePendingRetake } = useStore();
   const fx = useCelebrate();
   const [text, setText] = useState("");
   const [drafts, setDrafts] = useState<Draft[] | null>(null);
@@ -170,13 +170,25 @@ export function PasteImport({ onRetake }: { onRetake: (subject: string) => void 
       {hints.length ? (
         <View style={{ gap: 6 }}>
           <T bold>Järeltöö võib olla vaja</T>
-          <Muted>Lisa järeltöö, kui see on tulemas. Vali siis kuupäev ja ülesanded, mis läksid valesti.</Muted>
+          <Muted>Kui kuupäev on teada, lisa järeltöö kohe. Kui ei, salvesta see: TASA lisab õpilasele sammu „Lepi õpetajaga kokku järeltöö aeg“ ja kuupäeva saad lisada hiljem.</Muted>
           {hints.map((h) => (
             <View key={h.subject} style={[st.row, { alignItems: "center" }]}>
               <T style={{ flex: 1, fontSize: 15 }}>
                 {h.subject} <T style={{ color: C.muted, fontSize: 15 }}>({h.marks.join(", ")})</T>
               </T>
-              <Btn small kind="ghost" title="Lisa järeltöö" onPress={() => onRetake(h.subject)} />
+              <View style={{ gap: 6 }}>
+                <Btn small kind="ghost" title="Kuupäev teada" onPress={() => onRetake(h.subject)} />
+                <Btn
+                  small
+                  kind="ghost"
+                  title="Kuupäev hiljem"
+                  onPress={() => {
+                    savePendingRetake(h.subject);
+                    setHints(hints.filter((x) => x.subject !== h.subject));
+                    fx.toast(`Salvestatud: ${h.subject} järeltöö. Lisa kuupäev, kui see selgub.`);
+                  }}
+                />
+              </View>
             </View>
           ))}
         </View>

@@ -490,7 +490,7 @@ function Privacy() {
 }
 
 function ParentHome({ onLock }: { onLock: () => void }) {
-  const { state, day } = useStore();
+  const { state, day, removePendingRetake } = useStore();
   const fx = useCelebrate();
   const [prefill, setPrefill] = useState<{ kind: Kind; subject: string; n: number } | undefined>();
   const w = weekStats(state, day);
@@ -518,6 +518,28 @@ function ParentHome({ onLock }: { onLock: () => void }) {
           fx.toast("Järeltöö on all valmis: vali kuupäev ja valed ülesanded.");
         }}
       />
+
+      {(state.pendingRetakes ?? []).length ? (
+        <>
+          <Section>Järeltöö vaja, kuupäev teadmata</Section>
+          <Card>
+            {(state.pendingRetakes ?? []).map((r) => (
+              <View key={r.id} style={[st.prow, { justifyContent: "space-between" }]}>
+                <T style={{ flex: 1, fontSize: 16 }}>{r.subject}</T>
+                <Btn
+                  small
+                  title="Lisa kuupäev"
+                  onPress={() => {
+                    setPrefill((p) => ({ kind: "retake", subject: r.subject, n: (p?.n ?? 0) + 1 }));
+                    fx.toast("Järeltöö on all valmis: vali kuupäev ja valed ülesanded.");
+                  }}
+                />
+                <Btn small kind="ghost" title="Eemalda" onPress={() => removePendingRetake(r.id)} />
+              </View>
+            ))}
+          </Card>
+        </>
+      ) : null}
 
       <Section>Lisa plaani</Section>
       <AddForm key={prefill?.n ?? 0} prefill={prefill} />

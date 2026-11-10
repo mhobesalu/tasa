@@ -84,6 +84,8 @@ export interface AppState {
   seq: number;
   /** Daily reminder to add the next day's homework (Stuudium: teachers can't add after 17:00). */
   reminder?: { on: boolean; hour: number; asked?: boolean };
+  /** Subjects that need a järeltöö whose date isn't known yet (no grade is stored). */
+  pendingRetakes?: { id: string; subject: string; since: Day }[];
 }
 
 export interface Step {
