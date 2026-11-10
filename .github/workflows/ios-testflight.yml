@@ -74,10 +74,12 @@ jobs:
         env:
           EAS_NO_VCS: 1
         run: npx --yes eas-cli@latest build --local --platform ios --profile production --non-interactive --output "$RUNNER_TEMP/tasa.ipa"
+      # EAS Submit queues the upload on Expo's side; free submissions can wait
+      # there a long time, so don't keep the Mac waiting (Expo emails if it fails).
       - name: Send to TestFlight
         if: inputs.where != 'expo'
-        timeout-minutes: 30
-        run: npx --yes eas-cli@latest submit --platform ios --profile production --non-interactive --path "$RUNNER_TEMP/tasa.ipa"
+        timeout-minutes: 15
+        run: npx --yes eas-cli@latest submit --platform ios --profile production --non-interactive --no-wait --path "$RUNNER_TEMP/tasa.ipa"
       - name: Remove key
         if: always()
         run: rm -f "$EXPO_ASC_API_KEY_PATH"
