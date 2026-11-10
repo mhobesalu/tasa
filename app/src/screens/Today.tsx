@@ -2,6 +2,7 @@ import * as Haptics from "expo-haptics";
 import React, { useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
+import { DayPicker } from "../components/DayPicker";
 import { Btn, Card, H, Muted, Pill, Section, T, Tick } from "../components/ui";
 import { addDays, diffDays, longDate, mondayOf, WEEKDAY_SHORT, type Day } from "../dates";
 import { dayFull, dayItems, rewardSummary, weekStillPossible, type TodayItem } from "../logic";
@@ -52,6 +53,7 @@ export function EventRow({ e }: { e: DayEvent }) {
 export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
   const { state, day, plan, tick } = useStore();
   const fx = useCelebrate();
+  const [askFor, setAskFor] = useState<string | null>(null); // subject whose retake day we ask
   const [offset, setOffset] = useState(0); // -1 yesterday, 0 today, 1 tomorrow
   const [open, setOpen] = useState(true);
   const [timerFor, setTimerFor] = useState<TodayItem | null>(null);
@@ -75,6 +77,9 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
       return;
     }
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    const a = state.assignments.find((x) => x.id === was.aid);
+    if (a && state.studentRetakeDate !== false && (a.askDate || a.title === "Lepi õpetajaga kokku järeltöö aeg"))
+      setAskFor(a.subject);
     const left = active.length - doneN - 1;
     if (left <= 0) {
       fx.all();
@@ -162,6 +167,7 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
         <Btn kind="ghost" title="＋ Lisa e-päevikust" onPress={onAdd} style={{ marginTop: 16 }} accessibilityHint="Kleebi või pildista kodutööde nimekiri" />
       ) : null}
 
+      <RetakeDayModal subject={askFor} onClose={() => setAskFor(null)} />
       <TimerModal item={timerFor} onClose={() => setTimerFor(null)} onDone={(id) => { setTimerFor(null); doTick(id); }} />
     </View>
   );
@@ -349,6 +355,40 @@ function RewardCard({ open, setOpen }: { open: boolean; setOpen: (b: boolean) =>
         </>
       ) : null}
     </Card>
+  );
+}
+
+/** Asked when the student ticks "Lepi õpetajaga kokku järeltöö aeg". No grades shown. */
+function RetakeDayModal({ subject, onClose }: { subject: string | null; onClose: () => void }) {
+  const { day, studentRetake } = useStore();
+  const fx = useCelebrate();
+  const [due, setDue] = useState<Day | null>(null);
+  useEffect(() => setDue(null), [subject]);
+  if (!subject) return null;
+  return (
+    <Modal transparent animationType="slide" visible onRequestClose={onClose}>
+      <Pressable style={st.scrim} onPress={onClose} accessibilityLabel="Sulge">
+        <Pressable style={st.sheet} onPress={() => {}}>
+          <Text style={[st.eyebrow, { color: C.lakeInk }]}>{subject}</Text>
+          <H size={24}>Mis päeval järeltöö on?</H>
+          <T>Vali päev, milles õpetajaga kokku leppisid. TASA jagab kordamise päevade peale enne seda.</T>
+          <DayPicker label="Järeltöö päev" value={due ?? ""} onChange={setDue} from={addDays(day, 1)} refDay={day} days={21} />
+          <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
+            <Btn
+              title="Lisa plaani"
+              disabled={!due}
+              onPress={() => {
+                if (!due) return;
+                studentRetake(subject, due);
+                fx.toast("Järeltöö on plaanis.");
+                onClose();
+              }}
+            />
+            <Btn title="Veel ei tea" kind="ghost" onPress={onClose} />
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 }
 

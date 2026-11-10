@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
+import { DayPicker } from "../components/DayPicker";
 import { Btn, Card, Choice, Field, H, Muted, Row, Section, T } from "../components/ui";
 import { addDays, diffDays, relDate, shortDate, WEEKDAY_NAMES, WEEKDAY_SHORT, type Day } from "../dates";
 import { dayItems, rewardSummary, weekStats } from "../logic";
-import { numList, retakeChunks, stepsOf } from "../planner";
+import { numList, parseReview, retakeChunks, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
 import { askNotifications } from "../native";
@@ -76,29 +77,6 @@ const KINDS: { value: Kind | "event"; label: string }[] = [
   { value: "event", label: "Kohustuslik aeg" },
 ];
 
-function DayPicker({ label, value, onChange, from, refDay, days = 21 }: { label: string; value: Day; onChange: (d: Day) => void; from: Day; refDay: Day; days?: number }) {
-  return (
-    <View style={{ gap: 4 }}>
-      <T style={{ color: C.muted, fontSize: 14 }}>{label}</T>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-        {Array.from({ length: days }, (_, i) => addDays(from, i)).map((d) => {
-          const on = d === value;
-          return (
-            <Pressable
-              key={d}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-              onPress={() => onChange(d)}
-              style={[st.dayChip, on && { borderColor: C.lake, backgroundColor: C.lakeSoft }]}
-            >
-              <T bold={on} style={{ fontSize: 14 }}>{["täna", "homme"].includes(relDate(d, refDay)) ? relDate(d, refDay) : shortDate(d)}</T>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-    </View>
-  );
-}
 
 function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?: string } }) {
   const { day, addAssignment, addEvent } = useStore();
@@ -112,6 +90,8 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
   const [pTo, setPTo] = useState("");
   const [problems, setProblems] = useState(8);
   const [wrong, setWrong] = useState<number[]>([]);
+  const [review, setReview] = useState("");
+  const [reviewFrom, setReviewFrom] = useState("");
   const [time, setTime] = useState("15:00–15:45");
   const [weekly, setWeekly] = useState(true);
 
@@ -119,6 +99,8 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
     setTitle("");
     setWrong([]);
     setPTo("");
+    setReview("");
+    setReviewFrom("");
   };
 
   const submit = () => {
@@ -139,7 +121,12 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
       addAssignment({ kind, subject: subj, title: "järeltöö", due, minutes: 0, wrong });
     } else {
       if (kind !== "test" && !title.trim()) return fx.toast("Kirjuta, mis on vaja teha.");
-      addAssignment({ kind, subject: subj, title: title.trim() || "kontrolltöö", due, minutes });
+      const r = kind === "test" ? parseReview(review) : [];
+      addAssignment({
+        kind, subject: subj, title: title.trim() || "kontrolltöö", due, minutes,
+        ...(r.length ? { review: r } : {}),
+        ...(kind === "test" && reviewFrom.trim() ? { note: reviewFrom.trim() } : {}),
+      });
     }
     fx.toast("Lisatud plaani.");
     reset();
@@ -179,6 +166,8 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
           }))}
         />
       ) : null}
+
+      {kind === "test" ? <ReviewFields review={review} setReview={setReview} from={reviewFrom} setFrom={setReviewFrom} /> : null}
 
       {kind === "book" ? (
         <Row>
@@ -248,6 +237,7 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
 function PlannedList() {
   const { state, day, removeAssignment, removeEvent } = useStore();
   const [confirm, setConfirm] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   const list = [...state.assignments]
     .filter((a) => diffDays(day, a.due) >= -1)
     .sort((a, b) => a.due.localeCompare(b.due));
@@ -262,12 +252,23 @@ function PlannedList() {
           <View key={a.id} style={[st.prow, i > 0 && st.rowLine]}>
             <View style={{ flex: 1, gap: 2 }}>
               <T>
-                {a.subject}: {a.kind === "book" ? `${a.title}, lk ${a.pageFrom}–${a.pageTo}` : a.kind === "retake" ? `järeltöö, ${numList(a.wrong ?? [])}` : a.title}
+                {a.subject}: {a.kind === "book" ? `${a.title}, lk ${a.pageFrom}–${a.pageTo}` : a.kind === "retake" ? (a.wrong?.length ? `järeltöö, ${numList(a.wrong)}` : "järeltöö") : a.title}
               </T>
               <Muted>
                 {kindLabel[a.kind]} · {relDate(a.due, day)} · {done} / {steps.length} sammu tehtud
                 {a.source === "sample" ? " · näidis" : ""}
               </Muted>
+              {a.kind === "test" ? (
+                editing === a.id ? (
+                  <ReviewEditor a={a} onDone={() => setEditing(null)} />
+                ) : (
+                  <Pressable accessibilityRole="button" onPress={() => setEditing(a.id)} style={{ minHeight: 36, justifyContent: "center" }}>
+                    <T style={{ color: C.lakeInk, fontSize: 15 }} bold>
+                      {a.review?.length ? `Kordamisülesandeid ${a.review.length} · muuda` : "＋ Lisa kordamisküsimused"}
+                    </T>
+                  </Pressable>
+                )
+              ) : null}
             </View>
             {confirm === a.id ? (
               <Btn small kind="danger" title="Jah, eemalda" onPress={() => { removeAssignment(a.id); setConfirm(null); }} />
@@ -289,6 +290,46 @@ function PlannedList() {
         </View>
       ))}
     </Card>
+  );
+}
+
+function ReviewFields({ review, setReview, from, setFrom }: { review: string; setReview: (v: string) => void; from: string; setFrom: (v: string) => void }) {
+  const items = parseReview(review);
+  const numeric = items.length > 0 && items.every((x) => /^\d+$/.test(x));
+  return (
+    <View style={{ gap: 8 }}>
+      <Field
+        label="Kordamisküsimused või -ülesanded (kui õpetaja andis)"
+        value={review}
+        onChangeText={setReview}
+        placeholder={"nt 1–12, 15\nvõi iga küsimus eraldi real"}
+        multiline
+        style={{ flex: 0 }}
+        inputStyle={{ minHeight: 70, textAlignVertical: "top" }}
+        maxLength={2000}
+      />
+      <Field style={{ flex: 0 }} label="Kust need on? (valikuline)" value={from} onChangeText={setFrom} placeholder="nt Kordamisleht, töövihik lk 45" maxLength={200} />
+      {items.length ? (
+        <Muted>{numeric ? `${items.length} ülesannet` : `${items.length} küsimust`}. TASA jagab need kordamise sammudele järjest.</Muted>
+      ) : null}
+    </View>
+  );
+}
+
+function ReviewEditor({ a, onDone }: { a: import("../types").Assignment; onDone: () => void }) {
+  const { setReview } = useStore();
+  const fx = useCelebrate();
+  const numeric = (a.review ?? []).every((x) => /^\d+$/.test(x));
+  const [text, setText] = useState(numeric ? (a.review ?? []).join(", ") : (a.review ?? []).join("\n"));
+  const [from, setFrom] = useState(a.note ?? "");
+  return (
+    <View style={{ gap: 8, marginTop: 6 }}>
+      <ReviewFields review={text} setReview={setText} from={from} setFrom={setFrom} />
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        <Btn small title="Salvesta" onPress={() => { setReview(a.id, parseReview(text), from.trim()); fx.toast("Salvestatud."); onDone(); }} />
+        <Btn small kind="ghost" title="Tühista" onPress={onDone} />
+      </View>
+    </View>
   );
 }
 
@@ -429,6 +470,18 @@ function Settings() {
           ...[16, 17, 18, 19].map((h) => ({ value: h, label: `kell ${h}` })),
         ]}
       />
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <Switch
+          value={state.studentRetakeDate !== false}
+          onValueChange={(on) => parentUpdate((s) => ({ ...s, studentRetakeDate: on }))}
+          trackColor={{ true: C.lake, false: C.line }}
+          accessibilityLabel="Õpilane lisab ise järeltöö aja"
+        />
+        <View style={{ flex: 1 }}>
+          <T>Õpilane lisab ise järeltöö aja</T>
+          <Muted>Kui õpilane on õpetajaga kokku leppinud, valib ta päeva ise. Hinnet ta ei näe.</Muted>
+        </View>
+      </View>
       <Choice
         label="Õppimise aeg päevas (umbes)"
         value={state.budget}

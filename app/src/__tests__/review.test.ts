@@ -1,0 +1,47 @@
+import { parseReview, stepsOf } from "../planner";
+import type { Assignment } from "../types";
+
+const test = (over: Partial<Assignment>): Assignment => ({
+  id: "t1", kind: "test", subject: "Ajalugu", title: "kontrolltöö", due: "2026-11-20",
+  minutes: 75, createdOn: "2026-11-10", source: "parent", ...over,
+});
+
+describe("kordamisküsimused", () => {
+  it("reads numbers and ranges", () => {
+    expect(parseReview("1-5, 8")).toEqual(["1", "2", "3", "4", "5", "8"]);
+    expect(parseReview("1–3 ja 7")).toEqual(["1", "2", "3", "7"]);
+    expect(parseReview("4 5 6")).toEqual(["4", "5", "6"]);
+  });
+  it("reads one question per line", () => {
+    expect(parseReview("1. Mis on demokraatia?\n2. Kes oli Perikles?\n\n- Too näide")).toEqual([
+      "Mis on demokraatia?", "Kes oli Perikles?", "Too näide",
+    ]);
+  });
+  it("tells each review step which problems to do", () => {
+    const s = stepsOf(test({ review: parseReview("1-12") }));
+    expect(s).toHaveLength(3);
+    expect(s.map((x) => x.title)).toEqual([
+      "Ajalugu: kontrolltööks kordamine 1/3, nr 1–4",
+      "Ajalugu: kontrolltööks kordamine 2/3, nr 5–8",
+      "Ajalugu: kontrolltööks kordamine 3/3, nr 9–12",
+    ]);
+  });
+  it("lists questions in the step note and pads extra steps", () => {
+    const s = stepsOf(test({ review: ["Mis on demokraatia?", "Kes oli Perikles?"], note: "Kordamisleht" }));
+    expect(s).toHaveLength(3);
+    expect(s[0].title).toBe("Ajalugu: kontrolltööks kordamine 1/3, 1 küsimus");
+    expect(s[0].note).toBe("Kordamisleht\n• Mis on demokraatia?");
+    expect(s[2].title).toContain("kõik uuesti üle");
+  });
+  it("keeps plain test steps without a list", () => {
+    expect(stepsOf(test({}))[0].title).toBe("Ajalugu: kontrolltööks kordamine 1/3");
+  });
+});
+
+describe("järeltöö day from the student", () => {
+  it("plans general review when the wrong problems aren't known", () => {
+    const s = stepsOf(test({ kind: "retake", title: "järeltöö", minutes: 0, wrong: [] }));
+    expect(s).toHaveLength(2);
+    expect(s[0].title).toBe("Ajalugu: järeltööks kordamine 1/2");
+  });
+});

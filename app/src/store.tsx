@@ -36,6 +36,9 @@ interface Ctx {
   /** Remember that a subject needs a järeltöö; the date comes later. Adds a step "agree the date". */
   savePendingRetake: (subject: string) => void;
   removePendingRetake: (id: string) => void;
+  /** the student got the retake day from the teacher */
+  studentRetake: (subject: string, due: Day) => void;
+  setReview: (id: string, review: string[], note?: string) => void;
   addEvent: (e: Omit<FixedEvent, "id">) => void;
   removeEvent: (id: string) => void;
   toggleExcuse: (stepId: string) => void;
@@ -176,6 +179,7 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
               minutes: 5,
               createdOn: day,
               source: "parent",
+              askDate: true,
             },
           ],
         };
@@ -198,6 +202,21 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
     },
     removeMany: (ids) => parentUpdate((s) => ({ ...s, assignments: s.assignments.filter((a) => !ids.includes(a.id)) })),
     setReminder: (r) => setState((s) => (s ? { ...s, reminder: r } : s)),
+    studentRetake: (subject, due) =>
+      parentUpdate((s) => ({
+        ...s,
+        seq: s.seq + 1,
+        assignments: [
+          ...s.assignments,
+          { id: `p${s.seq + 1}`, kind: "retake", subject, title: "järeltöö", due, minutes: 0, wrong: [], createdOn: day, source: "parent" },
+        ],
+        pendingRetakes: (s.pendingRetakes ?? []).filter((r) => r.subject.toLowerCase() !== subject.toLowerCase()),
+      })),
+    setReview: (id, review, note) =>
+      parentUpdate((s) => ({
+        ...s,
+        assignments: s.assignments.map((a) => (a.id === id ? { ...a, review: review.length ? review : undefined, note: note || undefined } : a)),
+      })),
     removeAssignment: (id) => parentUpdate((s) => ({ ...s, assignments: s.assignments.filter((a) => a.id !== id) })),
     addEvent: (e) =>
       parentUpdate((s) => ({ ...s, seq: s.seq + 1, events: [...s.events, { ...e, id: `e${s.seq + 1}` }] })),
