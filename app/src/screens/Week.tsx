@@ -71,7 +71,7 @@ export function WeekScreen() {
         ].map((t) => (
           <T key={t} style={{ fontSize: 15, lineHeight: 22 }}>• {t}</T>
         ))}
-        <Muted>Hiljem tulevad kodused tööd otse e-päevikust (eKool või Stuudium), kooli loal. Praegu lisab need lapsevanem.</Muted>
+        <Muted>Kodused tööd lisab lapsevanem: kleebib e-päevikust (eKool või Stuudium) või kirjutab käsitsi.</Muted>
       </Card>
     </View>
   );

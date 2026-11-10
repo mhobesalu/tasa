@@ -406,7 +406,7 @@ function viewWeek(){
   const nextMon=[{t:"Füüsika kontrolltöö",m:0,tag:"test"}].concat(S.extra[7]||[]);
   return'<div class="head"><h1>Nädal</h1></div><p class="sub">2.–8. november. Laps näeb tavaliselt ainult tänast päeva. See vaade on ülevaateks.</p>'+
     '<section class="card flow"><b>Kuidas TASA plaani teeb</b><ol>'+
-    '<li>Kodused tööd, tähtajad ja kontrolltööd tulevad e-päevikust (eKool või Stuudium), kooli loal.</li>'+
+    '<li>Kodused tööd, tähtajad ja kontrolltööd kopeerib lapsevanem e-päevikust (eKool või Stuudium).</li>'+
     '<li>Suured tööd jagatakse umbes 25-minutilisteks sammudeks, lähim tähtaeg ees.</li>'+
     '<li>Kontrolltöö ettevalmistus algab kuni 7 päeva enne. Kui töö läks halvasti, saab vanem lisada parandatud töö ja valesti läinud ülesanded jagatakse 2–3 päeva peale.</li>'+
     '<li>TASA kasutab ainult kooli antud ja vanema lisatud materjali. Ise ülesandeid ei koostata ega lahendata.</li>'+
@@ -521,7 +521,7 @@ function viewParent(){
     S.tasks.map(t=>'<div class="prow"><div class="it"><div>'+esc(t.t)+'</div><div class="hist">'+(t.exc?"Vabandatud":t.done?"Tehtud ✓":"Tegemata")+'</div></div><button class="btn small ghost" type="button" data-act="excuse" data-id="'+t.id+'">'+(t.exc?"Taasta":"Vabanda")+'</button></div>').join("")+'</section>'+
     '<div class="sec">Andmed ja privaatsus</div><section class="card pcard"><ul class="facts">'+
     '<li>Lapsevanem on konto omanik ja annab nõusoleku.</li>'+
-    '<li>E-päeviku parooli ei küsita kunagi. Andmed tulevad ametliku liidese kaudu, kooli loal.</li>'+
+    '<li>E-päeviku parooli ei küsita kunagi. Ülesanded kleebib lapsevanem e-päevikust.</li>'+
     '<li>Õpetajad ei näe vaikimisi midagi.</li><li>Diagnoose ei salvestata. Andmed hoitakse EL-is.</li>'+
     '<li>Vanem saab kõik andmed alla laadida või kustutada.</li></ul></section>'+
     '<div class="sec">Näidis</div><section class="card pcard"><div class="field"><label for="kid">Lapse nimi näidises</label><input id="kid" type="text" maxlength="20" value="'+esc(S.kid)+'"></div><button class="btn ghost small" type="button" data-act="reset" style="justify-self:start">Alusta näidist otsast</button></section>';
@@ -621,7 +621,7 @@ function sheet(html){
 }
 function closeSheet(){clearInterval(tmrInt);$("#sheetHost").innerHTML="";}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
-$("#aboutBtn").onclick=()=>sheet('<h2>TASA: õppimise planeerija lapsele</h2><p>TASA aitab last, kellel on raske koduste töödega alustada või oma aega planeerida. Laps näeb ainult tänast päeva ja ühte asja korraga.</p><ul class="facts"><li>Kodused tööd, tähtajad, kontrolltööd ja hinded tulevad e-päevikust (eKool või Stuudium), kooli loal. Õpetajatele lisatööd ei tule.</li><li>Suured tööd jagatakse umbes 25-minutilisteks sammudeks.</li><li>Iga linnuke saab tähistuse. Preemia paneb paika lapsevanem, näiteks ekraaniaeg minutites, tähed filmiõhtuks vanemaga või pereretkeks aasta lõpus. Või ilma preemiata.</li><li>Kui kontrolltöö läks halvasti, pildistab vanem parandatud töö ja valesti läinud ülesanded jagatakse 2–3 päeva peale. TASA ei lahenda ülesandeid lapse eest.</li><li>Perele alati tasuta.</li></ul><p class="hist">See näidis kasutab väljamõeldud andmeid ega ühendu ühegi e-päevikuga. Proovi: vajuta „Tehtud“, vaata homset noolega ja ava vaade „Lapsevanem“ (PIN: mis tahes 4 numbrit).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Proovi</button>');
+$("#aboutBtn").onclick=()=>sheet('<h2>TASA: õppimise planeerija lapsele</h2><p>TASA aitab last, kellel on raske koduste töödega alustada või oma aega planeerida. Laps näeb ainult tänast päeva ja ühte asja korraga.</p><ul class="facts"><li>Kodused tööd, tähtajad ja kontrolltööd kopeerib lapsevanem e-päevikust (eKool või Stuudium) ja kleebib TASAsse. Õpetajatele lisatööd ei tule.</li><li>Suured tööd jagatakse umbes 25-minutilisteks sammudeks.</li><li>Iga linnuke saab tähistuse. Preemia paneb paika lapsevanem, näiteks ekraaniaeg minutites, tähed filmiõhtuks vanemaga või pereretkeks aasta lõpus. Või ilma preemiata.</li><li>Kui kontrolltöö läks halvasti, pildistab vanem parandatud töö ja valesti läinud ülesanded jagatakse 2–3 päeva peale. TASA ei lahenda ülesandeid lapse eest.</li><li>Perele alati tasuta.</li></ul><p class="hist">See näidis kasutab väljamõeldud andmeid ega ühendu ühegi e-päevikuga. Proovi: vajuta „Tehtud“, vaata homset noolega ja ava vaade „Lapsevanem“ (PIN: mis tahes 4 numbrit).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Proovi</button>');
 
 /* ---------- toast ---------- */
 let tt;
