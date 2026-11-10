@@ -106,3 +106,99 @@ Kursus
 september — oktoober 5 P AR
 Salvesta/prindi
 `;
+
+// What the phone's text recognition makes of Stuudium app screenshots (made up):
+// clock and app header on every picture, text wrapped over several rows, a task
+// cut off at the bottom of one picture and shown again in the next, and the tab
+// bar covering a row.
+export const HOMEWORK_SHOTS = `14:12
+Stuudium v3.0.25
+Õpilane Näidis
+Ülesanded, kodutööd ja kontrolltööd Kalender
+Sa pole seda lehte mõnda aega värskendanud, ja näha
+olevad ülesanded ei pruugi kajastada uusimat seisu.
+Näita vanemaid ülesandeid ↑
+T 10. november täna
+O Inglise keel I
+Finish your short story for next Tuesday and share it
+with your group. -5p
+K 11. november homme
+O Eesti keel I 1 h
+Loe kodus läbi õpikutekst ,,Sõnaliigid". Tee tunnis
+alustatud tööleht lõpuni.
+| Tera: Õigekeel: sõnaliigid (slaidid, tööleht) -7p
+Tunnid Ülesanded Puudumised Tera
+O Eesti keel I
+––– pilt –––
+14:12
+Stuudium v3.0.25
+O Eesti keel I
+NB! Võta tundi kaasa siniste kaantega harjutustik. Kui sul
+seda ei ole, küsi raamatukogust. -1p
+O Mat 1: Arvuhulgad. Avaldised. (K) Kontrolltöö
+Avaldiste lihtsustamine -20p
+N 12. november
+O Ajalugu Kontrolltöö
+Vanaaeg (Kreeka, Rooma) -4p
+R 13. november
+O Filmiõpetus 1 h
+Kirjuta 1-3 sündmuse kirjeldust, millest saaks hea loo. Mõtle,
+en Tunnid Ülesanded Puudumised Tera
+––– pilt –––
+14:12
+Stuudium v3.0.25
+R 13. november
+O Filmiõpetus 1 h
+Kirjuta 1-3 sündmuse kirjeldust, millest saaks hea loo. Mõtle,
+kuidas lugu kasvab ja lõpeb. -4p
+O Muusikaajalugu Kontrolltöö
+Keskaeg -18p
+Lisa e Tunnid Ülesanded Puudumised Tera
+`;
+
+export const GRADES_SHOTS = `14:13
+miikael.example.ee
+Mat 1: Arvuhulgad. Avaldised. (K)
+Mari Maasikas
+Hindamisjuhend Tegevuste kava
+Kursus
+september — oktoober P P 2 Q P
+Ajalugu
+Jaan Tamm
+Kursus
+september P
+Füüsika 1: Kinemaatika.
+August Allik
+Tegevuste kava Hindamisjuhend
+Kursus
+september — november P 5 H 2 P
+Kehaline kasvatus I
+Toomas Tamm Rein Rebane
+Tegevuste kava
+Kursus
+september — november
+P P P T P P P P T P P
+Mängufilm
+Andres Org
+Kursus
+november AR
+`;
+
+// A message screenshot read on the phone (made up).
+export const MSG_SHOT = `14:12
+Stuudium v3.0.25
+Sulge ↓ Järgmine 10.11
+Mari Mets 10. nov kell 13:00
+10K Kunstimuuseumis
+Sõnumit näevad: 10k vanemad ja õpetaja
+Gümnaasiumi õpetajad Kunstimaja
+reede, 13. nov kell 12:30–14:30
+Muuseumitund „Vaata. Mõtle. Muutu.“
+Arhiveeri
+Märgi lemmikuks
+× Vaigista teema enda jaoks
+← Vasta ainult saatjale uue sõnumiga
++
+Vastuseid veel pole
+Vasta sõnumile
++ Lisa vestlusesse uusi osalisi`;

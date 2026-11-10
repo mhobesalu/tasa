@@ -13,25 +13,34 @@ export async function readClipboard(): Promise<string> {
   }
 }
 
-interface Frame { top: number; left: number }
+interface Frame { top: number; left: number; height?: number; width?: number }
 interface Line { text: string; frame?: Frame }
 interface Block { text: string; frame?: Frame; lines?: Line[] }
 
-/** Lines in reading order: top to bottom, then left to right. */
+/** Put between screenshots so the reader knows where one picture ends. */
+import { SHOT_BREAK as SHOT_BREAK_LINE } from "./importText";
+
+/**
+ * Lines in reading order. Pieces on the same row (a subject and its "1 h" or
+ * "Kontrolltöö" badge, a month and its marks) are joined with a space.
+ */
 export function linesInOrder(blocks: Block[]): string[] {
-  const lines: Line[] = [];
+  const lines: (Line & { i: number })[] = [];
   for (const b of blocks) {
-    if (b.lines?.length) lines.push(...b.lines.map((l) => ({ text: l.text, frame: l.frame ?? b.frame })));
-    else lines.push({ text: b.text, frame: b.frame });
+    if (b.lines?.length) for (const l of b.lines) lines.push({ text: l.text, frame: l.frame ?? b.frame, i: lines.length });
+    else lines.push({ text: b.text, frame: b.frame, i: lines.length });
   }
-  return lines
-    .map((l, i) => ({ ...l, i }))
-    .sort((a, b) => {
-      const ta = a.frame?.top ?? a.i, tb = b.frame?.top ?? b.i;
-      if (Math.abs(ta - tb) > 8) return ta - tb;
-      return (a.frame?.left ?? 0) - (b.frame?.left ?? 0);
-    })
-    .map((l) => l.text.trim())
+  const mid = (l: Line & { i: number }) => (l.frame ? l.frame.top + (l.frame.height ?? 0) / 2 : l.i * 1000);
+  const sorted = [...lines].sort((a, b) => mid(a) - mid(b));
+  const rows: (Line & { i: number })[][] = [];
+  for (const l of sorted) {
+    const row = rows[rows.length - 1];
+    const h = Math.max(l.frame?.height ?? 0, row?.[0].frame?.height ?? 0);
+    if (row && l.frame && row[0].frame && Math.abs(mid(l) - mid(row[0])) < Math.max(h * 0.5, 4)) row.push(l);
+    else rows.push([l]);
+  }
+  return rows
+    .map((r) => r.sort((a, b) => (a.frame?.left ?? 0) - (b.frame?.left ?? 0)).map((l) => l.text.trim()).filter(Boolean).join(" "))
     .filter(Boolean);
 }
 
@@ -55,7 +64,7 @@ export async function textFromScreenshots(): Promise<string | null> {
     const r = await TextRecognition.recognize(a.uri);
     parts.push(linesInOrder(r.blocks ?? [{ text: r.text }]).join("\n"));
   }
-  return parts.join("\n");
+  return parts.join(`\n${SHOT_BREAK_LINE}\n`);
 }
 
 // ---- Daily reminder ----
