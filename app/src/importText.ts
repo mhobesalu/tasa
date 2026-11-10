@@ -3,7 +3,7 @@
 // and pastes it here. Everything is read on the phone; nothing is sent anywhere.
 // TASA only copies what the school wrote. It never makes up or solves tasks.
 
-import { addDays, diffDays, toDay, type Day } from "./dates";
+import { addDays, diffDays, toDay, weekdayIndex, type Day } from "./dates";
 import type { Assignment, Kind } from "./types";
 
 export interface Draft {
@@ -247,4 +247,118 @@ export function parseGrades(raw: string): RetakeHint[] {
     if (bad.length) bySubject.set(r.subject, [...(bySubject.get(r.subject) ?? []), ...bad]);
   }
   return [...bySubject].map(([subject, marks]) => ({ subject, marks }));
+}
+
+// ---- Messages (Stuudium "Suhtlus" / eKool messages) ----
+// TASA suggests one thing to do with a pasted message; the parent confirms.
+// It never answers the message or writes anything for the student.
+
+export type MessageAction =
+  | { type: "attach"; aid: string; label: string }
+  | { type: "event"; day: Day; time: string; title: string }
+  | { type: "reminder"; due: Day; subject: string; title: string };
+
+export interface ParsedMessage {
+  title: string;
+  text: string;
+  actions: MessageAction[];
+}
+
+const MSG_NOISE = [
+  /^sõnumit näevad:/i,
+  /^arhiveeri$/i,
+  /^märgi lemmikuks$/i,
+  /^¶?\s*muuda sõnumit$/i,
+  /^sõnumit on näinud/i,
+  /^\+$/,
+  /^\d+ vastus(t)?$/i,
+  /vaata veebis$/i,
+  /\d{1,2}\.\s*\p{L}+\.?\s+kell\s+\d{1,2}[:.]\d{2}$/iu, // "Mari Maasikas 8. nov kell 17:00"
+];
+
+const SUBJECT_WORDS: [string, RegExp][] = [
+  ["Matemaatika", /\bmat(emaatika)?\b|\bmatemaatika/i],
+  ["Eesti keel", /eesti keel/i],
+  ["Inglise keel", /inglise keel/i],
+  ["Ajalugu", /ajalu|ajaloo|vanaaeg|vanaaja|keskaeg|keskaja|üldajalugu/i],
+  ["Keemia", /keemia/i],
+  ["Füüsika", /füüsika/i],
+  ["Bioloogia", /bioloogia/i],
+  ["Geograafia", /geograafia/i],
+  ["Kirjandus", /kirjandus/i],
+  ["Muusika", /muusika/i],
+  ["Kunst", /\bkunst/i],
+];
+
+function subjectIn(text: string): string | null {
+  for (const [name, re] of SUBJECT_WORDS) if (re.test(text)) return name;
+  return null;
+}
+
+const WD_STEMS = ["esmasp", "teisip", "kolmap", "neljap", "reede", "laup", "pühap"];
+
+/** Next day (from tomorrow on) named in the text, e.g. "neljapäevaseks", "kolmapäeviti". */
+function weekdayIn(text: string, t: Day): { day: Day; every: boolean } | null {
+  const l = text.toLowerCase();
+  for (let i = 0; i < 7; i++) {
+    const m = l.match(new RegExp(`${WD_STEMS[i]}\\p{L}*`, "u"));
+    if (!m) continue;
+    for (let k = 1; k <= 7; k++) {
+      const d = addDays(t, k);
+      if (weekdayIndex(d) === i) return { day: d, every: /iti$/.test(m[0]) };
+    }
+  }
+  return null;
+}
+
+function dateIn(text: string, t: Day): Day | null {
+  const m = text.match(/\b(\d{1,2})\.(\d{1,2})\b/) ?? null;
+  if (m) return nearDate(Number(m[1]), Number(m[2]), t);
+  const m2 = text.toLowerCase().match(new RegExp(`\\b(\\d{1,2})\\.\\s*(${MONTHS.map((x) => x.slice(0, 3)).join("|")})\\p{L}*`, "u"));
+  if (m2) return nearDate(Number(m2[1]), MONTHS.findIndex((x) => x.startsWith(m2[2])) + 1, t);
+  return null;
+}
+
+function timeIn(text: string): string | null {
+  const m = text.match(/kell\s*(\d{1,2})(?:[.:](\d{2}))?/i) ?? text.match(/\b(\d{1,2}):(\d{2})\b/);
+  if (!m) return null;
+  const h = Number(m[1]);
+  if (h > 23) return null;
+  return `${String(h).padStart(2, "0")}:${m[2] ?? "00"}`;
+}
+
+const GREETING = /^(tere|tervist|head|lugupidamisega|tervitades|tervitavasti|parimat|aitäh)\b/i;
+
+export function parseMessage(raw: string, t: Day, assignments: Assignment[]): ParsedMessage | null {
+  const lines = decode(raw)
+    .split(/\r?\n/)
+    .map((l) => l.replace(/\s+/g, " ").trim())
+    .filter((l) => l && !MSG_NOISE.some((r) => r.test(l)));
+  if (!lines.length) return null;
+  const text = lines.join("\n");
+  const body = lines.filter((l) => !GREETING.test(l));
+  const title = shortTitle(body[0] ?? lines[0]);
+  const subject = subjectIn(text);
+  const when = dateIn(text, t) ?? weekdayIn(text, t)?.day ?? null;
+  const time = timeIn(text);
+  const actions: MessageAction[] = [];
+
+  // About an upcoming test? Attach the message to it.
+  const tests = assignments.filter((a) => a.kind === "test" || a.kind === "retake").filter((a) => a.due > t);
+  const bySubject = subject ? tests.filter((a) => subjectIn(a.subject) === subject || a.subject.toLowerCase().includes(subject.toLowerCase())) : [];
+  const byDay = when ? tests.filter((a) => a.due === when) : [];
+  const target = bySubject.find((a) => !when || a.due === when) ?? (byDay.length === 1 ? byDay[0] : bySubject[0]);
+  if (target && /kontrolltöö|tasemekontroll|test|järeltöö|kordamis|kordamine|tööks|tööle/i.test(text)) {
+    actions.push({ type: "attach", aid: target.id, label: `${target.subject}: ${target.kind === "retake" ? "järeltöö" : "kontrolltöö"} ${target.due}` });
+  }
+
+  // A time to be somewhere? Offer a fixed appointment.
+  if (time && when) {
+    const what = /järeltöö|parandama/i.test(text) ? `${subject ?? "Järeltöö"}${subject ? " järeltöö" : ""}` : title;
+    actions.push({ type: "event", day: when, time, title: what });
+  }
+
+  // Otherwise (or as well): a short reminder for tomorrow.
+  actions.push({ type: "reminder", due: addDays(t, 1), subject: subject ?? "Kool", title });
+  return { title, text, actions };
 }

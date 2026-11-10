@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { Btn, Card, Muted, Pill, Row, T } from "../components/ui";
-import { relDate } from "../dates";
-import { isDuplicate, parseGrades, parsePasted, type Draft, type RetakeHint } from "../importText";
+import { longDate, relDate } from "../dates";
+import { isDuplicate, parseGrades, parseMessage, parsePasted, type Draft, type MessageAction, type ParsedMessage, type RetakeHint } from "../importText";
 import { useStore } from "../store";
 import { C, F } from "../theme";
 
@@ -12,12 +12,13 @@ import { C, F } from "../theme";
  * Read on the phone only. The parent checks the list before anything is added.
  */
 export function PasteImport({ onRetake }: { onRetake: (subject: string) => void }) {
-  const { state, day, addAssignment } = useStore();
+  const { state, day, addAssignment, addEvent, attachNote } = useStore();
   const fx = useCelebrate();
   const [text, setText] = useState("");
   const [drafts, setDrafts] = useState<Draft[] | null>(null);
   const [hints, setHints] = useState<RetakeHint[]>([]);
   const [on, setOn] = useState<Record<string, boolean>>({});
+  const [msg, setMsg] = useState<ParsedMessage | null>(null);
 
   const why = (d: Draft) =>
     d.due <= day ? "tähtaeg möödas" : isDuplicate(d, state.assignments) ? "juba plaanis" : null;
@@ -26,9 +27,14 @@ export function PasteImport({ onRetake }: { onRetake: (subject: string) => void 
     const d = parsePasted(text, day);
     const h = parseGrades(text);
     if (!d.length && !h.length) {
-      fx.toast("Ei leidnud midagi. Kopeeri kogu nimekiri koos kuupäevadega.");
+      const m = parseMessage(text, day, state.assignments);
+      if (!m) return fx.toast("Ei leidnud midagi. Kopeeri kogu nimekiri koos kuupäevadega.");
+      setDrafts(null);
+      setHints([]);
+      setMsg(m);
       return;
     }
+    setMsg(null);
     setDrafts(d);
     setHints(h);
     setOn(Object.fromEntries(d.map((x) => [x.key, why(x) === null])));
@@ -38,7 +44,30 @@ export function PasteImport({ onRetake }: { onRetake: (subject: string) => void 
     setText("");
     setDrafts(null);
     setHints([]);
+    setMsg(null);
   };
+
+  const act = (a: MessageAction) => {
+    if (!msg) return;
+    if (a.type === "attach") {
+      attachNote(a.aid, `Õpetaja sõnum: ${msg.text}`);
+      fx.toast("Sõnum lisatud kontrolltöö juurde.");
+    } else if (a.type === "event") {
+      addEvent({ title: a.title, day: a.day, time: a.time, weekly: false });
+      fx.toast("Lisatud kohustuslik aeg.");
+    } else {
+      addAssignment({ kind: "homework", subject: a.subject, title: a.title, due: a.due, minutes: 10, note: msg.text });
+      fx.toast("Meeldetuletus lisatud tänasesse plaani.");
+    }
+    clear();
+  };
+
+  const actLabel = (a: MessageAction) =>
+    a.type === "attach"
+      ? `Lisa kordamise juurde (${a.label.replace(/ \d{4}-\d{2}-\d{2}$/, "")})`
+      : a.type === "event"
+        ? `Lisa kohustuslik aeg: ${longDate(a.day).toLowerCase()} kell ${a.time}`
+        : "Lisa meeldetuletus tänasesse plaani";
 
   const chosen = (drafts ?? []).filter((d) => on[d.key]);
   const add = () => {
@@ -52,9 +81,8 @@ export function PasteImport({ onRetake }: { onRetake: (subject: string) => void 
   return (
     <Card>
       <Muted>
-        Kopeeri e-päevikust kodutööde nimekiri (Stuudiumis „Ülesanded, kodutööd ja kontrolltööd“) ja kleebi siia. Hinnete
-        kokkuvõttest leiab TASA ained, kus võib olla vaja järeltööd. Kõik loetakse selles telefonis, midagi ei saadeta
-        kuhugi ja hindeid ei salvestata.
+        Kopeeri e-päevikust kodutööde nimekiri (Stuudiumis „Ülesanded, kodutööd ja kontrolltööd“), hinnete kokkuvõte või
+        õpetaja sõnum ja kleebi siia. Kõik loetakse selles telefonis, midagi ei saadeta kuhugi ja hindeid ei salvestata.
       </Muted>
       <TextInput
         value={text}
@@ -107,6 +135,16 @@ export function PasteImport({ onRetake }: { onRetake: (subject: string) => void 
             title={chosen.length ? `Lisa ${chosen.length} plaani` : "Vali vähemalt üks"}
             onPress={() => (chosen.length ? add() : fx.toast("Vali vähemalt üks ülesanne."))}
           />
+        </View>
+      ) : null}
+
+      {msg ? (
+        <View style={{ gap: 6 }}>
+          <T bold>Sõnum: {msg.title}</T>
+          <Muted>Mida TASA sellega tegema peaks?</Muted>
+          {msg.actions.map((a, i) => (
+            <Btn key={i} kind={i === 0 ? "primary" : "ghost"} title={actLabel(a)} onPress={() => act(a)} />
+          ))}
         </View>
       ) : null}
 

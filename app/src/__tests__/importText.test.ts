@@ -1,5 +1,6 @@
-import { GRADES_SUMMARY, GRADES_TABLE, HOMEWORK } from "../testdata/stuudium";
-import { parseDayHeader, parseGrades, parsePasted, parseSubjectLine } from "../importText";
+import { GRADES_SUMMARY, GRADES_TABLE, HOMEWORK, MSG_NOTEBOOK, MSG_RETAKE, MSG_TEST } from "../testdata/stuudium";
+import type { Assignment } from "../types";
+import { parseDayHeader, parseGrades, parseMessage, parsePasted, parseSubjectLine } from "../importText";
 
 const T = "2026-11-10";
 const sample = HOMEWORK;
@@ -70,4 +71,27 @@ test("a homework list has no grade hints and a grade table has no tasks", () => 
   expect(parseGrades(sample)).toEqual([]);
   expect(parsePasted(GRADES_TABLE, T)).toEqual([]);
   expect(parsePasted(GRADES_SUMMARY, T)).toEqual([]);
+});
+
+describe("messages", () => {
+  const tests: Assignment[] = [
+    { id: "a1", kind: "test", subject: "Ajalugu", title: "Vanaaeg", due: "2026-11-12", minutes: 50, createdOn: T, source: "parent" },
+  ];
+
+  test("revision questions are attached to Thursday's history test", () => {
+    const m = parseMessage(MSG_TEST, T, tests)!;
+    expect(m.actions[0]).toEqual({ type: "attach", aid: "a1", label: "Ajalugu: kontrolltöö 2026-11-12" });
+  });
+
+  test("a notice becomes a reminder for tomorrow", () => {
+    const m = parseMessage(MSG_NOTEBOOK, T, tests)!;
+    expect(m.title).toBe("Teie eesti keele vihikud");
+    expect(m.actions).toEqual([{ type: "reminder", due: "2026-11-11", subject: "Eesti keel", title: "Teie eesti keele vihikud" }]);
+    expect(m.text).not.toMatch(/Sõnumit näevad/);
+  });
+
+  test("a retake time becomes a fixed appointment on the next Wednesday", () => {
+    const m = parseMessage(MSG_RETAKE, T, tests)!;
+    expect(m.actions[0]).toEqual({ type: "event", day: "2026-11-11", time: "16:00", title: "Keemia järeltöö" });
+  });
 });
