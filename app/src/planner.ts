@@ -113,6 +113,9 @@ function splitEven<T>(xs: T[], n: number): T[][] {
   return out.filter((x) => x.length);
 }
 
+/** A reading task: "Loe raamat …", "lugemine", "kohustuslik kirjandus". */
+export const READING = /\b(loe(?:ge)?|lugeda|lugemine|lugemiseks|raamat\w*|kohustuslik kirjandus)\b/i;
+
 /** Turn one assignment into its fixed list of ~25-minute steps. Ids stay stable. */
 export function stepsOf(a: Assignment): Step[] {
   const base = { aid: a.id, kind: a.kind, subject: a.subject };
@@ -176,6 +179,18 @@ export function stepsOf(a: Assignment): Step[] {
       const list = p.map((x) => `• ${x}`).join("\n");
       return mk(i, n, `${head}, ${p.length === 1 ? "1 küsimus" : `${p.length} küsimust`}`, m, a.note ? `${a.note}\n${list}` : list);
     });
+  }
+  // Reading a book or a longer text: a little every day until it's due, not all at the end.
+  if ((a.kind === "homework" || a.kind === "project") && READING.test(`${a.title} ${a.note ?? ""}`)) {
+    const days = Math.min(7, diffDays(a.createdOn, a.due));
+    if (days >= 2) {
+      const r = Math.max(n, days);
+      const per = Math.max(10, Math.ceil(a.minutes / r / 5) * 5);
+      return Array.from({ length: r }, (_, i) =>
+        mk(i, r, `${a.subject}: ${a.title}, loe edasi ${i + 1}/${r}`, per,
+          a.note || "Loe täna natuke. Iga päev natuke, siis jõuad rahulikult."),
+      );
+    }
   }
   const steps: Step[] = [];
   for (let i = 0; i < n; i++) {

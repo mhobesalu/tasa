@@ -87,3 +87,19 @@ describe("photo of a maths worksheet", () => {
     expect(s[0].title).toBe("Ajalugu: kontrolltööks kordamine 1/5, nr 32–34");
   });
 });
+
+describe("reading homework", () => {
+  const hw = (over: Partial<Assignment>): Assignment => ({
+    id: "h1", kind: "homework", subject: "Kirjandus", title: "Loe raamat „Kevade“", due: "2026-11-17",
+    minutes: 60, createdOn: "2026-11-10", source: "ediary", ...over,
+  });
+  it("reads a little every day until it's due", () => {
+    const s = stepsOf(hw({}));
+    expect(s).toHaveLength(7);
+    expect(s[0].title).toBe("Kirjandus: Loe raamat „Kevade“, loe edasi 1/7");
+    expect(s[0].minutes).toBe(10);
+  });
+  it("keeps a reading task due tomorrow as it is", () => {
+    expect(stepsOf(hw({ due: "2026-11-11", minutes: 25 }))).toHaveLength(1);
+  });
+});
