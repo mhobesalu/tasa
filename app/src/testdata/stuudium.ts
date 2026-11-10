@@ -35,3 +35,38 @@ Sõnumit on näinud…
 
 Liis Lepp 8. nov kell 17:00
 Töid saab teha etteteatamisega kolmapäeviti kell 16.00`;
+
+// The same page copied in the phone browser: blank line after each day, every task
+// ends with its age ("-5p"), text can span lines and Tera material sits on its own line.
+export const HOMEWORK_PHONE = `Ülesanded, kodutööd ja kontrolltööd
+Kalender
+Näita vanemaid ülesandeid ↑
+T 10. novembertäna
+
+Inglise keel I
+Finish your short story for next Tuesday and share it with your group. If someone is absent, another member presents it -5p
+K 11. novemberhomme
+
+Eesti keel I 1 h
+Loe kodus süvenemisega läbi abimaterjal (õpikutekst ,,Sõnaliigid"). Tee tunnis alustatud tööleht lõpuni. Käändsõnade puhul pead oskama kõiki sõnaliike määrata.
+Tera: Õigekeel: sõnaliigid (slaidid, tööleht)https://example.ope.ee/tera/r/1/1 -7p
+Eesti keel I
+NB! Võta tundi kaasa siniste kaantega harjutustik. Kui sul seda ei ole, küsi raamatukogust. -1p
+Mat 1: Arvuhulgad. Avaldised. (K) Kontrolltöö
+Avaldiste lihtsustamine -20p
+N 12. november
+
+Ajalugu Kontrolltöö
+Vanaaeg (Kreeka, Rooma) -4p
+R 13. november
+
+Muusikaajalugu Kontrolltöö
+Keskaeg -18p
+Muusikaajalugu 1 h 30 min
+Kontrolltöö nr 1 - keskaeg.
+Tera: Kordamine KT 1https://example.ope.ee/tera/r/2/2 -7p
+tulevikus veel 1 ülesanne ↓
+Lisa endale ülesanne
+Tegemata
+Kunst, K 07. oktoober
+`;

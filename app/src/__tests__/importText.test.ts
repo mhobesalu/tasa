@@ -1,4 +1,4 @@
-import { GRADES_SUMMARY, GRADES_TABLE, HOMEWORK, MSG_NOTEBOOK, MSG_RETAKE, MSG_TEST } from "../testdata/stuudium";
+import { GRADES_SUMMARY, GRADES_TABLE, HOMEWORK, HOMEWORK_PHONE, MSG_NOTEBOOK, MSG_RETAKE, MSG_TEST } from "../testdata/stuudium";
 import type { Assignment } from "../types";
 import { parseDayHeader, parseGrades, parseMessage, parsePasted, parseSubjectLine } from "../importText";
 
@@ -36,7 +36,7 @@ test("a Stuudium homework list becomes tasks", () => {
     ["2026-11-17", "Kirjandus", "test"],
   ]);
   expect(d[1].minutes).toBe(60);
-  expect(d[1].title).toBe("Loe kodus läbi õpikutekst ,,Sõnaliigid\" ja tee tunnis…");
+  expect(d[1].title).toBe("Loe kodus läbi õpikutekst ,,Sõnaliigid\" ja tee tunnis alustatud tööleht lõpuni");
   expect(d[1].note).toContain("https://example.ope.ee/tera/r/1/1");
   expect(d[3].title).toBe("Avaldiste lihtsustamine");
   expect(d[8].minutes).toBe(90);
@@ -94,4 +94,27 @@ describe("messages", () => {
     const m = parseMessage(MSG_RETAKE, T, tests)!;
     expect(m.actions[0]).toEqual({ type: "event", day: "2026-11-11", time: "16:00", title: "Keemia järeltöö" });
   });
+});
+
+test("phone-browser copy: tasks end at \"-Np\", tests and reminders are recognised", () => {
+  const d = parsePasted(HOMEWORK_PHONE, "2026-11-10");
+  const by = (s: string) => d.filter((x) => x.subject === s);
+  expect(d.map((x) => x.subject)).toEqual([
+    "Inglise keel I", "Eesti keel I", "Eesti keel I", "Mat 1", "Ajalugu", "Muusikaajalugu", "Muusikaajalugu",
+  ]);
+  const [read, bring] = by("Eesti keel I");
+  expect(read.minutes).toBe(60);
+  expect(read.title).toBe("Loe kodus süvenemisega läbi abimaterjal (õpikutekst ,,Sõnaliigid\")");
+  expect(read.note).toContain("Tera: Õigekeel");
+  expect(bring.minutes).toBe(5);
+  expect(bring.title).toBe("Võta tundi kaasa siniste kaantega harjutustik");
+  const mat = by("Mat 1")[0];
+  expect(mat.kind).toBe("test");
+  expect(mat.title).toBe("Avaldiste lihtsustamine");
+  expect(mat.due).toBe("2026-11-11");
+  expect(by("Ajalugu")[0].kind).toBe("test");
+  const [kt, rev] = by("Muusikaajalugu");
+  expect(kt.kind).toBe("test");
+  expect(rev.minutes).toBe(90);
+  expect(d.every((x) => !/-\d+p$/.test(x.title))).toBe(true);
 });
