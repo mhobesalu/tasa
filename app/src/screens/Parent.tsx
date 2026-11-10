@@ -7,6 +7,7 @@ import { dayItems, rewardSummary, weekStats } from "../logic";
 import { numList, retakeChunks, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
+import { PasteImport } from "./PasteImport";
 import type { Kind, RewardConfig } from "../types";
 
 export function ParentScreen({ unlocked, setUnlocked }: { unlocked: boolean; setUnlocked: (b: boolean) => void }) {
@@ -97,11 +98,11 @@ function DayPicker({ label, value, onChange, from, refDay, days = 21 }: { label:
   );
 }
 
-function AddForm() {
+function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string } }) {
   const { day, addAssignment, addEvent } = useStore();
   const fx = useCelebrate();
-  const [kind, setKind] = useState<Kind | "event">("homework");
-  const [subject, setSubject] = useState("");
+  const [kind, setKind] = useState<Kind | "event">(prefill?.kind ?? "homework");
+  const [subject, setSubject] = useState(prefill?.subject ?? "");
   const [title, setTitle] = useState("");
   const [due, setDue] = useState<Day>(addDays(day, 2));
   const [minutes, setMinutes] = useState(50);
@@ -476,6 +477,8 @@ function Privacy() {
 
 function ParentHome({ onLock }: { onLock: () => void }) {
   const { state, day } = useStore();
+  const fx = useCelebrate();
+  const [prefill, setPrefill] = useState<{ kind: Kind; subject: string; n: number } | undefined>();
   const w = weekStats(state, day);
   const pct = w.stepsPlanned ? Math.round((w.stepsDone / w.stepsPlanned) * 100) : 0;
   return (
@@ -494,8 +497,16 @@ function ParentHome({ onLock }: { onLock: () => void }) {
         <Stat n={String(w.missedDeadlines)} l="tähtaega mööda" />
       </View>
 
+      <Section>Kleebi e-päevikust</Section>
+      <PasteImport
+        onRetake={(subject) => {
+          setPrefill((p) => ({ kind: "retake", subject, n: (p?.n ?? 0) + 1 }));
+          fx.toast("Järeltöö on all valmis: vali kuupäev ja valed ülesanded.");
+        }}
+      />
+
       <Section>Lisa plaani</Section>
-      <AddForm />
+      <AddForm key={prefill?.n ?? 0} prefill={prefill} />
 
       <Section>Plaanis</Section>
       <PlannedList />
