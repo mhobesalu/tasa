@@ -283,14 +283,14 @@ let S;
 function fresh(){return{
   tasks:TODAY0.map(x=>Object.assign({done:false,exc:false},x)),
   open:true, day:1, unlocked:false,
-  rw:{on:true,name:"Pocket money",unit:"euros",per:"day",amount:3,goal:0,bonus:10},
+  rw:{on:true,name:"Screen time",unit:"minutes",per:"step",amount:10,goal:0,bonus:30},
   paid:0, hist:[], kid:"Mia",
   test:null, extra:{}, manual:[], mseq:0
 };}
 S=fresh();
 const PRESETS={
   ekraan:{on:true,name:"Screen time",unit:"minutes",per:"step",amount:10,goal:0,bonus:30},
-  raha:{on:true,name:"Pocket money",unit:"euros",per:"day",amount:3,goal:0,bonus:10},
+  film:{on:true,name:"Movie night with a parent",unit:"stars",per:"step",amount:1,goal:30,bonus:0},
   ps4:{on:true,name:"PS4",unit:"stars",per:"step",amount:1,goal:100,bonus:0}
 };
 
@@ -496,7 +496,7 @@ function viewParent(){
   if(r.on){
     const bal=balance(),reached=r.goal>0&&bal>=r.goal;
     pay='<div class="row" style="align-items:center"><span>'+(r.goal>0?"Collected: <b>"+bal+" / "+r.goal+" "+u+"</b>":"Not yet given: <b>"+bal+" "+u+"</b>")+'</span>'+
-      (r.goal>0&&!reached?'<span class="hist">Still collecting</span>':'<button class="btn small" type="button" data-act="pay"'+(bal>0?"":" disabled")+'>'+(r.goal>0?"Reward given":"Mark as paid")+'</button>')+'</div>'+
+      (r.goal>0&&!reached?'<span class="hist">Still collecting</span>':'<button class="btn small" type="button" data-act="pay"'+(bal>0?"":" disabled")+'>'+(r.goal>0?"Reward given":"Mark as given")+'</button>')+'</div>'+
       (S.hist.length?'<p class="hist">'+S.hist.map(esc).join("<br>")+'</p>':'');
   }
   return'<div class="head"><h1>Parent</h1><button class="btn small ghost" type="button" data-act="lock">Lock</button></div><p class="sub">The child doesn\'t see this view. You see grades in the e-diary. TASA shows effort.</p>'+
@@ -513,7 +513,7 @@ function viewParent(){
     '<div class="field"><label for="rwAmt">How much ('+u+')</label><input id="rwAmt" type="number" min="0" max="1000" value="'+r.amount+'" data-rw="amount"></div></div>'+
     '<div class="two"><div class="field"><label for="rwGoal">Goal (0 = none)</label><input id="rwGoal" type="number" min="0" max="10000" value="'+r.goal+'" data-rw="goal"></div>'+
     '<div class="field"><label for="rwBonus">Full week bonus</label><input id="rwBonus" type="number" min="0" max="1000" value="'+r.bonus+'" data-rw="bonus"></div></div>'+
-    '<p class="hist" style="margin:0">Try: <button class="linkbtn" type="button" data-act="preset" data-p="ekraan">Screen time · minutes</button> <button class="linkbtn" type="button" data-act="preset" data-p="raha">Pocket money · euros</button> <button class="linkbtn" type="button" data-act="preset" data-p="ps4">PS4 · stars</button></p>'+pay
+    '<p class="hist" style="margin:0">Try: <button class="linkbtn" type="button" data-act="preset" data-p="ekraan">Screen time · minutes</button> <button class="linkbtn" type="button" data-act="preset" data-p="film">Movie night with a parent · stars</button> <button class="linkbtn" type="button" data-act="preset" data-p="ps4">PS4 · stars</button></p>'+pay
     :'<p class="hist" style="margin:0">The child sees only progress and celebrations.</p>')+'</section>'+
     '<div class="sec">Marked test</div>'+testCard()+
     '<div class="sec">A task that isn\'t in the e-diary</div>'+manualCard()+
@@ -621,7 +621,7 @@ function sheet(html){
 }
 function closeSheet(){clearInterval(tmrInt);$("#sheetHost").innerHTML="";}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
-$("#aboutBtn").onclick=()=>sheet('<h2>TASA: a study planner for children</h2><p>TASA helps children who find it hard to get started with homework or to plan their time. The child sees only today and one thing at a time.</p><ul class="facts"><li>Homework, deadlines, tests and grades come from the e-diary (eKool or Stuudium), with the school\'s permission. Teachers don\'t need to do anything extra.</li><li>Big work is split into steps of about 25 minutes.</li><li>Every tick gets a celebration. The parent sets the reward, for example screen time in minutes, pocket money in euros, or stars for a movie night. Or no reward at all.</li><li>If a test went badly, the parent takes a photo of the marked test and the problems that went wrong are spread over 2–3 days. TASA never solves problems for the child.</li><li>Always free for families.</li></ul><p class="hist">This demo uses made-up data and doesn\'t connect to any e-diary. Try it: press “Done”, look at tomorrow with the arrow, and open the “Parent” view (PIN: any 4 digits).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Try it</button>');
+$("#aboutBtn").onclick=()=>sheet('<h2>TASA: a study planner for children</h2><p>TASA helps children who find it hard to get started with homework or to plan their time. The child sees only today and one thing at a time.</p><ul class="facts"><li>Homework, deadlines, tests and grades come from the e-diary (eKool or Stuudium), with the school\'s permission. Teachers don\'t need to do anything extra.</li><li>Big work is split into steps of about 25 minutes.</li><li>Every tick gets a celebration. The parent sets the reward, for example screen time in minutes, stars for a movie night with a parent or a family trip at the end of the year. Or no reward at all.</li><li>If a test went badly, the parent takes a photo of the marked test and the problems that went wrong are spread over 2–3 days. TASA never solves problems for the child.</li><li>Always free for families.</li></ul><p class="hist">This demo uses made-up data and doesn\'t connect to any e-diary. Try it: press “Done”, look at tomorrow with the arrow, and open the “Parent” view (PIN: any 4 digits).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Try it</button>');
 
 /* ---------- toast ---------- */
 let tt;

@@ -26,6 +26,8 @@ interface Ctx {
   checkPin: (pin: string) => Promise<boolean>;
   setPin: (pin: string) => Promise<void>;
   addAssignment: (a: Omit<Assignment, "id" | "createdOn" | "source">) => void;
+  /** Add text (e.g. a teacher's message) to an assignment's note. */
+  attachNote: (id: string, text: string) => void;
   removeAssignment: (id: string) => void;
   addEvent: (e: Omit<FixedEvent, "id">) => void;
   removeEvent: (id: string) => void;
@@ -142,6 +144,11 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
         ...s,
         seq: s.seq + 1,
         assignments: [...s.assignments, { ...a, id: `p${s.seq + 1}`, createdOn: day, source: "parent" }],
+      })),
+    attachNote: (id, text) =>
+      parentUpdate((s) => ({
+        ...s,
+        assignments: s.assignments.map((a) => (a.id === id ? { ...a, note: a.note ? `${a.note}\n\n${text}` : text } : a)),
       })),
     removeAssignment: (id) => parentUpdate((s) => ({ ...s, assignments: s.assignments.filter((a) => a.id !== id) })),
     addEvent: (e) =>

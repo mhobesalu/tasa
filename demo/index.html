@@ -283,14 +283,14 @@ let S;
 function fresh(){return{
   tasks:TODAY0.map(x=>Object.assign({done:false,exc:false},x)),
   open:true, day:1, unlocked:false,
-  rw:{on:true,name:"Taskuraha",unit:"eur",per:"day",amount:3,goal:0,bonus:10},
+  rw:{on:true,name:"Ekraaniaeg",unit:"minutit",per:"step",amount:10,goal:0,bonus:30},
   paid:0, hist:[], kid:"Mia",
   test:null, extra:{}, manual:[], mseq:0
 };}
 S=fresh();
 const PRESETS={
   ekraan:{on:true,name:"Ekraaniaeg",unit:"minutit",per:"step",amount:10,goal:0,bonus:30},
-  raha:{on:true,name:"Taskuraha",unit:"eur",per:"day",amount:3,goal:0,bonus:10},
+  film:{on:true,name:"Filmiõhtu vanemaga",unit:"tähte",per:"step",amount:1,goal:30,bonus:0},
   ps4:{on:true,name:"PS4",unit:"tähte",per:"step",amount:1,goal:100,bonus:0}
 };
 
@@ -496,7 +496,7 @@ function viewParent(){
   if(r.on){
     const bal=balance(),reached=r.goal>0&&bal>=r.goal;
     pay='<div class="row" style="align-items:center"><span>'+(r.goal>0?"Kogutud: <b>"+bal+" / "+r.goal+" "+u+"</b>":"Välja andmata: <b>"+bal+" "+u+"</b>")+'</span>'+
-      (r.goal>0&&!reached?'<span class="hist">Veel kogumisel</span>':'<button class="btn small" type="button" data-act="pay"'+(bal>0?"":" disabled")+'>'+(r.goal>0?"Preemia antud":"Märgi makstuks")+'</button>')+'</div>'+
+      (r.goal>0&&!reached?'<span class="hist">Veel kogumisel</span>':'<button class="btn small" type="button" data-act="pay"'+(bal>0?"":" disabled")+'>'+(r.goal>0?"Preemia antud":"Märgi antuks")+'</button>')+'</div>'+
       (S.hist.length?'<p class="hist">'+S.hist.map(esc).join("<br>")+'</p>':'');
   }
   return'<div class="head"><h1>Lapsevanem</h1><button class="btn small ghost" type="button" data-act="lock">Lukusta</button></div><p class="sub">Laps seda vaadet ei näe. Hindeid näed e-päevikust, TASA näitab pingutust.</p>'+
@@ -513,7 +513,7 @@ function viewParent(){
     '<div class="field"><label for="rwAmt">Kui palju ('+u+')</label><input id="rwAmt" type="number" min="0" max="1000" value="'+r.amount+'" data-rw="amount"></div></div>'+
     '<div class="two"><div class="field"><label for="rwGoal">Eesmärk (0 = pole)</label><input id="rwGoal" type="number" min="0" max="10000" value="'+r.goal+'" data-rw="goal"></div>'+
     '<div class="field"><label for="rwBonus">Terve nädala boonus</label><input id="rwBonus" type="number" min="0" max="1000" value="'+r.bonus+'" data-rw="bonus"></div></div>'+
-    '<p class="hist" style="margin:0">Proovi: <button class="linkbtn" type="button" data-act="preset" data-p="ekraan">Ekraaniaeg · minutit</button> <button class="linkbtn" type="button" data-act="preset" data-p="raha">Taskuraha · eur</button> <button class="linkbtn" type="button" data-act="preset" data-p="ps4">PS4 · tähte</button></p>'+pay
+    '<p class="hist" style="margin:0">Proovi: <button class="linkbtn" type="button" data-act="preset" data-p="ekraan">Ekraaniaeg · minutit</button> <button class="linkbtn" type="button" data-act="preset" data-p="film">Filmiõhtu vanemaga · tähte</button> <button class="linkbtn" type="button" data-act="preset" data-p="ps4">PS4 · tähte</button></p>'+pay
     :'<p class="hist" style="margin:0">Laps näeb ainult edenemist ja tähistusi.</p>')+'</section>'+
     '<div class="sec">Parandatud kontrolltöö</div>'+testCard()+
     '<div class="sec">Ülesanne, mida e-päevikus pole</div>'+manualCard()+
@@ -621,7 +621,7 @@ function sheet(html){
 }
 function closeSheet(){clearInterval(tmrInt);$("#sheetHost").innerHTML="";}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
-$("#aboutBtn").onclick=()=>sheet('<h2>TASA: õppimise planeerija lapsele</h2><p>TASA aitab last, kellel on raske koduste töödega alustada, näiteks ATH või individuaalõppe puhul. Laps näeb ainult tänast päeva ja ühte asja korraga.</p><ul class="facts"><li>Kodused tööd, tähtajad, kontrolltööd ja hinded tulevad e-päevikust (eKool või Stuudium), kooli loal. Õpetajatele lisatööd ei tule.</li><li>Suured tööd jagatakse umbes 25-minutilisteks sammudeks.</li><li>Iga linnuke saab tähistuse. Preemia paneb paika lapsevanem, näiteks ekraaniaeg minutites, taskuraha eurodes või tähed kinoõhtu jaoks. Või ilma preemiata.</li><li>Kui kontrolltöö läks halvasti, pildistab vanem parandatud töö ja valesti läinud ülesanded jagatakse 2–3 päeva peale. TASA ei lahenda ülesandeid lapse eest.</li><li>Perele alati tasuta.</li></ul><p class="hist">See näidis kasutab väljamõeldud andmeid ega ühendu ühegi e-päevikuga. Proovi: vajuta „Tehtud“, vaata homset noolega ja ava vaade „Lapsevanem“ (PIN: mis tahes 4 numbrit).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Proovi</button>');
+$("#aboutBtn").onclick=()=>sheet('<h2>TASA: õppimise planeerija lapsele</h2><p>TASA aitab last, kellel on raske koduste töödega alustada või oma aega planeerida. Laps näeb ainult tänast päeva ja ühte asja korraga.</p><ul class="facts"><li>Kodused tööd, tähtajad, kontrolltööd ja hinded tulevad e-päevikust (eKool või Stuudium), kooli loal. Õpetajatele lisatööd ei tule.</li><li>Suured tööd jagatakse umbes 25-minutilisteks sammudeks.</li><li>Iga linnuke saab tähistuse. Preemia paneb paika lapsevanem, näiteks ekraaniaeg minutites, tähed filmiõhtuks vanemaga või pereretkeks aasta lõpus. Või ilma preemiata.</li><li>Kui kontrolltöö läks halvasti, pildistab vanem parandatud töö ja valesti läinud ülesanded jagatakse 2–3 päeva peale. TASA ei lahenda ülesandeid lapse eest.</li><li>Perele alati tasuta.</li></ul><p class="hist">See näidis kasutab väljamõeldud andmeid ega ühendu ühegi e-päevikuga. Proovi: vajuta „Tehtud“, vaata homset noolega ja ava vaade „Lapsevanem“ (PIN: mis tahes 4 numbrit).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Proovi</button>');
 
 /* ---------- toast ---------- */
 let tt;

@@ -7,6 +7,7 @@ import { dayItems, rewardSummary, weekStats } from "../logic";
 import { numList, retakeChunks, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
+import { PasteImport } from "./PasteImport";
 import type { Kind, RewardConfig } from "../types";
 
 export function ParentScreen({ unlocked, setUnlocked }: { unlocked: boolean; setUnlocked: (b: boolean) => void }) {
@@ -97,11 +98,11 @@ function DayPicker({ label, value, onChange, from, refDay, days = 21 }: { label:
   );
 }
 
-function AddForm() {
+function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string } }) {
   const { day, addAssignment, addEvent } = useStore();
   const fx = useCelebrate();
-  const [kind, setKind] = useState<Kind | "event">("homework");
-  const [subject, setSubject] = useState("");
+  const [kind, setKind] = useState<Kind | "event">(prefill?.kind ?? "homework");
+  const [subject, setSubject] = useState(prefill?.subject ?? "");
   const [title, setTitle] = useState("");
   const [due, setDue] = useState<Day>(addDays(day, 2));
   const [minutes, setMinutes] = useState(50);
@@ -311,8 +312,8 @@ function TodayExcuse() {
 
 const PRESETS: Omit<RewardConfig, "since">[] = [
   { on: true, name: "Ekraaniaeg", unit: "minutit", per: "step", amount: 10, goal: 0, bonus: 30 },
-  { on: true, name: "Taskuraha", unit: "eur", per: "day", amount: 3, goal: 0, bonus: 10 },
-  { on: true, name: "Kinoõhtu", unit: "tähte", per: "step", amount: 1, goal: 30, bonus: 0 },
+  { on: true, name: "Filmiõhtu vanemaga", unit: "tähte", per: "step", amount: 1, goal: 30, bonus: 0 },
+  { on: true, name: "Pereretk aasta lõpus", unit: "tähte", per: "day", amount: 1, goal: 120, bonus: 2 },
 ];
 
 function RewardSettings() {
@@ -382,7 +383,7 @@ function RewardSettings() {
             ) : (
               <Btn
                 small
-                title={r.goal > 0 ? "Preemia antud" : "Märgi makstuks"}
+                title={r.goal > 0 ? "Preemia antud" : "Märgi antuks"}
                 disabled={sum.balance <= 0}
                 onPress={() => {
                   const amt = r.goal > 0 ? r.goal : sum.balance;
@@ -476,6 +477,8 @@ function Privacy() {
 
 function ParentHome({ onLock }: { onLock: () => void }) {
   const { state, day } = useStore();
+  const fx = useCelebrate();
+  const [prefill, setPrefill] = useState<{ kind: Kind; subject: string; n: number } | undefined>();
   const w = weekStats(state, day);
   const pct = w.stepsPlanned ? Math.round((w.stepsDone / w.stepsPlanned) * 100) : 0;
   return (
@@ -494,8 +497,16 @@ function ParentHome({ onLock }: { onLock: () => void }) {
         <Stat n={String(w.missedDeadlines)} l="tähtaega mööda" />
       </View>
 
+      <Section>Kleebi e-päevikust</Section>
+      <PasteImport
+        onRetake={(subject) => {
+          setPrefill((p) => ({ kind: "retake", subject, n: (p?.n ?? 0) + 1 }));
+          fx.toast("Järeltöö on all valmis: vali kuupäev ja valed ülesanded.");
+        }}
+      />
+
       <Section>Lisa plaani</Section>
-      <AddForm />
+      <AddForm key={prefill?.n ?? 0} prefill={prefill} />
 
       <Section>Plaanis</Section>
       <PlannedList />

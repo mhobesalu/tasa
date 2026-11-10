@@ -68,7 +68,7 @@ test("ticking does not change the rest of today's plan", () => {
 
 test("day reward only for a day finished on that day", () => {
   let s = st([hw("a", 2, 50)], {
-    reward: { on: true, name: "Taskuraha", unit: "eur", per: "day", amount: 3, goal: 0, bonus: 0, since: T },
+    reward: { on: true, name: "Filmiõhtu vanemaga", unit: "tähte", per: "day", amount: 3, goal: 0, bonus: 0, since: T },
   });
   s = freezeToday(s, T);
   const ids = s.days[T];
