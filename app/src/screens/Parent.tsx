@@ -526,7 +526,7 @@ function ParentHome({ onLock }: { onLock: () => void }) {
 
       {(state.pendingRetakes ?? []).length ? (
         <>
-          <Section>Järeltöö vaja, kuupäev teadmata</Section>
+          <Section>Järeltöö vajalik, kuupäev teadmata</Section>
           <Card>
             {(state.pendingRetakes ?? []).map((r) => (
               <View key={r.id} style={[st.prow, { justifyContent: "space-between" }]}>

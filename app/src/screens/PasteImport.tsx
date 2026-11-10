@@ -217,7 +217,7 @@ export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: stri
 
       {hints.length ? (
         <View style={{ gap: 6 }}>
-          <T bold>Järeltöö võib olla vaja</T>
+          <T bold>Järeltöö võib olla vajalik</T>
           <Muted>Kui kuupäev on teada, lisa järeltöö kohe. Kui ei, salvesta see: TASA lisab õpilasele sammu „Lepi õpetajaga kokku järeltöö aeg“ ja kuupäeva saad lisada hiljem.</Muted>
           {hints.map((h) => (
             <View key={h.subject} style={[st.row, { alignItems: "center" }]}>
