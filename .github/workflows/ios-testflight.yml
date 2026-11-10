@@ -44,11 +44,12 @@ jobs:
         timeout-minutes: 60
         run: |
           unset CI
+          export FORCE_COLOR=0 EAS_BUILD_NO_EXPO_GO_WARNING=true
           expect -c '
             set timeout -1
             spawn npx --yes eas-cli@latest build --platform ios --profile production --auto-submit
             expect {
-              -re {\? [^\r\n]*} { sleep 1; send "\r"; exp_continue }
+              -re {\(Y/n\)|\(y/N\)|\u203a} { sleep 1; send "\r"; exp_continue }
               eof
             }
             catch wait result
