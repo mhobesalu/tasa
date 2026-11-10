@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { Btn, Card, Muted, Pill, Row, T } from "../components/ui";
 import { longDate, relDate } from "../dates";
-import { isDuplicate, parseGrades, parseMessage, parsePasted, type Draft, type MessageAction, type ParsedMessage, type RetakeHint } from "../importText";
+import { isDuplicate, parseGrades, parseMessage, parseMissed, parsePasted, type Draft, type MessageAction, type MissedWork, type ParsedMessage, type RetakeHint } from "../importText";
 import { canReadImages, readClipboard, textFromScreenshots } from "../native";
 import { useStore } from "../store";
 import { C, F } from "../theme";
@@ -12,12 +12,13 @@ import { C, F } from "../theme";
  * Paste the homework list (or the grades summary) copied from the e-diary.
  * Read on the phone only. The parent checks the list before anything is added.
  */
-export function PasteImport({ onRetake }: { onRetake: (subject: string) => void }) {
+export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: string) => void; onHomework: (subject: string, title: string) => void }) {
   const { state, day, addAssignment, addEvent, attachNote, savePendingRetake } = useStore();
   const fx = useCelebrate();
   const [text, setText] = useState("");
   const [drafts, setDrafts] = useState<Draft[] | null>(null);
   const [hints, setHints] = useState<RetakeHint[]>([]);
+  const [missed, setMissed] = useState<MissedWork[]>([]);
   const [on, setOn] = useState<Record<string, boolean>>({});
   const [msg, setMsg] = useState<ParsedMessage | null>(null);
 
@@ -27,7 +28,9 @@ export function PasteImport({ onRetake }: { onRetake: (subject: string) => void 
   const read = () => {
     const d = parsePasted(text, day);
     const h = parseGrades(text);
-    if (!d.length && !h.length) {
+    const mw = parseMissed(text, day);
+    setMissed(mw);
+    if (!d.length && !h.length && !mw.length) {
       const m = parseMessage(text, day, state.assignments);
       if (!m) return fx.toast("Ei leidnud midagi. Kopeeri kogu nimekiri koos kuupäevadega.");
       setDrafts(null);
@@ -45,6 +48,7 @@ export function PasteImport({ onRetake }: { onRetake: (subject: string) => void 
     setText("");
     setDrafts(null);
     setHints([]);
+    setMissed([]);
     setMsg(null);
   };
 
@@ -163,6 +167,37 @@ export function PasteImport({ onRetake }: { onRetake: (subject: string) => void 
           <Muted>Mida TASA sellega tegema peaks?</Muted>
           {msg.actions.map((a, i) => (
             <Btn key={i} kind={i === 0 ? "primary" : "ghost"} title={actLabel(a)} onPress={() => act(a)} />
+          ))}
+        </View>
+      ) : null}
+
+      {missed.length ? (
+        <View style={{ gap: 6 }}>
+          <T bold>Tegemata tööd</T>
+          <Muted>
+            Tavaliselt tuleb see teha järgmiseks tunniks. Kui seda ei saa kodus teha (näiteks tunnitöö), lepi õpetajaga kokku
+            järeltöö aeg.
+          </Muted>
+          {missed.map((m) => (
+            <View key={m.key} style={[st.row, { alignItems: "center" }]}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <T bold style={{ fontSize: 15 }}>{m.subject}</T>
+                <Muted>{m.topic ? `${m.topic} · ` : ""}tund {relDate(m.lessonDay, day)}</Muted>
+              </View>
+              <View style={{ gap: 6 }}>
+                <Btn small kind="ghost" title="Tee kodus" onPress={() => onHomework(m.subject, m.topic ? `Tegemata: ${m.topic}` : "Tegemata töö")} />
+                <Btn
+                  small
+                  kind="ghost"
+                  title="Järeltöö"
+                  onPress={() => {
+                    savePendingRetake(m.subject);
+                    setMissed(missed.filter((x) => x.key !== m.key));
+                    fx.toast(`Salvestatud: ${m.subject} järeltöö. Lisa kuupäev, kui see selgub.`);
+                  }}
+                />
+              </View>
+            </View>
           ))}
         </View>
       ) : null}

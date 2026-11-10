@@ -3,7 +3,7 @@
 // the user can undo the whole batch.
 
 import type { Day } from "./dates";
-import { isDuplicate, parseGrades, parseMessage, parsePasted, type Draft, type ParsedMessage, type RetakeHint } from "./importText";
+import { isDuplicate, parseGrades, parseMessage, parseMissed, parsePasted, type Draft, type ParsedMessage, type RetakeHint } from "./importText";
 import type { Assignment } from "./types";
 
 export interface QuickResult {
@@ -12,6 +12,8 @@ export interface QuickResult {
   skipped: number;
   message: ParsedMessage | null;
   grades: RetakeHint[];
+  /** works marked "Tegemata" (handled in the parent view) */
+  missed: number;
 }
 
 export function planImport(text: string, day: Day, assignments: Assignment[]): QuickResult {
@@ -26,5 +28,5 @@ export function planImport(text: string, day: Day, assignments: Assignment[]): Q
     else add.push(d);
   }
   const message = !drafts.length && !grades.length ? parseMessage(text, day, assignments) : null;
-  return { add, skipped, message, grades };
+  return { add, skipped, message, grades, missed: parseMissed(text, day).length };
 }

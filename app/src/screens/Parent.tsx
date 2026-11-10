@@ -99,12 +99,12 @@ function DayPicker({ label, value, onChange, from, refDay, days = 21 }: { label:
   );
 }
 
-function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string } }) {
+function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?: string } }) {
   const { day, addAssignment, addEvent } = useStore();
   const fx = useCelebrate();
   const [kind, setKind] = useState<Kind | "event">(prefill?.kind ?? "homework");
   const [subject, setSubject] = useState(prefill?.subject ?? "");
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(prefill?.title ?? "");
   const [due, setDue] = useState<Day>(addDays(day, 2));
   const [minutes, setMinutes] = useState(50);
   const [pFrom, setPFrom] = useState("1");
@@ -492,7 +492,7 @@ function Privacy() {
 function ParentHome({ onLock }: { onLock: () => void }) {
   const { state, day, removePendingRetake } = useStore();
   const fx = useCelebrate();
-  const [prefill, setPrefill] = useState<{ kind: Kind; subject: string; n: number } | undefined>();
+  const [prefill, setPrefill] = useState<{ kind: Kind; subject: string; title?: string; n: number } | undefined>();
   const w = weekStats(state, day);
   const pct = w.stepsPlanned ? Math.round((w.stepsDone / w.stepsPlanned) * 100) : 0;
   return (
@@ -516,6 +516,10 @@ function ParentHome({ onLock }: { onLock: () => void }) {
         onRetake={(subject) => {
           setPrefill((p) => ({ kind: "retake", subject, n: (p?.n ?? 0) + 1 }));
           fx.toast("Järeltöö on all valmis: vali kuupäev ja valed ülesanded.");
+        }}
+        onHomework={(subject, title) => {
+          setPrefill((p) => ({ kind: "homework", subject, title, n: (p?.n ?? 0) + 1 }));
+          fx.toast("Ülesanne on all valmis: vali tähtajaks järgmine tund.");
         }}
       />
 

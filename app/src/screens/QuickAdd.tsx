@@ -12,7 +12,7 @@ import { C, F } from "../theme";
 type View_ =
   | { s: "start" }
   | { s: "busy" }
-  | { s: "added"; items: Draft[]; ids: string[]; skipped: number }
+  | { s: "added"; items: Draft[]; ids: string[]; skipped: number; missed: number }
   | { s: "message"; msg: ParsedMessage }
   | { s: "none"; why: string }
   | { s: "remind" };
@@ -47,7 +47,7 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
       const ids = addMany(
         r.add.map((d) => ({ kind: d.kind, subject: d.subject, title: d.title, due: d.due, minutes: d.minutes, note: d.note || undefined })),
       );
-      return setV({ s: "added", items: r.add, ids, skipped: r.skipped });
+      return setV({ s: "added", items: r.add, ids, skipped: r.skipped, missed: r.missed });
     }
     if (r.message) return setV({ s: "message", msg: r.message });
     if (r.skipped) return setV({ s: "none", why: `Uut ei leidnud: kõik ${r.skipped} on juba plaanis või tähtaeg on möödas.` });
@@ -102,6 +102,7 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
               ))}
               {v.items.length > 8 ? <Muted>ja veel {v.items.length - 8}</Muted> : null}
               {v.skipped ? <Muted>{v.skipped} oli juba plaanis või tähtaeg on möödas.</Muted> : null}
+              {v.missed ? <Muted>Leidsin ka {v.missed === 1 ? "1 tegemata töö" : `${v.missed} tegemata tööd`}. Need saab lisada lapsevanema vaates.</Muted> : null}
             </View>
             <View style={{ gap: 10, marginTop: 6 }}>
               <Btn title="Valmis" onPress={done} />

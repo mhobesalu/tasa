@@ -204,6 +204,43 @@ export function parsePasted(raw: string, t: Day): Draft[] {
   return out;
 }
 
+// ---- "Tegemata" list under the homework page ----
+// "KI Kompositsioon, K 07. oktoober" / "Tegemata" / "Tunni teema: …". Usually due
+// by the next lesson; work that can't be done at home becomes a järeltöö.
+
+export interface MissedWork {
+  key: string;
+  subject: string;
+  lessonDay: Day;
+  topic: string;
+}
+
+export function parseMissed(raw: string, t: Day): MissedWork[] {
+  const lines = decode(raw)
+    .split(/\r?\n/)
+    .map((l) => l.replace(TAB_BAR, " ").replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  const out: MissedWork[] = [];
+  let inList = false;
+  let cur: MissedWork | null = null;
+  for (const line of lines) {
+    if (/^tegemata$/i.test(line)) {
+      inList = true;
+      continue;
+    }
+    if (!inList || NOISE.some((r) => r.test(line)) || line === SHOT_BREAK) continue;
+    const m = line.match(/^(.+?),\s*(.+)$/);
+    const d = m ? parseDayHeader(m[2], t) : null;
+    if (m && d) {
+      cur = { key: `${d}|${m[1]}`, subject: parseSubjectLine(m[1]).subject, lessonDay: d, topic: "" };
+      if (!out.some((x) => x.key === cur!.key)) out.push(cur);
+      continue;
+    }
+    if (cur && !cur.topic) cur.topic = shortTitle(line.replace(/^tunni teema:\s*/i, ""));
+  }
+  return out;
+}
+
 /** Already in the plan? (same subject, day and title) */
 export function isDuplicate(d: Draft, existing: Assignment[]): boolean {
   return existing.some(
