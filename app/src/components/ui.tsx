@@ -56,7 +56,7 @@ export function Btn({
   ...p
 }: PressableProps & { title: string; kind?: BtnKind; small?: boolean; style?: StyleProp<ViewStyle>; icon?: React.ReactNode }) {
   const bg = { primary: C.lake, ghost: "transparent", sun: C.sun, danger: C.boatSoft }[kind];
-  const fg = { primary: C.white, ghost: C.lakeInk, sun: C.ink, danger: C.boatInk }[kind];
+  const fg = { primary: C.white, ghost: C.lakeInk, sun: C.onSun, danger: C.boatInk }[kind];
   return (
     <Pressable
       accessibilityRole="button"

@@ -133,7 +133,7 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
             {tagFor(next, day) ? <Pill tag={tagFor(next, day)!} /> : null}
           </View>
           {next.note ? <Text style={st.note}>{next.note}</Text> : null}
-          <Btn title="Tehtud" kind="sun" icon={<Tick color={C.ink} />} onPress={() => doTick(next.id)} />
+          <Btn title="Tehtud" kind="sun" icon={<Tick color={C.onSun} />} onPress={() => doTick(next.id)} />
           <Pressable accessibilityRole="button" onPress={() => setTimerFor(next)} style={st.timerBtn}>
             <Text style={{ color: C.white, fontFamily: F.bodyBold, fontSize: 16 }}>Käivita {next.minutes} min taimer</Text>
           </Pressable>

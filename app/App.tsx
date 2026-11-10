@@ -31,7 +31,7 @@ export default function App() {
   if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: C.paper }} />;
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
+      <StatusBar style="auto" />
       <StoreProvider>
         <CelebrateProvider>
           <Shell />

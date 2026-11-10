@@ -4,6 +4,7 @@
 // TASA only copies what the school wrote. It never makes up or solves tasks.
 
 import { addDays, diffDays, toDay, weekdayIndex, type Day } from "./dates";
+import { cleanSubject, isSubjectName } from "./subjects";
 import type { Assignment, Kind } from "./types";
 
 export interface Draft {
@@ -121,7 +122,7 @@ export function parseSubjectLine(line: string): { subject: string; minutes: numb
   // "Mat 1: Arvuhulgad. Avaldised. (K)" -> "Mat 1"
   const colon = s.indexOf(":");
   if (colon > 0 && colon < 25) s = s.slice(0, colon).trim();
-  return { subject: s.slice(0, 30), minutes, test };
+  return { subject: cleanSubject(s).slice(0, 30), minutes, test };
 }
 
 function shortTitle(text: string): string {
@@ -197,7 +198,7 @@ export function parsePasted(raw: string, t: Day): Draft[] {
       cur.text.push(line); // teacher's text for this subject
       continue;
     }
-    if (/^\d{1,3}$/.test(line)) continue; // a bare number (e.g. the screenshot clock read as "14") is never a subject
+    if (/^\d{1,3}$/.test(line) || !isSubjectName(cleanSubject(line))) continue; // a bare number (e.g. the screenshot clock read as "14") is never a subject
     flush();
     cur = { ...parseSubjectLine(line), text: [], extra: [], done: false };
   }

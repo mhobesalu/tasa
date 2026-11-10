@@ -101,6 +101,21 @@ export function parseReview(text: string): string[] {
   return out.slice(0, 100);
 }
 
+/** "Sokrates, Pythagoras, Aleksander…": the topics of one step, short enough for a title. */
+export function topicNames(items: string[], max = 60): string {
+  const short = items.map((x) => {
+    const t = x.replace(/[?.:!]+$/, "").trim();
+    return t.length <= 28 ? t : t.slice(0, 27).replace(/\s\S*$/, "") + "…";
+  });
+  let out = "";
+  for (const t of short) {
+    const next = out ? `${out}, ${t}` : t;
+    if (next.length > max && out) return `${out}…`;
+    out = next;
+  }
+  return out;
+}
+
 /** Numbers back as editable text: ["1","2","3","5"] → "1–3, 5". */
 export function rangeText(items: string[]): string {
   const n = items.map(Number);
@@ -195,7 +210,7 @@ export function stepsOf(a: Assignment): Step[] {
       if (!p) return mk(i, n, `${head}, kõik uuesti üle`, m, a.note || "Vaata kõik kordamisküsimused veel kord üle.");
       if (numeric) return mk(i, n, `${head}, ${numRange(p)}`, m, a.note || "");
       const list = p.map((x) => `• ${x}`).join("\n");
-      return mk(i, n, `${head}, ${p.length === 1 ? "1 küsimus" : `${p.length} küsimust`}`, m, a.note ? `${a.note}\n${list}` : list);
+      return mk(i, n, `${head}: ${topicNames(p)}`, m, a.note ? `${a.note}\n${list}` : list);
     });
   }
   // Reading a book or a longer text: a little every day until it's due, not all at the end.

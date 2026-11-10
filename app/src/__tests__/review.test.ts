@@ -29,7 +29,7 @@ describe("kordamisküsimused", () => {
   it("lists questions in the step note and pads extra steps", () => {
     const s = stepsOf(test({ review: ["Mis on demokraatia?", "Kes oli Perikles?"], note: "Kordamisleht" }));
     expect(s).toHaveLength(3);
-    expect(s[0].title).toBe("Ajalugu: kontrolltööks kordamine 1/3, 1 küsimus");
+    expect(s[0].title).toBe("Ajalugu: kontrolltööks kordamine 1/3: Mis on demokraatia");
     expect(s[0].note).toBe("Kordamisleht\n• Mis on demokraatia?");
     expect(s[2].title).toContain("kõik uuesti üle");
   });
