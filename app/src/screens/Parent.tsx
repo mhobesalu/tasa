@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { Btn, Card, Choice, Field, H, Muted, Row, Section, T } from "../components/ui";
-import { addDays, diffDays, relDate, shortDate, type Day } from "../dates";
+import { addDays, diffDays, relDate, shortDate, WEEKDAY_NAMES, WEEKDAY_SHORT, type Day } from "../dates";
 import { dayItems, rewardSummary, weekStats } from "../logic";
 import { numList, retakeChunks, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
 import { askNotifications } from "../native";
+import { knownSubjects, lessonDays, setDays } from "../timetable";
 import { PasteImport } from "./PasteImport";
 import type { Kind, RewardConfig } from "../types";
 
@@ -560,9 +561,57 @@ function ParentHome({ onLock }: { onLock: () => void }) {
       <Section>Seaded</Section>
       <Settings />
 
+      <Section>Tunniplaan</Section>
+      <Timetable />
+
       <Section>Andmed ja privaatsus</Section>
       <Privacy />
     </View>
+  );
+}
+
+function Timetable() {
+  const { state, parentUpdate } = useStore();
+  const subjects = knownSubjects(state);
+  return (
+    <Card>
+      <Muted>
+        TASA õpib tunnipäevad kodutööde tähtaegadest. Kontrolli ja paranda vajadusel: siis saab tegemata töö tähtajaks
+        järgmise tunni.
+      </Muted>
+      {subjects.length ? (
+        subjects.map((sub) => {
+          const { days, manual } = lessonDays(state, sub);
+          return (
+            <View key={sub} style={[st.prow, st.rowLine, { flexWrap: "wrap" }]}>
+              <T style={{ flex: 1, minWidth: 120, fontSize: 15 }}>
+                {sub}
+                {!manual && days.length ? <T style={{ color: C.muted, fontSize: 13 }}> (õpitud)</T> : null}
+              </T>
+              <View style={{ flexDirection: "row", gap: 4 }}>
+                {WEEKDAY_SHORT.slice(0, 5).map((w, i) => {
+                  const on = days.includes(i);
+                  return (
+                    <Pressable
+                      key={w}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: on }}
+                      accessibilityLabel={`${sub}: ${WEEKDAY_NAMES[i]}`}
+                      onPress={() => parentUpdate((s) => setDays(s, sub, on ? days.filter((x) => x !== i) : [...days, i]))}
+                      style={[st.wd, on && { backgroundColor: C.lake, borderColor: C.lake }]}
+                    >
+                      <T bold style={{ fontSize: 14, color: on ? C.white : C.ink }}>{w}</T>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })
+      ) : (
+        <Muted>Aineid veel pole. Need tulevad siia, kui lisad ülesandeid.</Muted>
+      )}
+    </Card>
   );
 }
 
@@ -593,4 +642,5 @@ const st = StyleSheet.create({
   numChip: { width: 46, height: 46, borderRadius: 12, borderWidth: 2, borderColor: C.line, alignItems: "center", justifyContent: "center", backgroundColor: C.card },
   prow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10 },
   rowLine: { borderTopWidth: 1, borderTopColor: C.line },
+  wd: { width: 34, height: 34, borderRadius: 9, borderWidth: 2, borderColor: C.line, alignItems: "center", justifyContent: "center", backgroundColor: C.card },
 });

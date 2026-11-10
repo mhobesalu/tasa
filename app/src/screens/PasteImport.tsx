@@ -6,6 +6,7 @@ import { longDate, relDate } from "../dates";
 import { isDuplicate, parseGrades, parseMessage, parseMissed, parsePasted, type Draft, type MessageAction, type MissedWork, type ParsedMessage, type RetakeHint } from "../importText";
 import { canReadImages, readClipboard, textFromScreenshots } from "../native";
 import { useStore } from "../store";
+import { nextLesson } from "../timetable";
 import { C, F } from "../theme";
 
 /**
@@ -185,7 +186,19 @@ export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: stri
                 <Muted>{m.topic ? `${m.topic} · ` : ""}tund {relDate(m.lessonDay, day)}</Muted>
               </View>
               <View style={{ gap: 6 }}>
-                <Btn small kind="ghost" title="Tee kodus" onPress={() => onHomework(m.subject, m.topic ? `Tegemata: ${m.topic}` : "Tegemata töö")} />
+                <Btn
+                  small
+                  kind="ghost"
+                  title="Tee kodus"
+                  onPress={() => {
+                    const title = m.topic ? `Tegemata: ${m.topic}` : "Tegemata töö";
+                    const due = nextLesson(state, m.subject, day);
+                    if (!due) return onHomework(m.subject, title); // lesson day unknown: the parent picks the date
+                    addAssignment({ kind: "homework", subject: m.subject, title, due, minutes: 25 });
+                    setMissed(missed.filter((x) => x.key !== m.key));
+                    fx.toast(`Lisatud järgmiseks tunniks (${relDate(due, day)}).`);
+                  }}
+                />
                 <Btn
                   small
                   kind="ghost"

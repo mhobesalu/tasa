@@ -86,6 +86,8 @@ export interface AppState {
   reminder?: { on: boolean; hour: number; asked?: boolean };
   /** Subjects that need a järeltöö whose date isn't known yet (no grade is stored). */
   pendingRetakes?: { id: string; subject: string; since: Day }[];
+  /** Lesson weekdays (0 = Monday) the parent set by hand, by subject (lower case). */
+  timetable?: Record<string, number[]>;
 }
 
 export interface Step {
