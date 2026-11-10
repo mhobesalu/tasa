@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "TASA",
-    "slug": "tasa",
+    "slug": "tasa-plan",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -40,6 +40,12 @@
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFF7E8"
+    },
+    "owner": "sild-growth-ou",
+    "extra": {
+      "eas": {
+        "projectId": "b3e3b600-7a5f-4bee-ac97-b5d9513ff30b"
+      }
     }
   }
 }
