@@ -59,3 +59,31 @@ describe("kordamisküsimused from a screenshot", () => {
     expect(parseReview("Mis on rakk ja millest see\nkoosneb?\nMis on DNA?")).toEqual(["Mis on rakk ja millest see koosneb?", "Mis on DNA?"]);
   });
 });
+
+describe("photo of a maths worksheet", () => {
+  // made-up text in the shape the text reader returns for a printed sheet with formulas
+  const OCR = [
+    "II Algebraliste avaldiste lihtsustamine",
+    "32. Lihtsusta avaldis.",
+    "1+ a(a-2c)+c² (1+ c",
+    "33. Lihtsusta avaldis.",
+    "(x+2)²-x² 3",
+    "34. Lihtsusta avaldis.",
+    "x+1 1 x 2x",
+    "35.",
+    "Lihtsusta avaldis.",
+    "1-2a²",
+    "36. Lihtsusta avaldis.",
+    "√a+√b-1",
+    "2.",
+    "12",
+  ].join("\n");
+  it("keeps the task numbers, not the formulas", () => {
+    expect(parseReview(OCR)).toEqual(["32", "33", "34", "35", "36"]);
+  });
+  it("plans about four problems per step", () => {
+    const s = stepsOf(test({ minutes: 50, review: Array.from({ length: 18 }, (_, i) => String(32 + i)) }));
+    expect(s).toHaveLength(5);
+    expect(s[0].title).toBe("Ajalugu: kontrolltööks kordamine 1/5, nr 32–34");
+  });
+});

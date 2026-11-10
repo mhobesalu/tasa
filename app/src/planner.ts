@@ -46,19 +46,55 @@ export function parseReview(text: string): string[] {
     .filter((x) => x && !/^[–-]{2,}.*[–-]{2,}$/.test(x)); // screenshot breaks
   const NUM = /^(\d{1,3})\s*[.)]\s*(.*)$/;
   const BULLET = /^[-•*–]\s*(.*)$/;
-  const numbered = lines.filter((x) => NUM.test(x)).length >= 2;
+  if (lines.filter((x) => NUM.test(x)).length >= 2) {
+    // numbered list: wrapped lines join the item above, a heading before the first number is dropped
+    const items: { n: number; body: string }[] = [];
+    for (const line of lines) {
+      const m = line.match(NUM);
+      const bm = line.match(BULLET);
+      if (m) items.push({ n: +m[1], body: m[2].trim() });
+      else if (bm) items.push({ n: (items[items.length - 1]?.n ?? 0) + 1, body: bm[1].trim() });
+      else if (items.length) {
+        const last = items[items.length - 1];
+        last.body = last.body ? `${last.body} ${line}` : line;
+      }
+    }
+    // A worksheet where every task starts the same way ("Lihtsusta avaldis.") or holds formulas
+    // the text reader can't read: the numbers are what matter.
+    const head = (x: string) => x.split(/\s+/).slice(0, 2).join(" ").toLowerCase();
+    const counts: Record<string, number> = {};
+    for (const it of items) if (it.body) counts[head(it.body)] = (counts[head(it.body)] ?? 0) + 1;
+    const [top, topN] = Object.entries(counts).sort((x, y) => y[1] - x[1])[0] ?? ["", 0];
+    const letters = (x: string) => (x.match(/[a-zõäöüšž]/gi) ?? []).length / Math.max(1, x.replace(/\s/g, "").length);
+    const garbled = items.filter((it) => !it.body || letters(it.body) < 0.6).length;
+    if (items.length >= 3 && (topN >= Math.max(2, items.length * 0.4) || garbled > items.length / 2)) {
+      const keep = topN >= 2 ? items.filter((it) => !it.body || head(it.body) === top) : items;
+      return [...new Set(keep.map((it) => it.n))].sort((x, y) => x - y).map(String);
+    }
+    return items.map((it) => it.body).filter(Boolean).slice(0, 100);
+  }
   const out: string[] = [];
   for (const line of lines) {
-    const m = line.match(NUM) ?? line.match(BULLET);
-    const body = m ? m[m.length - 1].trim() : line;
+    const m = line.match(BULLET);
+    const body = m ? m[1].trim() : line;
     const prev = out[out.length - 1];
-    if (m && body) out.push(body);
-    else if (!m && numbered && prev !== undefined) out[out.length - 1] = `${prev} ${body}`; // wrapped line
-    else if (!m && numbered) continue; // heading before question 1
-    else if (!m && prev !== undefined && !/[?.!:]$/.test(prev) && /^[a-zõäöü(]/.test(body)) out[out.length - 1] = `${prev} ${body}`;
+    if (!m && prev !== undefined && !/[?.!:]$/.test(prev) && /^[a-zõäöü(]/.test(body)) out[out.length - 1] = `${prev} ${body}`;
     else if (body) out.push(body);
   }
   return out.slice(0, 100);
+}
+
+/** Numbers back as editable text: ["1","2","3","5"] → "1–3, 5". */
+export function rangeText(items: string[]): string {
+  const n = items.map(Number);
+  const parts: string[] = [];
+  for (let i = 0; i < n.length; ) {
+    let j = i;
+    while (j + 1 < n.length && n[j + 1] === n[j] + 1) j++;
+    parts.push(j - i >= 2 ? `${n[i]}–${n[j]}` : n.slice(i, j + 1).join(", "));
+    i = j + 1;
+  }
+  return parts.join(", ");
 }
 
 /** "nr 1–4" or "nr 1, 3 ja 5" for numeric items. */
@@ -124,12 +160,15 @@ export function stepsOf(a: Assignment): Step[] {
   }
 
   const n = Math.min(MAX_STEPS, Math.max(1, Math.ceil(a.minutes / STEP_MIN)));
+  const base_n = n;
   if (a.kind === "test" && a.review?.length) {
+    // about 4 problems per 25-minute step, even if the parent guessed less time
+    const n = Math.min(12, Math.max(base_n, Math.ceil(a.review.length / 4)));
     // the parent's kordamisküsimused / -ülesanded in order; any steps left over go over everything again
     const parts = splitEven(a.review, Math.min(n, a.review.length));
     const numeric = a.review.every((x) => /^\d+$/.test(x));
     return Array.from({ length: n }, (_, i) => {
-      const m = i < n - 1 ? STEP_MIN : Math.max(5, a.minutes - STEP_MIN * (n - 1));
+      const m = n > base_n || i < n - 1 ? STEP_MIN : Math.max(5, a.minutes - STEP_MIN * (n - 1));
       const head = `${a.subject}: kontrolltööks kordamine${n > 1 ? ` ${i + 1}/${n}` : ""}`;
       const p = parts[i];
       if (!p) return mk(i, n, `${head}, kõik uuesti üle`, m, a.note || "Vaata kõik kordamisküsimused veel kord üle.");

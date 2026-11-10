@@ -4,6 +4,7 @@
 
 import type { Day } from "./dates";
 import { isDuplicate, parseGrades, parseMessage, parseMissed, parsePasted, type Draft, type ParsedMessage, type RetakeHint } from "./importText";
+import { parseReview } from "./planner";
 import type { Assignment } from "./types";
 
 export interface QuickResult {
@@ -14,6 +15,8 @@ export interface QuickResult {
   grades: RetakeHint[];
   /** works marked "Tegemata" (handled in the parent view) */
   missed: number;
+  /** a numbered worksheet (kordamisküsimused / -ülesanded) to add to a kontrolltöö */
+  review: string[];
 }
 
 export function planImport(text: string, day: Day, assignments: Assignment[]): QuickResult {
@@ -27,6 +30,8 @@ export function planImport(text: string, day: Day, assignments: Assignment[]): Q
     if (d.due <= day || isDuplicate(d, planned)) skipped++;
     else add.push(d);
   }
-  const message = !drafts.length && !grades.length ? parseMessage(text, day, assignments) : null;
-  return { add, skipped, message, grades, missed: parseMissed(text, day).length };
+  const sheet = !drafts.length && !grades.length && text.split(/\n/).filter((l) => /^\s*\d{1,3}\s*[.)]\s*\S/.test(l) || /^\s*\d{1,3}\s*[.)]\s*$/.test(l)).length >= 3;
+  const review = sheet ? parseReview(text) : [];
+  const message = !drafts.length && !grades.length && !review.length ? parseMessage(text, day, assignments) : null;
+  return { add, skipped, message, grades, missed: parseMissed(text, day).length, review };
 }

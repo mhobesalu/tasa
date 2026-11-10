@@ -74,3 +74,11 @@ test("a message screenshot becomes a fixed appointment", () => {
   expect(r.message?.actions[0]).toEqual({ type: "event", day: "2026-11-13", time: "12:30", title: "10K Kunstimuuseumis" });
   expect(r.message?.text).not.toMatch(/Vasta|Arhiveeri|Stuudium/);
 });
+
+describe("worksheet photo in quick import", () => {
+  it("offers the numbers for a kontrolltöö instead of a reminder", () => {
+    const r = planImport("41. Lihtsusta avaldis.\n(y-x)\n42. Lihtsusta avaldis.\nab\n43. Lihtsusta avaldis.\n44. Lihtsusta avaldis.", "2026-11-10", []);
+    expect(r.review).toEqual(["41", "42", "43", "44"]);
+    expect(r.message).toBeNull();
+  });
+});

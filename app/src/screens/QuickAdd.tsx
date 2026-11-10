@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
-import { Btn, Muted, T } from "../components/ui";
+import { Btn, Field, Muted, T } from "../components/ui";
 import { longDate, relDate } from "../dates";
 import { type Draft, type MessageAction, type ParsedMessage } from "../importText";
 import { askNotifications, canReadImages, readClipboard, syncReminder, textFromScreenshots } from "../native";
+import { parseReview, rangeText } from "../planner";
 import { planImport } from "../quickImport";
 import { useStore } from "../store";
 import { C, F } from "../theme";
@@ -14,6 +15,7 @@ type View_ =
   | { s: "busy" }
   | { s: "added"; items: Draft[]; ids: string[]; skipped: number; missed: number }
   | { s: "message"; msg: ParsedMessage }
+  | { s: "review"; text: string }
   | { s: "none"; why: string }
   | { s: "remind" };
 
@@ -22,7 +24,7 @@ type View_ =
  * New items go straight into the plan; the whole batch can be undone.
  */
 export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { state, day, addMany, removeMany, attachNote, addEvent, addAssignment, setReminder } = useStore();
+  const { state, day, addMany, removeMany, attachNote, addEvent, addAssignment, setReminder, setReview } = useStore();
   const fx = useCelebrate();
   const [v, setV] = useState<View_>({ s: "start" });
 
@@ -49,6 +51,8 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
       );
       return setV({ s: "added", items: r.add, ids, skipped: r.skipped, missed: r.missed });
     }
+    if (r.review.length)
+      return setV({ s: "review", text: r.review.every((x) => /^\d+$/.test(x)) ? rangeText(r.review) : r.review.join("\n") });
     if (r.message) return setV({ s: "message", msg: r.message });
     if (r.skipped) return setV({ s: "none", why: `Uut ei leidnud: kõik ${r.skipped} on juba plaanis või tähtaeg on möödas.` });
     if (r.grades.length) return setV({ s: "none", why: "See on hinnete leht. Järeltöö saab lisada lapsevanema vaates." });
@@ -117,6 +121,19 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
               />
             </View>
           </>
+        ) : v.s === "review" ? (
+          <ReviewPick
+            text={v.text}
+            setText={(text) => setV({ s: "review", text })}
+            tests={state.assignments.filter((a) => a.kind === "test" && a.due > day).sort((a, b) => a.due.localeCompare(b.due))}
+            day={day}
+            onPick={(id) => {
+              setReview(id, parseReview(v.text), state.assignments.find((a) => a.id === id)?.note);
+              fx.toast("Kordamisülesanded lisatud.");
+              done();
+            }}
+            onClose={close}
+          />
         ) : v.s === "message" ? (
           <>
             <T bold style={st.h}>Sõnum: {v.msg.title}</T>
@@ -194,3 +211,42 @@ const st = StyleSheet.create({
   },
   h: { fontFamily: F.display, fontSize: 24, color: C.ink },
 });
+
+/** A photographed worksheet: check the numbers (cross out what the teacher left out), pick the test. */
+function ReviewPick({ text, setText, tests, day, onPick, onClose }: {
+  text: string; setText: (t: string) => void; tests: import("../types").Assignment[]; day: string;
+  onPick: (id: string) => void; onClose: () => void;
+}) {
+  const items = parseReview(text);
+  const numeric = items.length > 0 && items.every((x) => /^\d+$/.test(x));
+  return (
+    <>
+      <T bold style={{ fontFamily: F.display, fontSize: 22 }}>Kordamisülesanded</T>
+      <Muted>
+        Leidsin {items.length} {numeric ? "ülesannet" : "küsimust"}. Kontrolli üle ja kustuta need, mida õpetaja ei andnud.
+      </Muted>
+      <Field
+        label={numeric ? "Ülesannete numbrid" : "Küsimused"}
+        value={text}
+        onChangeText={setText}
+        multiline
+        style={{ flex: 0 }}
+        inputStyle={{ minHeight: 48, maxHeight: 200, textAlignVertical: "top" }}
+      />
+      {tests.length ? (
+        <View style={{ gap: 10, marginTop: 6 }}>
+          <Muted>Millise kontrolltöö kordamiseks?</Muted>
+          {tests.slice(0, 4).map((a, i) => (
+            <Btn key={a.id} kind={i === 0 ? "primary" : "ghost"} disabled={!items.length} title={`${a.subject}, ${relDate(a.due, day)}`} onPress={() => onPick(a.id)} />
+          ))}
+          <Btn kind="ghost" title="Sulge" onPress={onClose} />
+        </View>
+      ) : (
+        <View style={{ gap: 10, marginTop: 6 }}>
+          <Muted>Plaanis pole veel kontrolltööd. Lisa kõigepealt kontrolltöö e-päevikust või lapsevanema vaates, siis saad need selle juurde lisada.</Muted>
+          <Btn kind="ghost" title="Sulge" onPress={onClose} />
+        </View>
+      )}
+    </>
+  );
+}
