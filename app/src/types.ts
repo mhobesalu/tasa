@@ -30,6 +30,10 @@ export interface Assignment {
   pageTo?: number;
   /** retake: problem numbers that were wrong (read from the marked test, confirmed by the parent) */
   wrong?: number[];
+  /** test: kordamisküsimused / -ülesanded in order, e.g. ["1","2"] or question texts */
+  review?: string[];
+  /** "Lepi õpetajaga kokku järeltöö aeg": when ticked, the student is asked for the day */
+  askDate?: boolean;
 }
 
 /** A fixed, required thing at a set time (e.g. a weekly maths consultation). */
@@ -85,6 +89,8 @@ export interface AppState {
   /** Daily reminder to add the next day's homework (Stuudium: teachers can't add after 17:00). */
   reminder?: { on: boolean; hour: number; asked?: boolean };
   /** Subjects that need a järeltöö whose date isn't known yet (no grade is stored). */
+  /** false = only the parent adds the retake day (default: the student may add it) */
+  studentRetakeDate?: boolean;
   pendingRetakes?: { id: string; subject: string; since: Day }[];
   /** Lesson weekdays (0 = Monday) the parent set by hand, by subject (lower case). */
   timetable?: Record<string, number[]>;

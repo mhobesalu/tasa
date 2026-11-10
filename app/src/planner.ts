@@ -23,6 +23,60 @@ export function retakeChunks(wrong: number[]): number[][] {
   return out;
 }
 
+/**
+ * Read what the parent typed as kordamisküsimused / -ülesanded.
+ * "1-5, 8" or "1–5 ja 8" → ["1","2","3","4","5","8"]; anything else → one item per line (or ";").
+ */
+export function parseReview(text: string): string[] {
+  const t = text.trim();
+  if (!t) return [];
+  if (/^[\d\s,.;–—-]+$|^[\d\s,.;–—-]*(ja|and)[\d\s,.;–—-]*$/i.test(t) && /\d/.test(t)) {
+    const out: number[] = [];
+    for (const part of t.split(/[,;]|\s+ja\s+|\s+and\s+|\s+(?=\d)/i)) {
+      const m = part.trim().match(/^(\d+)\s*(?:[–—-]\s*(\d+))?\.?$/);
+      if (!m) continue;
+      const a = +m[1], b = m[2] ? +m[2] : a;
+      for (let n = Math.min(a, b); n <= Math.max(a, b) && out.length < 200; n++) out.push(n);
+    }
+    return [...new Set(out)].map(String);
+  }
+  const lines = t
+    .split(/\n|;/)
+    .map((x) => x.trim())
+    .filter((x) => x && !/^[–-]{2,}.*[–-]{2,}$/.test(x)); // screenshot breaks
+  const NUM = /^(\d{1,3})\s*[.)]\s*(.*)$/;
+  const BULLET = /^[-•*–]\s*(.*)$/;
+  const numbered = lines.filter((x) => NUM.test(x)).length >= 2;
+  const out: string[] = [];
+  for (const line of lines) {
+    const m = line.match(NUM) ?? line.match(BULLET);
+    const body = m ? m[m.length - 1].trim() : line;
+    const prev = out[out.length - 1];
+    if (m && body) out.push(body);
+    else if (!m && numbered && prev !== undefined) out[out.length - 1] = `${prev} ${body}`; // wrapped line
+    else if (!m && numbered) continue; // heading before question 1
+    else if (!m && prev !== undefined && !/[?.!:]$/.test(prev) && /^[a-zõäöü(]/.test(body)) out[out.length - 1] = `${prev} ${body}`;
+    else if (body) out.push(body);
+  }
+  return out.slice(0, 100);
+}
+
+/** "nr 1–4" or "nr 1, 3 ja 5" for numeric items. */
+export function numRange(items: string[]): string {
+  const n = items.map(Number);
+  const run = n.every((x, i) => i === 0 || x === n[i - 1] + 1);
+  if (n.length > 2 && run) return `nr ${n[0]}–${n[n.length - 1]}`;
+  if (n.length === 1) return `nr ${n[0]}`;
+  return `nr ${n.slice(0, -1).join(", ")} ja ${n[n.length - 1]}`;
+}
+
+/** Split items in order into n nearly equal parts. */
+function splitEven<T>(xs: T[], n: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < n; i++) out.push(xs.slice(Math.floor((i * xs.length) / n), Math.floor(((i + 1) * xs.length) / n)));
+  return out.filter((x) => x.length);
+}
+
 /** Turn one assignment into its fixed list of ~25-minute steps. Ids stay stable. */
 export function stepsOf(a: Assignment): Step[] {
   const base = { aid: a.id, kind: a.kind, subject: a.subject };
@@ -57,6 +111,12 @@ export function stepsOf(a: Assignment): Step[] {
 
   if (a.kind === "retake") {
     const chunks = retakeChunks(a.wrong ?? []);
+    if (!chunks.length)
+      // date added by the student: the wrong problems aren't known, so plan general review
+      return [0, 1].map((i) =>
+        mk(i, 2, `${a.subject}: järeltööks kordamine ${i + 1}/2`, STEP_MIN,
+          a.note || "Korda kontrolltöö teemat oma vihiku, töö ja kooli materjali järgi. Kui tead, mis läks valesti, harjuta just seda."),
+      );
     return chunks.map((c, i) =>
       mk(i, chunks.length, `${a.subject} järeltöö: harjuta ${numList(c)}`, STEP_MIN,
         "Need ülesanded läksid kontrolltöös valesti. Tee need oma töö ja kooli materjali järgi uuesti läbi."),
@@ -64,6 +124,20 @@ export function stepsOf(a: Assignment): Step[] {
   }
 
   const n = Math.min(MAX_STEPS, Math.max(1, Math.ceil(a.minutes / STEP_MIN)));
+  if (a.kind === "test" && a.review?.length) {
+    // the parent's kordamisküsimused / -ülesanded in order; any steps left over go over everything again
+    const parts = splitEven(a.review, Math.min(n, a.review.length));
+    const numeric = a.review.every((x) => /^\d+$/.test(x));
+    return Array.from({ length: n }, (_, i) => {
+      const m = i < n - 1 ? STEP_MIN : Math.max(5, a.minutes - STEP_MIN * (n - 1));
+      const head = `${a.subject}: kontrolltööks kordamine${n > 1 ? ` ${i + 1}/${n}` : ""}`;
+      const p = parts[i];
+      if (!p) return mk(i, n, `${head}, kõik uuesti üle`, m, a.note || "Vaata kõik kordamisküsimused veel kord üle.");
+      if (numeric) return mk(i, n, `${head}, ${numRange(p)}`, m, a.note || "");
+      const list = p.map((x) => `• ${x}`).join("\n");
+      return mk(i, n, `${head}, ${p.length === 1 ? "1 küsimus" : `${p.length} küsimust`}`, m, a.note ? `${a.note}\n${list}` : list);
+    });
+  }
   const steps: Step[] = [];
   for (let i = 0; i < n; i++) {
     const m = i < n - 1 ? STEP_MIN : Math.max(5, a.minutes - STEP_MIN * (n - 1));
