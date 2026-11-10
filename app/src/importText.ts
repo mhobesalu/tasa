@@ -24,7 +24,14 @@ const WEEKDAYS = ["esmaspäev", "teisipäev", "kolmapäev", "neljapäev", "reede
 
 const STEP_MIN = 25;
 const TEST_MIN = 50;
-const TITLE_MAX = 60;
+const TITLE_MAX = 90;
+const REMINDER_MIN = 5;
+// Stuudium ends each task with its age in days, e.g. "… -5p" (seen in the phone browser copy).
+const END_MARK = /\s*-\d+p$/;
+// A teacher's note that is only "bring X to class" is a reminder, not a 25-min step.
+const BRING = /(võta|too|võtke|tooge)\b[^.]{0,60}\bkaasa\b/i;
+// Attached Tera material: "Tera: Kordamine KT 1https://…".
+const TERA = /^tera:\s/i;
 
 // Lines where the list ends (Stuudium shows these under the list).
 const STOP = [
@@ -106,7 +113,7 @@ export function parseSubjectLine(line: string): { subject: string; minutes: numb
 }
 
 function shortTitle(text: string): string {
-  const first = text.split(/(?<=[.!?])\s/)[0].trim();
+  const first = text.replace(/^NB!?\s*/i, "").split(/(?<=[.!?])\s/)[0].trim();
   const t = first.length <= TITLE_MAX ? first : first.slice(0, TITLE_MAX - 1).replace(/\s\S*$/, "") + "…";
   return t.replace(/[.!]$/, "");
 }
@@ -123,7 +130,9 @@ export function parsePasted(raw: string, t: Day): Draft[] {
 
   const out: Draft[] = [];
   let day: Day | null = null;
-  let cur: { subject: string; minutes: number | null; test: boolean; text: string[] } | null = null;
+  let cur: { subject: string; minutes: number | null; test: boolean; text: string[]; extra: string[]; done: boolean } | null = null;
+  // Phone-browser copy: each task ends with "-Np", and its text can span several lines.
+  const marked = lines.some((l) => END_MARK.test(l));
 
   const flush = () => {
     if (cur && day) {
@@ -131,14 +140,15 @@ export function parsePasted(raw: string, t: Day): Draft[] {
       const words = text.split("\n").filter((x) => !URL.test(x)).join(" ").trim();
       const kind: Kind = cur.test ? "test" : "homework";
       const title = kind === "test" ? (words ? shortTitle(words) : "kontrolltöö") : words ? shortTitle(words) : "kodune töö";
+      const bring = kind === "homework" && cur.minutes === null && BRING.test(words) && words.length < 200;
       out.push({
         key: `${day}|${cur.subject}|${out.length}`,
         kind,
         subject: cur.subject,
         title,
         due: day,
-        minutes: cur.minutes ?? (kind === "test" ? TEST_MIN : STEP_MIN),
-        note: text,
+        minutes: cur.minutes ?? (kind === "test" ? TEST_MIN : bring ? REMINDER_MIN : STEP_MIN),
+        note: [text, ...cur.extra].filter(Boolean).join("\n"),
       });
     }
     cur = null;
@@ -158,12 +168,20 @@ export function parsePasted(raw: string, t: Day): Draft[] {
       if (cur) cur.text.push(line);
       continue;
     }
-    if (cur && cur.text.length === 0) {
+    if (marked) {
+      if (cur && !cur.done) {
+        const end = END_MARK.test(line);
+        const body = line.replace(END_MARK, "").trim();
+        if (body) (TERA.test(body) ? cur.extra : cur.text).push(body);
+        if (end) cur.done = true;
+        continue;
+      }
+    } else if (cur && cur.text.length === 0) {
       cur.text.push(line); // teacher's text for this subject
       continue;
     }
     flush();
-    cur = { ...parseSubjectLine(line), text: [] };
+    cur = { ...parseSubjectLine(line), text: [], extra: [], done: false };
   }
   flush();
   return out;
