@@ -34,27 +34,24 @@ jobs:
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: printf '%s\n' "$ASC_KEY_P8" > "$EXPO_ASC_API_KEY_PATH"
-      # EAS can only create the Apple signing certificate and profile in
-      # interactive mode, so run it under `expect` and accept the default
-      # answer (Enter) to each question. The App Store Connect key above is
-      # used for Apple, so no Apple password is asked for.
-      - name: Install expect
-        run: sudo apt-get install -y -qq expect >/dev/null
-      - name: Build and send to TestFlight
-        timeout-minutes: 60
+      # EAS Submit only uses the App Store Connect key when eas.json names it.
+      # The key ID and issuer ID are kept as secrets, so add them here at run time.
+      - name: Point EAS Submit at the App Store Connect key
         run: |
-          unset CI
-          export FORCE_COLOR=0 EAS_BUILD_NO_EXPO_GO_WARNING=true
-          expect -c '
-            set timeout -1
-            spawn npx --yes eas-cli@latest build --platform ios --profile production --auto-submit
-            expect {
-              -re {\(Y/n\)|\(y/N\)|\u203a} { sleep 1; send "\r"; exp_continue }
-              eof
-            }
-            catch wait result
-            exit [lindex $result 3]
-          '
+          jq --arg id "$EXPO_ASC_KEY_ID" --arg iss "$EXPO_ASC_ISSUER_ID" --arg p "$EXPO_ASC_API_KEY_PATH" \
+            '.submit.production.ios += {ascApiKeyId: $id, ascApiKeyIssuerId: $iss, ascApiKeyPath: $p}' eas.json > eas.tmp
+          mv eas.tmp eas.json
+      # The Apple signing certificate and profile were created on the first
+      # run (interactive) and are stored on Expo, so builds run non-interactively:
+      # a missing answer fails fast instead of waiting for the 60-minute limit.
+      # EAS_NO_VCS: upload the folder as it is (with the eas.json change above);
+      # .gitignore still applies, and the key file lives outside app/.
+      # Free builds can wait a long time in Expo's queue, hence 120 minutes.
+      - name: Build and send to TestFlight
+        timeout-minutes: 120
+        env:
+          EAS_NO_VCS: 1
+        run: npx --yes eas-cli@latest build --platform ios --profile production --non-interactive --auto-submit
       - name: Remove key
         if: always()
         run: rm -f "$EXPO_ASC_API_KEY_PATH"
