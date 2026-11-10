@@ -35,14 +35,25 @@ jobs:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: printf '%s\n' "$ASC_KEY_P8" > "$EXPO_ASC_API_KEY_PATH"
       # EAS can only create the Apple signing certificate and profile in
-      # interactive mode, so run it in a pseudo-terminal and accept the
-      # default answer (Enter) to each question. The App Store Connect key
-      # above is used for Apple, so no Apple password is asked for.
+      # interactive mode, so run it under `expect` and accept the default
+      # answer (Enter) to each question. The App Store Connect key above is
+      # used for Apple, so no Apple password is asked for.
+      - name: Install expect
+        run: sudo apt-get install -y -qq expect >/dev/null
       - name: Build and send to TestFlight
         timeout-minutes: 60
         run: |
           unset CI
-          yes "" | script -q -e -c "npx --yes eas-cli@latest build --platform ios --profile production --auto-submit" /dev/null
+          expect -c '
+            set timeout -1
+            spawn npx --yes eas-cli@latest build --platform ios --profile production --auto-submit
+            expect {
+              -re {\? [^\r\n]*} { sleep 1; send "\r"; exp_continue }
+              eof
+            }
+            catch wait result
+            exit [lindex $result 3]
+          '
       - name: Remove key
         if: always()
         run: rm -f "$EXPO_ASC_API_KEY_PATH"
