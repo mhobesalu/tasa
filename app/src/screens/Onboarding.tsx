@@ -68,7 +68,7 @@ export function Onboarding() {
       </Card>
 
       <Muted>
-        Kõik andmed on ainult selles telefonis. E-päeviku (eKool, Stuudium) ühendus tuleb hiljem, kooli loal. Seni lisab ülesanded lapsevanem.
+        Kõik andmed on ainult selles telefonis. Ülesanded kleebib lapsevanem e-päevikust (eKool, Stuudium) või lisab käsitsi.
       </Muted>
     </View>
   );

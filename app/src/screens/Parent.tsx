@@ -455,7 +455,7 @@ function Privacy() {
       {[
         "Lapsevanem on konto omanik ja annab nõusoleku.",
         "Praegu on kõik andmed ainult selles telefonis. Neid ei saadeta kuhugi.",
-        "E-päeviku parooli ei küsita kunagi. Hiljem tulevad andmed ametliku liidese kaudu, kooli loal.",
+        "E-päeviku parooli ei küsita kunagi. Ülesanded kleebid sina e-päevikust.",
         "Õpetajad ei näe midagi. Diagnoose ei salvestata.",
       ].map((t) => (
         <T key={t} style={{ fontSize: 15, lineHeight: 22 }}>• {t}</T>

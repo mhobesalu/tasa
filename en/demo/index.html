@@ -406,7 +406,7 @@ function viewWeek(){
   const nextMon=[{t:"Physics test",m:0,tag:"test"}].concat(S.extra[7]||[]);
   return'<div class="head"><h1>Week</h1></div><p class="sub">2–8 November. The child usually sees only today. This view is an overview.</p>'+
     '<section class="card flow"><b>How TASA makes the plan</b><ol>'+
-    '<li>Homework, deadlines and tests come from the e-diary (eKool or Stuudium), with the school\'s permission.</li>'+
+    '<li>A parent copies homework, deadlines and tests from the e-diary (eKool or Stuudium).</li>'+
     '<li>Big work is split into steps of about 25 minutes, nearest deadline first.</li>'+
     '<li>Test revision starts up to 7 days before. If a test went badly, the parent can add the marked test, and the problems that went wrong are spread over 2–3 days.</li>'+
     '<li>TASA only uses material from the school or the parent. It never writes or solves problems itself.</li>'+
@@ -521,7 +521,7 @@ function viewParent(){
     S.tasks.map(t=>'<div class="prow"><div class="it"><div>'+esc(t.t)+'</div><div class="hist">'+(t.exc?"Excused":t.done?"Done ✓":"Not done")+'</div></div><button class="btn small ghost" type="button" data-act="excuse" data-id="'+t.id+'">'+(t.exc?"Restore":"Excuse")+'</button></div>').join("")+'</section>'+
     '<div class="sec">Data and privacy</div><section class="card pcard"><ul class="facts">'+
     '<li>The parent owns the account and gives consent.</li>'+
-    '<li>We never ask for e-diary passwords. Data comes through the official interface, with the school\'s permission.</li>'+
+    '<li>We never ask for e-diary passwords. A parent pastes the tasks from the e-diary.</li>'+
     '<li>By default, teachers see nothing.</li><li>No diagnoses are stored. Data is kept in the EU.</li>'+
     '<li>The parent can download or delete all data.</li></ul></section>'+
     '<div class="sec">Demo</div><section class="card pcard"><div class="field"><label for="kid">Child\'s name in the demo</label><input id="kid" type="text" maxlength="20" value="'+esc(S.kid)+'"></div><button class="btn ghost small" type="button" data-act="reset" style="justify-self:start">Restart the demo</button></section>';
@@ -621,7 +621,7 @@ function sheet(html){
 }
 function closeSheet(){clearInterval(tmrInt);$("#sheetHost").innerHTML="";}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
-$("#aboutBtn").onclick=()=>sheet('<h2>TASA: a study planner for children</h2><p>TASA helps children who find it hard to get started with homework or to plan their time. The child sees only today and one thing at a time.</p><ul class="facts"><li>Homework, deadlines, tests and grades come from the e-diary (eKool or Stuudium), with the school\'s permission. Teachers don\'t need to do anything extra.</li><li>Big work is split into steps of about 25 minutes.</li><li>Every tick gets a celebration. The parent sets the reward, for example screen time in minutes, stars for a movie night with a parent or a family trip at the end of the year. Or no reward at all.</li><li>If a test went badly, the parent takes a photo of the marked test and the problems that went wrong are spread over 2–3 days. TASA never solves problems for the child.</li><li>Always free for families.</li></ul><p class="hist">This demo uses made-up data and doesn\'t connect to any e-diary. Try it: press “Done”, look at tomorrow with the arrow, and open the “Parent” view (PIN: any 4 digits).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Try it</button>');
+$("#aboutBtn").onclick=()=>sheet('<h2>TASA: a study planner for children</h2><p>TASA helps children who find it hard to get started with homework or to plan their time. The child sees only today and one thing at a time.</p><ul class="facts"><li>A parent copies homework, deadlines and tests from the e-diary (eKool or Stuudium) and pastes them into TASA. Teachers don\'t need to do anything extra.</li><li>Big work is split into steps of about 25 minutes.</li><li>Every tick gets a celebration. The parent sets the reward, for example screen time in minutes, stars for a movie night with a parent or a family trip at the end of the year. Or no reward at all.</li><li>If a test went badly, the parent takes a photo of the marked test and the problems that went wrong are spread over 2–3 days. TASA never solves problems for the child.</li><li>Always free for families.</li></ul><p class="hist">This demo uses made-up data and doesn\'t connect to any e-diary. Try it: press “Done”, look at tomorrow with the arrow, and open the “Parent” view (PIN: any 4 digits).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Try it</button>');
 
 /* ---------- toast ---------- */
 let tt;
