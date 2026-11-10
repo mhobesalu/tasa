@@ -11,6 +11,9 @@
       "bundleIdentifier": "ee.tasaplan.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
