@@ -45,3 +45,17 @@ describe("järeltöö day from the student", () => {
     expect(s[0].title).toBe("Ajalugu: järeltööks kordamine 1/2");
   });
 });
+
+describe("kordamisküsimused from a screenshot", () => {
+  it("joins wrapped lines and drops the heading", () => {
+    const ocr = "Kordamisküsimused\n1. Mis on demokraatia ja kus see\ntekkis?\n2) Kes oli Perikles?\n––– pilt –––\n3. Nimeta kolm\nAteena ehitist.";
+    expect(parseReview(ocr)).toEqual([
+      "Mis on demokraatia ja kus see tekkis?",
+      "Kes oli Perikles?",
+      "Nimeta kolm Ateena ehitist.",
+    ]);
+  });
+  it("joins wrapped lines without numbers", () => {
+    expect(parseReview("Mis on rakk ja millest see\nkoosneb?\nMis on DNA?")).toEqual(["Mis on rakk ja millest see koosneb?", "Mis on DNA?"]);
+  });
+});

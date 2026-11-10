@@ -40,11 +40,25 @@ export function parseReview(text: string): string[] {
     }
     return [...new Set(out)].map(String);
   }
-  return t
+  const lines = t
     .split(/\n|;/)
-    .map((x) => x.replace(/^\s*(?:[-•*]|\d+[.)])\s*/, "").trim())
-    .filter(Boolean)
-    .slice(0, 60);
+    .map((x) => x.trim())
+    .filter((x) => x && !/^[–-]{2,}.*[–-]{2,}$/.test(x)); // screenshot breaks
+  const NUM = /^(\d{1,3})\s*[.)]\s*(.*)$/;
+  const BULLET = /^[-•*–]\s*(.*)$/;
+  const numbered = lines.filter((x) => NUM.test(x)).length >= 2;
+  const out: string[] = [];
+  for (const line of lines) {
+    const m = line.match(NUM) ?? line.match(BULLET);
+    const body = m ? m[m.length - 1].trim() : line;
+    const prev = out[out.length - 1];
+    if (m && body) out.push(body);
+    else if (!m && numbered && prev !== undefined) out[out.length - 1] = `${prev} ${body}`; // wrapped line
+    else if (!m && numbered) continue; // heading before question 1
+    else if (!m && prev !== undefined && !/[?.!:]$/.test(prev) && /^[a-zõäöü(]/.test(body)) out[out.length - 1] = `${prev} ${body}`;
+    else if (body) out.push(body);
+  }
+  return out.slice(0, 100);
 }
 
 /** "nr 1–4" or "nr 1, 3 ja 5" for numeric items. */

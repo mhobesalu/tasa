@@ -8,7 +8,7 @@ import { dayItems, rewardSummary, weekStats } from "../logic";
 import { numList, parseReview, retakeChunks, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
-import { askNotifications } from "../native";
+import { askNotifications, canReadImages, readClipboard, textFromScreenshots } from "../native";
 import { knownSubjects, lessonDays, setDays } from "../timetable";
 import { PasteImport } from "./PasteImport";
 import type { Kind, RewardConfig } from "../types";
@@ -294,23 +294,50 @@ function PlannedList() {
 }
 
 function ReviewFields({ review, setReview, from, setFrom }: { review: string; setReview: (v: string) => void; from: string; setFrom: (v: string) => void }) {
+  const fx = useCelebrate();
+  const [busy, setBusy] = useState(false);
   const items = parseReview(review);
   const numeric = items.length > 0 && items.every((x) => /^\d+$/.test(x));
+  // read questions from a screenshot / photo or the clipboard, then show them one per line to check
+  const take = (raw: string | null) => {
+    if (raw === null) return;
+    const got = parseReview(raw);
+    if (!got.length) return fx.toast("Küsimusi ei leidnud. Proovi teist pilti või kirjuta need.");
+    setReview(got.every((x) => /^\d+$/.test(x)) ? got.join(", ") : got.join("\n"));
+    fx.toast(`Leidsin ${got.length}. Vaata üle.`);
+  };
   return (
     <View style={{ gap: 8 }}>
+      <T style={{ color: C.muted, fontSize: 14 }}>Kordamisküsimused või -ülesanded (kui õpetaja andis)</T>
+      <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+        {canReadImages ? (
+          <Btn
+            small
+            kind="ghost"
+            title={busy ? "Loen…" : "Ekraanipildilt"}
+            disabled={busy}
+            onPress={async () => {
+              setBusy(true);
+              try { take(await textFromScreenshots()); } catch { fx.toast("Pilti ei saanud lugeda."); }
+              setBusy(false);
+            }}
+          />
+        ) : null}
+        <Btn small kind="ghost" title="Kleebi" onPress={async () => take(await readClipboard())} />
+      </View>
       <Field
-        label="Kordamisküsimused või -ülesanded (kui õpetaja andis)"
+        label="Või kirjuta"
         value={review}
         onChangeText={setReview}
         placeholder={"nt 1–12, 15\nvõi iga küsimus eraldi real"}
         multiline
         style={{ flex: 0 }}
-        inputStyle={{ minHeight: 70, textAlignVertical: "top" }}
-        maxLength={2000}
+        inputStyle={{ minHeight: 70, maxHeight: 260, textAlignVertical: "top" }}
+        maxLength={6000}
       />
       <Field style={{ flex: 0 }} label="Kust need on? (valikuline)" value={from} onChangeText={setFrom} placeholder="nt Kordamisleht, töövihik lk 45" maxLength={200} />
       {items.length ? (
-        <Muted>{numeric ? `${items.length} ülesannet` : `${items.length} küsimust`}. TASA jagab need kordamise sammudele järjest.</Muted>
+        <Muted>{numeric ? `${items.length} ülesannet` : `${items.length} küsimust`}. TASA jagab need kordamise sammudele järjest. Pilt jääb telefoni.</Muted>
       ) : null}
     </View>
   );
