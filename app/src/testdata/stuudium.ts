@@ -70,3 +70,35 @@ Lisa endale ülesanne
 Tegemata
 Kunst, K 07. oktoober
 `;
+
+// Grade summary copied in the phone browser: teacher names on their own line.
+export const GRADES_SUMMARY_PHONE = `Päevik
+Tera
+Suhtlus
+Kokkuvõte
+kommentaaridega
+2026/2027
+Tunni kuupäeva ja teema nägemiseks vajuta hindel/märkel
+Klassijuhataja tund
+Mari Maasikas    Jaan Tamm
+Kursus
+oktoober P
+Eesti keel I
+Kati Kask
+Hindamisjuhend
+Kursus
+september — oktoober P 2 P
+Inglise keel I
+Anne Mets    John Smith
+Kursus
+september — oktoober 5 P 4-
+Mat 1: Arvuhulgad. Avaldised. (K)
+Peeter Paju
+Kursus
+september — oktoober P 2 P
+Filmiõpetus
+Andres Org    Kadri Kuusk
+Kursus
+september — oktoober 5 P AR
+Salvesta/prindi
+`;

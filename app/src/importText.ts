@@ -201,7 +201,8 @@ export function isDuplicate(d: Draft, existing: Assignment[]): boolean {
 // Grades are not stored.
 
 const MARK = /^(?:[1-5][+-]?|AR|MA|A|P|H|T|X|E|K)$/i;
-const FAILING = /^(?:[12][+-]?|AR|MA|X)$/i;
+// "AR" (arvestatud) is a pass, so it never suggests a retake.
+const FAILING = /^(?:[12][+-]?|MA|X)$/i;
 const MONTH_LINE = new RegExp(`^(${MONTHS.join("|")})$`, "i");
 
 export interface RetakeHint {
@@ -211,7 +212,9 @@ export interface RetakeHint {
 
 // Summary view ("Kokkuvõte"): subject + teacher(s), some link lines, "Kursus",
 // then "september — oktoober P P 2 P" with the marks on one line.
-const LINK_LINES = /^(hindamisjuhend|ainekaart|kirjandus ja materjalid|eesmärgid ja õpiväljundid|tegevuste kava|kursus)$/i;
+const LINK_LINES = /^(hindamisjuhend|ainekaart|kirjandus ja materjalid|eesmärgid ja õpiväljundid|tegevuste kava|kursus|päevik|tera|suhtlus|kokkuvõte|kommentaaridega|salvesta\/prindi|\d{4}\/\d{4})$/i;
+// The page intro; the first subject comes right after it.
+const INTRO = /^tunni kuupäeva ja teema/i;
 const MONTH_MARKS = new RegExp(`^(?:${MONTHS.join("|")})(?:\\s*—\\s*(?:${MONTHS.join("|")}))?((?:\\s+\\S+)*)$`, "i");
 
 /** "Keemia alused Mari Maasikas  Jaan Tamm" -> "Keemia alused" */
@@ -237,9 +240,14 @@ function parseSummary(lines: string[]): { subject: string; marks: string[] }[] |
       candidate = null;
       continue;
     }
+    if (INTRO.test(line)) {
+      candidate = null;
+      continue;
+    }
     if (LINK_LINES.test(line)) continue;
-    if (candidate === null) candidate = line; // first line after the last marks line
-    else candidate = line; // the subject is the last non-link line before "Kursus"
+    // The subject is the first line of each block. In the phone copy the teachers
+    // follow on their own line, so later lines are ignored.
+    if (candidate === null) candidate = line;
   }
   return rows;
 }
