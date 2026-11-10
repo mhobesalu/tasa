@@ -42,6 +42,7 @@
           "microphonePermission": false
         }
       ],
+      "./plugins/withoutPush",
       [
         "expo-notifications",
         {
