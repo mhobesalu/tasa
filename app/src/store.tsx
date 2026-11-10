@@ -39,6 +39,8 @@ interface Ctx {
   /** the student got the retake day from the teacher */
   studentRetake: (subject: string, due: Day) => void;
   setReview: (id: string, review: string[], note?: string) => void;
+  /** a reading task: from which page to which; it is then planned as exact pages per day */
+  setPages: (id: string, from: number, to: number) => void;
   addEvent: (e: Omit<FixedEvent, "id">) => void;
   removeEvent: (id: string) => void;
   toggleExcuse: (stepId: string) => void;
@@ -216,6 +218,11 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
       parentUpdate((s) => ({
         ...s,
         assignments: s.assignments.map((a) => (a.id === id ? { ...a, review: review.length ? review : undefined, note: note || undefined } : a)),
+      })),
+    setPages: (id, from, to) =>
+      parentUpdate((s) => ({
+        ...s,
+        assignments: s.assignments.map((a) => (a.id === id ? { ...a, kind: "book", pageFrom: from, pageTo: to } : a)),
       })),
     removeAssignment: (id) => parentUpdate((s) => ({ ...s, assignments: s.assignments.filter((a) => a.id !== id) })),
     addEvent: (e) =>

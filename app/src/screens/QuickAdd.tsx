@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
+import { PagesAsk } from "../components/PagesAsk";
 import { Btn, Field, Muted, T } from "../components/ui";
 import { longDate, relDate } from "../dates";
 import { type Draft, type MessageAction, type ParsedMessage } from "../importText";
 import { askNotifications, canReadImages, readClipboard, syncReminder, textFromScreenshots } from "../native";
-import { parseReview, rangeText } from "../planner";
+import { parseReview, rangeText, READING } from "../planner";
+import { diffDays } from "../dates";
 import { planImport } from "../quickImport";
 import { useStore } from "../store";
 import { C, F } from "../theme";
@@ -106,6 +108,15 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
               ))}
               {v.items.length > 8 ? <Muted>ja veel {v.items.length - 8}</Muted> : null}
               {v.skipped ? <Muted>{v.skipped} oli juba plaanis või tähtaeg on möödas.</Muted> : null}
+              {state.assignments
+                .filter((a) => v.ids.includes(a.id) && a.kind !== "book" && READING.test(a.title) && diffDays(day, a.due) >= 2)
+                .slice(0, 3)
+                .map((a) => (
+                  <View key={a.id} style={{ gap: 4, marginTop: 6 }}>
+                    <Muted>Lugemine: mis leheküljest mis leheküljeni? Siis jagab TASA leheküljed päevade peale.</Muted>
+                    <PagesAsk a={a} />
+                  </View>
+                ))}
               {v.missed ? <Muted>Leidsin ka {v.missed === 1 ? "1 tegemata töö" : `${v.missed} tegemata tööd`}. Need saab lisada lapsevanema vaates.</Muted> : null}
             </View>
             <View style={{ gap: 10, marginTop: 6 }}>

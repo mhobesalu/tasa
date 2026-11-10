@@ -103,3 +103,12 @@ describe("reading homework", () => {
     expect(stepsOf(hw({ due: "2026-11-11", minutes: 25 }))).toHaveLength(1);
   });
 });
+
+describe("reading with pages", () => {
+  it("spreads exact pages per day once the pages are known", () => {
+    const s = stepsOf({ id: "b1", kind: "book", subject: "Kirjandus", title: "Loe raamat „Kevade“", due: "2026-11-17", minutes: 60,
+      createdOn: "2026-11-10", source: "ediary", pageFrom: 41, pageTo: 110 });
+    expect(s).toHaveLength(7);
+    expect(s[0].title).toBe("Kirjandus: Loe raamat „Kevade“, loe lk 41–50");
+  });
+});
