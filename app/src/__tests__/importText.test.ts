@@ -1,4 +1,4 @@
-import { GRADES_SUMMARY, GRADES_TABLE, HOMEWORK, HOMEWORK_PHONE, MSG_NOTEBOOK, MSG_RETAKE, MSG_TEST } from "../testdata/stuudium";
+import { GRADES_SUMMARY, GRADES_SUMMARY_PHONE, GRADES_TABLE, HOMEWORK, HOMEWORK_PHONE, MSG_NOTEBOOK, MSG_RETAKE, MSG_TEST } from "../testdata/stuudium";
 import type { Assignment } from "../types";
 import { parseDayHeader, parseGrades, parseMessage, parsePasted, parseSubjectLine } from "../importText";
 
@@ -54,7 +54,6 @@ test("grade table: subjects with a failing mark become retake suggestions", () =
   expect(g).toEqual([
     { subject: "Mat 1", marks: ["2-"] },
     { subject: "Keemia", marks: ["1"] },
-    { subject: "Filmiõpetus", marks: ["AR"] },
   ]);
 });
 
@@ -63,7 +62,6 @@ test("grade summary view (marks on one line, teacher names stripped)", () => {
   expect(g).toEqual([
     { subject: "Mat 1", marks: ["2-"] },
     { subject: "Keemia", marks: ["1"] },
-    { subject: "Filmiõpetus", marks: ["AR"] },
   ]);
 });
 
@@ -117,4 +115,12 @@ test("phone-browser copy: tasks end at \"-Np\", tests and reminders are recognis
   expect(kt.kind).toBe("test");
   expect(rev.minutes).toBe(90);
   expect(d.every((x) => !/-\d+p$/.test(x.title))).toBe(true);
+});
+
+test("grade summary copied on the phone: teachers on their own line (even one named August), AR is a pass", () => {
+  expect(parseGrades(GRADES_SUMMARY_PHONE)).toEqual([
+    { subject: "Eesti keel I", marks: ["2"] },
+    { subject: "Mat 1", marks: ["2"] },
+    { subject: "Füüsika 1", marks: ["2"] },
+  ]);
 });
