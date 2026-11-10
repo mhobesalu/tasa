@@ -49,7 +49,7 @@ export function EventRow({ e }: { e: DayEvent }) {
   );
 }
 
-export function TodayScreen() {
+export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
   const { state, day, plan, tick } = useStore();
   const fx = useCelebrate();
   const [offset, setOffset] = useState(0); // -1 yesterday, 0 today, 1 tomorrow
@@ -156,6 +156,10 @@ export function TodayScreen() {
               ))}
           </Card>
         </>
+      ) : null}
+
+      {onAdd ? (
+        <Btn kind="ghost" title="＋ Lisa e-päevikust" onPress={onAdd} style={{ marginTop: 16 }} accessibilityHint="Kleebi või pildista kodutööde nimekiri" />
       ) : null}
 
       <TimerModal item={timerFor} onClose={() => setTimerFor(null)} onDone={(id) => { setTimerFor(null); doTick(id); }} />

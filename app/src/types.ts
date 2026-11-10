@@ -82,6 +82,8 @@ export interface AppState {
   reward: RewardConfig;
   payouts: Payout[];
   seq: number;
+  /** Daily reminder to add the next day's homework (Stuudium: teachers can't add after 17:00). */
+  reminder?: { on: boolean; hour: number; asked?: boolean };
 }
 
 export interface Step {

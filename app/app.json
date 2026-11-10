@@ -33,7 +33,21 @@
       "backgroundColor": "#FFF7E8"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "TASA loeb ekraanipildilt e-päeviku kodutööd. Pilt jääb telefoni.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2A8C8C"
+        }
+      ]
     ],
     "scheme": "tasa",
     "backgroundColor": "#FFF7E8",

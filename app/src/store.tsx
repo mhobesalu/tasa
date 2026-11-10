@@ -29,6 +29,10 @@ interface Ctx {
   /** Add text (e.g. a teacher's message) to an assignment's note. */
   attachNote: (id: string, text: string) => void;
   removeAssignment: (id: string) => void;
+  /** Add several at once (one undo step). Returns the new ids. */
+  addMany: (list: Omit<Assignment, "id" | "createdOn" | "source">[]) => string[];
+  removeMany: (ids: string[]) => void;
+  setReminder: (r: NonNullable<AppState["reminder"]>) => void;
   addEvent: (e: Omit<FixedEvent, "id">) => void;
   removeEvent: (id: string) => void;
   toggleExcuse: (stepId: string) => void;
@@ -150,6 +154,17 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
         ...s,
         assignments: s.assignments.map((a) => (a.id === id ? { ...a, note: a.note ? `${a.note}\n\n${text}` : text } : a)),
       })),
+    addMany: (list) => {
+      const ids = list.map((_, i) => `p${state.seq + i + 1}`);
+      parentUpdate((s) => ({
+        ...s,
+        seq: s.seq + list.length,
+        assignments: [...s.assignments, ...list.map((a, i) => ({ ...a, id: `p${s.seq + i + 1}`, createdOn: day, source: "parent" as const }))],
+      }));
+      return ids;
+    },
+    removeMany: (ids) => parentUpdate((s) => ({ ...s, assignments: s.assignments.filter((a) => !ids.includes(a.id)) })),
+    setReminder: (r) => setState((s) => (s ? { ...s, reminder: r } : s)),
     removeAssignment: (id) => parentUpdate((s) => ({ ...s, assignments: s.assignments.filter((a) => a.id !== id) })),
     addEvent: (e) =>
       parentUpdate((s) => ({ ...s, seq: s.seq + 1, events: [...s.events, { ...e, id: `e${s.seq + 1}` }] })),

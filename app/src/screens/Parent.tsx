@@ -7,6 +7,7 @@ import { dayItems, rewardSummary, weekStats } from "../logic";
 import { numList, retakeChunks, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
+import { askNotifications } from "../native";
 import { PasteImport } from "./PasteImport";
 import type { Kind, RewardConfig } from "../types";
 
@@ -403,7 +404,7 @@ function RewardSettings() {
 }
 
 function Settings() {
-  const { state, parentUpdate, setPin } = useStore();
+  const { state, parentUpdate, setPin, setReminder } = useStore();
   const fx = useCelebrate();
   const [name, setName] = useState(state.child.name);
   const [grade, setGrade] = useState(state.child.grade);
@@ -414,6 +415,19 @@ function Settings() {
         <Field label="Lapse nimi" value={name} onChangeText={setName} maxLength={20} />
         <Field label="Klass" value={grade} onChangeText={setGrade} maxLength={10} style={{ maxWidth: 110 }} />
       </Row>
+      <Choice
+        label="Meeldetuletus: lisa homsed kodutööd"
+        value={state.reminder?.on ? state.reminder.hour : 0}
+        onChange={async (hour) => {
+          const ok = hour === 0 ? false : await askNotifications();
+          setReminder({ on: ok, hour: hour || state.reminder?.hour || 17, asked: true });
+          if (hour && !ok) fx.toast("Teavitused on telefonis välja lülitatud. Luba need telefoni seadetes.");
+        }}
+        options={[
+          { value: 0, label: "Väljas" },
+          ...[16, 17, 18, 19].map((h) => ({ value: h, label: `kell ${h}` })),
+        ]}
+      />
       <Choice
         label="Õppimise aeg päevas (umbes)"
         value={state.budget}

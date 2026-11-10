@@ -4,6 +4,7 @@ import { useCelebrate } from "../components/Celebrate";
 import { Btn, Card, Muted, Pill, Row, T } from "../components/ui";
 import { longDate, relDate } from "../dates";
 import { isDuplicate, parseGrades, parseMessage, parsePasted, type Draft, type MessageAction, type ParsedMessage, type RetakeHint } from "../importText";
+import { canReadImages, readClipboard, textFromScreenshots } from "../native";
 import { useStore } from "../store";
 import { C, F } from "../theme";
 
@@ -81,7 +82,7 @@ export function PasteImport({ onRetake }: { onRetake: (subject: string) => void 
   return (
     <Card>
       <Muted>
-        Kopeeri e-päevikust kodutööde nimekiri (Stuudiumis „Ülesanded, kodutööd ja kontrolltööd“), hinnete kokkuvõte või
+        Kopeeri või pildista e-päevikust kodutööde nimekiri (Stuudiumis „Ülesanded, kodutööd ja kontrolltööd“), hinnete kokkuvõte või
         õpetaja sõnum ja kleebi siia. Kõik loetakse selles telefonis, midagi ei saadeta kuhugi ja hindeid ei salvestata.
       </Muted>
       <TextInput
@@ -94,6 +95,24 @@ export function PasteImport({ onRetake }: { onRetake: (subject: string) => void 
         style={st.box}
         textAlignVertical="top"
       />
+      <Row style={{ flexWrap: "wrap" }}>
+        <Btn small kind="ghost" title="Kleebi" onPress={async () => setText(await readClipboard())} />
+        {canReadImages ? (
+          <Btn
+            small
+            kind="ghost"
+            title="Ekraanipildilt"
+            onPress={async () => {
+              try {
+                const t = await textFromScreenshots();
+                if (t !== null) setText(t);
+              } catch {
+                fx.toast("Pilti ei õnnestunud lugeda.");
+              }
+            }}
+          />
+        ) : null}
+      </Row>
       <Row>
         <Btn title="Loe" onPress={read} />
         {text || drafts ? <Btn kind="ghost" title="Tühjenda" onPress={clear} /> : null}
