@@ -264,7 +264,7 @@ function PlannedList() {
                 ) : (
                   <Pressable accessibilityRole="button" onPress={() => setEditing(a.id)} style={{ minHeight: 36, justifyContent: "center" }}>
                     <T style={{ color: C.lakeInk, fontSize: 15 }} bold>
-                      {a.review?.length ? `Kordamisülesandeid ${a.review.length} · muuda` : "＋ Lisa kordamisküsimused"}
+                      {a.review?.length ? `${a.review.every((x) => /^\d+$/.test(x)) ? "Kordamisülesandeid" : "Kordamisküsimusi"} ${a.review.length} · muuda` : "＋ Lisa kordamisküsimused"}
                     </T>
                   </Pressable>
                 )
