@@ -96,6 +96,10 @@ Mat 1: Arvuhulgad. Avaldised. (K)
 Peeter Paju
 Kursus
 september — oktoober P 2 P
+Füüsika 1: Kinemaatika.
+ August Allik
+Kursus
+september — november P 5 H 2 P
 Filmiõpetus
 Andres Org    Kadri Kuusk
 Kursus

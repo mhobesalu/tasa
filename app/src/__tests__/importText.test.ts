@@ -117,9 +117,10 @@ test("phone-browser copy: tasks end at \"-Np\", tests and reminders are recognis
   expect(d.every((x) => !/-\d+p$/.test(x.title))).toBe(true);
 });
 
-test("grade summary copied on the phone: teachers on their own line, AR is a pass", () => {
+test("grade summary copied on the phone: teachers on their own line (even one named August), AR is a pass", () => {
   expect(parseGrades(GRADES_SUMMARY_PHONE)).toEqual([
     { subject: "Eesti keel I", marks: ["2"] },
     { subject: "Mat 1", marks: ["2"] },
+    { subject: "Füüsika 1", marks: ["2"] },
   ]);
 });

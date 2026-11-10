@@ -215,7 +215,8 @@ export interface RetakeHint {
 const LINK_LINES = /^(hindamisjuhend|ainekaart|kirjandus ja materjalid|eesmärgid ja õpiväljundid|tegevuste kava|kursus|päevik|tera|suhtlus|kokkuvõte|kommentaaridega|salvesta\/prindi|\d{4}\/\d{4})$/i;
 // The page intro; the first subject comes right after it.
 const INTRO = /^tunni kuupäeva ja teema/i;
-const MONTH_MARKS = new RegExp(`^(?:${MONTHS.join("|")})(?:\\s*—\\s*(?:${MONTHS.join("|")}))?((?:\\s+\\S+)*)$`, "i");
+// Case-sensitive: Stuudium writes months in lower case, and a teacher called "August" must not match.
+const MONTH_MARKS = new RegExp(`^(?:${MONTHS.join("|")})(?:\\s*—\\s*(?:${MONTHS.join("|")}))?((?:\\s+\\S+)*)$`);
 
 /** "Keemia alused Mari Maasikas  Jaan Tamm" -> "Keemia alused" */
 function stripTeachers(line: string): string {
