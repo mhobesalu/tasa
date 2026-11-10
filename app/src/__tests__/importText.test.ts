@@ -131,3 +131,8 @@ test("the Tegemata list: subject, lesson day and topic", () => {
     { key: "2026-10-07|Kunst", subject: "Kunst", lessonDay: "2026-10-07", topic: "värvid" },
   ]);
 });
+
+test("a bare number from the screenshot clock is not a subject", () => {
+  const d = parsePasted("14\nPraktiline eesti keel I\nNB! Too vihik kaasa.\n-1p\nKeemia\nLoe lk 12.\n-1p", "2026-11-10");
+  expect(d.map((x) => x.subject)).not.toContain("14");
+});

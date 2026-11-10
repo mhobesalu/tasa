@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
-import { Btn, Muted, T } from "../components/ui";
+import { PagesAsk } from "../components/PagesAsk";
+import { Btn, Field, Muted, T } from "../components/ui";
 import { longDate, relDate } from "../dates";
 import { type Draft, type MessageAction, type ParsedMessage } from "../importText";
 import { askNotifications, canReadImages, readClipboard, syncReminder, textFromScreenshots } from "../native";
+import { parseReview, rangeText, READING } from "../planner";
+import { diffDays } from "../dates";
 import { planImport } from "../quickImport";
 import { useStore } from "../store";
 import { C, F } from "../theme";
@@ -14,6 +17,7 @@ type View_ =
   | { s: "busy" }
   | { s: "added"; items: Draft[]; ids: string[]; skipped: number; missed: number }
   | { s: "message"; msg: ParsedMessage }
+  | { s: "review"; text: string; head: string }
   | { s: "none"; why: string }
   | { s: "remind" };
 
@@ -22,7 +26,7 @@ type View_ =
  * New items go straight into the plan; the whole batch can be undone.
  */
 export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { state, day, addMany, removeMany, attachNote, addEvent, addAssignment, setReminder } = useStore();
+  const { state, day, addMany, removeMany, attachNote, addEvent, addAssignment, setReminder, setReview } = useStore();
   const fx = useCelebrate();
   const [v, setV] = useState<View_>({ s: "start" });
 
@@ -49,6 +53,12 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
       );
       return setV({ s: "added", items: r.add, ids, skipped: r.skipped, missed: r.missed });
     }
+    if (r.review.length)
+      return setV({
+        s: "review",
+        text: r.review.every((x) => /^\d+$/.test(x)) ? rangeText(r.review) : r.review.join("\n"),
+        head: text.trim().split(/\n/).slice(0, 2).join(" "),
+      });
     if (r.message) return setV({ s: "message", msg: r.message });
     if (r.skipped) return setV({ s: "none", why: `Uut ei leidnud: kõik ${r.skipped} on juba plaanis või tähtaeg on möödas.` });
     if (r.grades.length) return setV({ s: "none", why: "See on hinnete leht. Järeltöö saab lisada lapsevanema vaates." });
@@ -102,6 +112,15 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
               ))}
               {v.items.length > 8 ? <Muted>ja veel {v.items.length - 8}</Muted> : null}
               {v.skipped ? <Muted>{v.skipped} oli juba plaanis või tähtaeg on möödas.</Muted> : null}
+              {state.assignments
+                .filter((a) => v.ids.includes(a.id) && a.kind !== "book" && READING.test(a.title) && diffDays(day, a.due) >= 2)
+                .slice(0, 3)
+                .map((a) => (
+                  <View key={a.id} style={{ gap: 4, marginTop: 6 }}>
+                    <Muted>Lugemine: mis leheküljest mis leheküljeni? Siis jagab TASA leheküljed päevade peale.</Muted>
+                    <PagesAsk a={a} />
+                  </View>
+                ))}
               {v.missed ? <Muted>Leidsin ka {v.missed === 1 ? "1 tegemata töö" : `${v.missed} tegemata tööd`}. Need saab lisada lapsevanema vaates.</Muted> : null}
             </View>
             <View style={{ gap: 10, marginTop: 6 }}>
@@ -117,6 +136,23 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
               />
             </View>
           </>
+        ) : v.s === "review" ? (
+          <ReviewPick
+            text={v.text}
+            setText={(text) => setV({ s: "review", text, head: v.head })}
+            tests={state.assignments
+              .filter((a) => a.kind === "test" && a.due > day)
+              .sort((a, b) => a.due.localeCompare(b.due))
+              // the sheet's heading usually names the subject ("Ajalugu: … (KT 12.11)"): offer that test first
+              .sort((a, b) => Number(namesSubject(v.head, b.subject)) - Number(namesSubject(v.head, a.subject)))}
+            day={day}
+            onPick={(id) => {
+              setReview(id, parseReview(v.text), state.assignments.find((a) => a.id === id)?.note);
+              fx.toast("Kordamisülesanded lisatud.");
+              done();
+            }}
+            onClose={close}
+          />
         ) : v.s === "message" ? (
           <>
             <T bold style={st.h}>Sõnum: {v.msg.title}</T>
@@ -194,3 +230,49 @@ const st = StyleSheet.create({
   },
   h: { fontFamily: F.display, fontSize: 24, color: C.ink },
 });
+
+/** A photographed worksheet: check the numbers (cross out what the teacher left out), pick the test. */
+function ReviewPick({ text, setText, tests, day, onPick, onClose }: {
+  text: string; setText: (t: string) => void; tests: import("../types").Assignment[]; day: string;
+  onPick: (id: string) => void; onClose: () => void;
+}) {
+  const items = parseReview(text);
+  const numeric = items.length > 0 && items.every((x) => /^\d+$/.test(x));
+  return (
+    <>
+      <T bold style={{ fontFamily: F.display, fontSize: 22 }}>Kordamisülesanded</T>
+      <Muted>
+        Leidsin {items.length} {numeric ? "ülesannet" : "küsimust"}. Kontrolli üle ja kustuta need, mida õpetaja ei andnud.
+      </Muted>
+      <Field
+        label={numeric ? "Ülesannete numbrid" : "Küsimused"}
+        value={text}
+        onChangeText={setText}
+        multiline
+        style={{ flex: 0 }}
+        inputStyle={{ minHeight: 48, maxHeight: 200, textAlignVertical: "top" }}
+      />
+      {tests.length ? (
+        <View style={{ gap: 10, marginTop: 6 }}>
+          <Muted>Millise kontrolltöö kordamiseks?</Muted>
+          {tests.slice(0, 4).map((a, i) => (
+            <Btn key={a.id} kind={i === 0 ? "primary" : "ghost"} disabled={!items.length} title={`${a.subject}, ${relDate(a.due, day)}`} onPress={() => onPick(a.id)} />
+          ))}
+          <Btn kind="ghost" title="Sulge" onPress={onClose} />
+        </View>
+      ) : (
+        <View style={{ gap: 10, marginTop: 6 }}>
+          <Muted>Plaanis pole veel kontrolltööd. Lisa kõigepealt kontrolltöö e-päevikust või lapsevanema vaates, siis saad need selle juurde lisada.</Muted>
+          <Btn kind="ghost" title="Sulge" onPress={onClose} />
+        </View>
+      )}
+    </>
+  );
+}
+
+function namesSubject(head: string, subject: string): boolean {
+  const h = head.toLowerCase();
+  const sub = subject.toLowerCase().replace(/\s*\d+$/, "").trim();
+  const first = h.split(/[:–-]/)[0].trim();
+  return (!!sub && h.includes(sub)) || (first.length >= 4 && sub.includes(first));
+}

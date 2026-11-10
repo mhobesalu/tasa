@@ -41,24 +41,77 @@ export function parseReview(text: string): string[] {
     return [...new Set(out)].map(String);
   }
   const lines = t
-    .split(/\n|;/)
+    .split(t.includes("\n") ? /\n/ : /;/)
     .map((x) => x.trim())
     .filter((x) => x && !/^[–-]{2,}.*[–-]{2,}$/.test(x)); // screenshot breaks
   const NUM = /^(\d{1,3})\s*[.)]\s*(.*)$/;
   const BULLET = /^[-•*–]\s*(.*)$/;
-  const numbered = lines.filter((x) => NUM.test(x)).length >= 2;
+  if (lines.filter((x) => NUM.test(x)).length >= 2) {
+    // numbered list: wrapped lines join the item above, a heading before the first number is dropped
+    const items: { n: number; body: string }[] = [];
+    const extra = new Map<object, number>(); // continuation lines per item
+    const head1 = new Map<object, string>(); // the numbered line itself
+    for (const line of lines) {
+      const m = line.match(NUM);
+      const bm = line.match(BULLET);
+      if (m) items.push({ n: +m[1], body: m[2].trim() });
+      else if (bm) items.push({ n: (items[items.length - 1]?.n ?? 0) + 1, body: bm[1].trim() });
+      else if (items.length) {
+        const last = items[items.length - 1];
+        extra.set(last, (extra.get(last) ?? 0) + 1);
+        if (!head1.has(last)) head1.set(last, last.body);
+        last.body = last.body ? `${last.body} ${line}` : line;
+      }
+    }
+    // A worksheet where every task starts the same way ("Lihtsusta avaldis.") or holds formulas
+    // the text reader can't read: the numbers are what matter.
+    const head = (x: string) => x.split(/\s+/).slice(0, 2).join(" ").toLowerCase();
+    const counts: Record<string, number> = {};
+    for (const it of items) if (it.body) counts[head(it.body)] = (counts[head(it.body)] ?? 0) + 1;
+    const [top, topN] = Object.entries(counts).sort((x, y) => y[1] - x[1])[0] ?? ["", 0];
+    const letters = (x: string) => (x.match(/[a-zõäöüšž]/gi) ?? []).length / Math.max(1, x.replace(/\s/g, "").length);
+    const garbled = items.filter((it) => !it.body || letters(it.body) < 0.6).length;
+    if (items.length >= 3 && (topN >= Math.max(2, items.length * 0.4) || garbled > items.length / 2)) {
+      const keep = topN >= 2 ? items.filter((it) => !it.body || head(it.body) === top) : items;
+      return [...new Set(keep.map((it) => it.n))].sort((x, y) => x - y).map(String);
+    }
+    // An answer sheet (several lines under each number): the numbered line is the question / topic.
+    const many = items.filter((it) => (extra.get(it) ?? 0) >= 2).length > items.length / 2;
+    return items.map((it) => (many && head1.get(it) ? head1.get(it)! : it.body)).filter(Boolean).slice(0, 100);
+  }
+  // An answer sheet without numbers (numbering lost when copying): short heading lines with notes under them.
+  const isHead = (x: string) => x.length <= 60 && !/[.,;:!]$/.test(x) && !x.includes(":") && /^\p{Lu}/u.test(x);
+  if (lines.length >= 15) {
+    const heads = lines.map((x, i) => (isHead(x) && i + 1 < lines.length && !isHead(lines[i + 1]) ? i : -1)).filter((i) => i >= 0);
+    const gaps = heads.slice(1).map((h, k) => h - heads[k]);
+    const hs = new Set(heads);
+    const notes = lines.filter((_, i) => !hs.has(i) && i > (heads[0] ?? 0));
+    const noteLike = notes.filter((x) => /[.)]$/.test(x) || /^[^:]{2,30}:\s/.test(x)).length;
+    if (heads.length >= 4 && heads.length <= lines.length / 2.5 && gaps.filter((g) => g >= 2).length >= gaps.length * 0.8 && noteLike >= notes.length * 0.6)
+      return heads.map((i) => lines[i]).slice(0, 100);
+  }
   const out: string[] = [];
   for (const line of lines) {
-    const m = line.match(NUM) ?? line.match(BULLET);
-    const body = m ? m[m.length - 1].trim() : line;
+    const m = line.match(BULLET);
+    const body = m ? m[1].trim() : line;
     const prev = out[out.length - 1];
-    if (m && body) out.push(body);
-    else if (!m && numbered && prev !== undefined) out[out.length - 1] = `${prev} ${body}`; // wrapped line
-    else if (!m && numbered) continue; // heading before question 1
-    else if (!m && prev !== undefined && !/[?.!:]$/.test(prev) && /^[a-zõäöü(]/.test(body)) out[out.length - 1] = `${prev} ${body}`;
+    if (!m && prev !== undefined && !/[?.!:]$/.test(prev) && /^[a-zõäöü(]/.test(body)) out[out.length - 1] = `${prev} ${body}`;
     else if (body) out.push(body);
   }
   return out.slice(0, 100);
+}
+
+/** Numbers back as editable text: ["1","2","3","5"] → "1–3, 5". */
+export function rangeText(items: string[]): string {
+  const n = items.map(Number);
+  const parts: string[] = [];
+  for (let i = 0; i < n.length; ) {
+    let j = i;
+    while (j + 1 < n.length && n[j + 1] === n[j] + 1) j++;
+    parts.push(j - i >= 2 ? `${n[i]}–${n[j]}` : n.slice(i, j + 1).join(", "));
+    i = j + 1;
+  }
+  return parts.join(", ");
 }
 
 /** "nr 1–4" or "nr 1, 3 ja 5" for numeric items. */
@@ -76,6 +129,9 @@ function splitEven<T>(xs: T[], n: number): T[][] {
   for (let i = 0; i < n; i++) out.push(xs.slice(Math.floor((i * xs.length) / n), Math.floor(((i + 1) * xs.length) / n)));
   return out.filter((x) => x.length);
 }
+
+/** A reading task: "Loe raamat …", "lugemine", "kohustuslik kirjandus". */
+export const READING = /\b(loe(?:ge)?|lugeda|lugemine|lugemiseks|raamat\w*|kohustuslik kirjandus)\b/i;
 
 /** Turn one assignment into its fixed list of ~25-minute steps. Ids stay stable. */
 export function stepsOf(a: Assignment): Step[] {
@@ -124,12 +180,16 @@ export function stepsOf(a: Assignment): Step[] {
   }
 
   const n = Math.min(MAX_STEPS, Math.max(1, Math.ceil(a.minutes / STEP_MIN)));
+  const base_n = n;
   if (a.kind === "test" && a.review?.length) {
+    // about 4 problems or 5 questions per 25-minute step, even if the parent guessed less time
+    const per = a.review.every((x) => /^\d+$/.test(x)) ? 4 : 5;
+    const n = Math.min(8, Math.max(base_n, Math.ceil(a.review.length / per)));
     // the parent's kordamisküsimused / -ülesanded in order; any steps left over go over everything again
     const parts = splitEven(a.review, Math.min(n, a.review.length));
     const numeric = a.review.every((x) => /^\d+$/.test(x));
     return Array.from({ length: n }, (_, i) => {
-      const m = i < n - 1 ? STEP_MIN : Math.max(5, a.minutes - STEP_MIN * (n - 1));
+      const m = n > base_n || i < n - 1 ? STEP_MIN : Math.max(5, a.minutes - STEP_MIN * (n - 1));
       const head = `${a.subject}: kontrolltööks kordamine${n > 1 ? ` ${i + 1}/${n}` : ""}`;
       const p = parts[i];
       if (!p) return mk(i, n, `${head}, kõik uuesti üle`, m, a.note || "Vaata kõik kordamisküsimused veel kord üle.");
@@ -137,6 +197,18 @@ export function stepsOf(a: Assignment): Step[] {
       const list = p.map((x) => `• ${x}`).join("\n");
       return mk(i, n, `${head}, ${p.length === 1 ? "1 küsimus" : `${p.length} küsimust`}`, m, a.note ? `${a.note}\n${list}` : list);
     });
+  }
+  // Reading a book or a longer text: a little every day until it's due, not all at the end.
+  if ((a.kind === "homework" || a.kind === "project") && READING.test(`${a.title} ${a.note ?? ""}`)) {
+    const days = Math.min(7, diffDays(a.createdOn, a.due));
+    if (days >= 2) {
+      const r = Math.max(n, days);
+      const per = Math.max(10, Math.ceil(a.minutes / r / 5) * 5);
+      return Array.from({ length: r }, (_, i) =>
+        mk(i, r, `${a.subject}: ${a.title}, loe edasi ${i + 1}/${r}`, per,
+          a.note || "Loe täna natuke. Iga päev natuke, siis jõuad rahulikult."),
+      );
+    }
   }
   const steps: Step[] = [];
   for (let i = 0; i < n; i++) {

@@ -197,6 +197,7 @@ export function parsePasted(raw: string, t: Day): Draft[] {
       cur.text.push(line); // teacher's text for this subject
       continue;
     }
+    if (/^\d{1,3}$/.test(line)) continue; // a bare number (e.g. the screenshot clock read as "14") is never a subject
     flush();
     cur = { ...parseSubjectLine(line), text: [], extra: [], done: false };
   }

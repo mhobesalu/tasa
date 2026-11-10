@@ -1,15 +1,23 @@
 name: iPhone build to TestFlight
 
 # Run by hand: Actions -> "iPhone build to TestFlight" -> Run workflow.
-# Builds the app on Expo's servers (EAS) and sends it to TestFlight.
+# Builds the app and sends it to TestFlight. By default the build runs here on a
+# GitHub Mac (free for this public repo and not counted in Expo's free plan of
+# 15 iOS builds a month); choose "expo" to build on Expo's servers instead.
 # Secrets (repo Settings -> Secrets and variables -> Actions):
 #   EXPO_TOKEN, ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8
 on:
   workflow_dispatch:
+    inputs:
+      where:
+        description: "Where to build: github (GitHub Mac) or expo (Expo's servers, counts against the free plan)"
+        default: github
+        type: choice
+        options: [github, expo]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.where == 'expo' && 'ubuntu-latest' || 'macos-latest' }}
     defaults:
       run:
         working-directory: app
@@ -47,11 +55,29 @@ jobs:
       # EAS_NO_VCS: upload the folder as it is (with the eas.json change above);
       # .gitignore still applies, and the key file lives outside app/.
       # Free builds can wait a long time in Expo's queue, hence 120 minutes.
-      - name: Build and send to TestFlight
+      - name: Build and send to TestFlight (Expo's servers)
+        if: inputs.where == 'expo'
         timeout-minutes: 120
         env:
           EAS_NO_VCS: 1
         run: npx --yes eas-cli@latest build --platform ios --profile production --non-interactive --auto-submit
+      # Same build, made on this Mac with the signing files stored on Expo;
+      # only the upload to App Store Connect goes through EAS Submit.
+      - name: Use the newest Xcode
+        if: inputs.where != 'expo'
+        run: |
+          x="$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+          echo "Using $x"; sudo xcode-select -s "$x"; xcodebuild -version
+      - name: Build on this Mac
+        if: inputs.where != 'expo'
+        timeout-minutes: 90
+        env:
+          EAS_NO_VCS: 1
+        run: npx --yes eas-cli@latest build --local --platform ios --profile production --non-interactive --output "$RUNNER_TEMP/tasa.ipa"
+      - name: Send to TestFlight
+        if: inputs.where != 'expo'
+        timeout-minutes: 30
+        run: npx --yes eas-cli@latest submit --platform ios --profile production --non-interactive --path "$RUNNER_TEMP/tasa.ipa"
       - name: Remove key
         if: always()
         run: rm -f "$EXPO_ASC_API_KEY_PATH"

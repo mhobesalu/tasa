@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { DayPicker } from "../components/DayPicker";
+import { PagesAsk } from "../components/PagesAsk";
 import { Btn, Card, Choice, Field, H, Muted, Row, Section, T } from "../components/ui";
 import { addDays, diffDays, relDate, shortDate, WEEKDAY_NAMES, WEEKDAY_SHORT, type Day } from "../dates";
 import { dayItems, rewardSummary, weekStats } from "../logic";
-import { numList, parseReview, retakeChunks, stepsOf } from "../planner";
+import { numList, parseReview, rangeText, READING, retakeChunks, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
 import { askNotifications, canReadImages, readClipboard, textFromScreenshots } from "../native";
@@ -258,6 +259,15 @@ function PlannedList() {
                 {kindLabel[a.kind]} · {relDate(a.due, day)} · {done} / {steps.length} sammu tehtud
                 {a.source === "sample" ? " · näidis" : ""}
               </Muted>
+              {a.kind === "homework" && READING.test(a.title) && diffDays(day, a.due) >= 2 ? (
+                editing === a.id ? (
+                  <PagesAsk a={a} compact onDone={() => setEditing(null)} />
+                ) : (
+                  <Pressable accessibilityRole="button" onPress={() => setEditing(a.id)} style={{ minHeight: 36, justifyContent: "center" }}>
+                    <T style={{ color: C.lakeInk, fontSize: 15 }} bold>＋ Lisa leheküljed</T>
+                  </Pressable>
+                )
+              ) : null}
               {a.kind === "test" ? (
                 editing === a.id ? (
                   <ReviewEditor a={a} onDone={() => setEditing(null)} />
@@ -303,7 +313,7 @@ function ReviewFields({ review, setReview, from, setFrom }: { review: string; se
     if (raw === null) return;
     const got = parseReview(raw);
     if (!got.length) return fx.toast("Küsimusi ei leidnud. Proovi teist pilti või kirjuta need.");
-    setReview(got.every((x) => /^\d+$/.test(x)) ? got.join(", ") : got.join("\n"));
+    setReview(got.every((x) => /^\d+$/.test(x)) ? rangeText(got) : got.join("\n"));
     fx.toast(`Leidsin ${got.length}. Vaata üle.`);
   };
   return (
@@ -347,7 +357,7 @@ function ReviewEditor({ a, onDone }: { a: import("../types").Assignment; onDone:
   const { setReview } = useStore();
   const fx = useCelebrate();
   const numeric = (a.review ?? []).every((x) => /^\d+$/.test(x));
-  const [text, setText] = useState(numeric ? (a.review ?? []).join(", ") : (a.review ?? []).join("\n"));
+  const [text, setText] = useState(numeric ? rangeText(a.review ?? []) : (a.review ?? []).join("\n"));
   const [from, setFrom] = useState(a.note ?? "");
   return (
     <View style={{ gap: 8, marginTop: 6 }}>
