@@ -312,8 +312,8 @@ function TodayExcuse() {
 
 const PRESETS: Omit<RewardConfig, "since">[] = [
   { on: true, name: "Ekraaniaeg", unit: "minutit", per: "step", amount: 10, goal: 0, bonus: 30 },
-  { on: true, name: "Taskuraha", unit: "eur", per: "day", amount: 3, goal: 0, bonus: 10 },
-  { on: true, name: "Kinoõhtu", unit: "tähte", per: "step", amount: 1, goal: 30, bonus: 0 },
+  { on: true, name: "Filmiõhtu vanemaga", unit: "tähte", per: "step", amount: 1, goal: 30, bonus: 0 },
+  { on: true, name: "Pereretk aasta lõpus", unit: "tähte", per: "day", amount: 1, goal: 120, bonus: 2 },
 ];
 
 function RewardSettings() {
@@ -383,7 +383,7 @@ function RewardSettings() {
             ) : (
               <Btn
                 small
-                title={r.goal > 0 ? "Preemia antud" : "Märgi makstuks"}
+                title={r.goal > 0 ? "Preemia antud" : "Märgi antuks"}
                 disabled={sum.balance <= 0}
                 onPress={() => {
                   const amt = r.goal > 0 ? r.goal : sum.balance;

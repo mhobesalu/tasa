@@ -44,8 +44,8 @@ export interface FixedEvent {
 
 export interface RewardConfig {
   on: boolean;
-  name: string; // e.g. "Ekraaniaeg", "Taskuraha", "PS4"
-  unit: string; // e.g. "minutit", "eur", "tähte"
+  name: string; // e.g. "Ekraaniaeg", "Filmiõhtu vanemaga", "Pereretk" (never money)
+  unit: string; // e.g. "minutit", "tähte"
   per: "step" | "day";
   amount: number;
   /** 0 = no goal */
