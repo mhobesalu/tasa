@@ -17,7 +17,7 @@ type View_ =
   | { s: "busy" }
   | { s: "added"; items: Draft[]; ids: string[]; skipped: number; missed: number }
   | { s: "message"; msg: ParsedMessage }
-  | { s: "review"; text: string }
+  | { s: "review"; text: string; head: string }
   | { s: "none"; why: string }
   | { s: "remind" };
 
@@ -54,7 +54,11 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
       return setV({ s: "added", items: r.add, ids, skipped: r.skipped, missed: r.missed });
     }
     if (r.review.length)
-      return setV({ s: "review", text: r.review.every((x) => /^\d+$/.test(x)) ? rangeText(r.review) : r.review.join("\n") });
+      return setV({
+        s: "review",
+        text: r.review.every((x) => /^\d+$/.test(x)) ? rangeText(r.review) : r.review.join("\n"),
+        head: text.trim().split(/\n/).slice(0, 2).join(" "),
+      });
     if (r.message) return setV({ s: "message", msg: r.message });
     if (r.skipped) return setV({ s: "none", why: `Uut ei leidnud: kõik ${r.skipped} on juba plaanis või tähtaeg on möödas.` });
     if (r.grades.length) return setV({ s: "none", why: "See on hinnete leht. Järeltöö saab lisada lapsevanema vaates." });
@@ -135,8 +139,12 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
         ) : v.s === "review" ? (
           <ReviewPick
             text={v.text}
-            setText={(text) => setV({ s: "review", text })}
-            tests={state.assignments.filter((a) => a.kind === "test" && a.due > day).sort((a, b) => a.due.localeCompare(b.due))}
+            setText={(text) => setV({ s: "review", text, head: v.head })}
+            tests={state.assignments
+              .filter((a) => a.kind === "test" && a.due > day)
+              .sort((a, b) => a.due.localeCompare(b.due))
+              // the sheet's heading usually names the subject ("Ajalugu: … (KT 12.11)"): offer that test first
+              .sort((a, b) => Number(namesSubject(v.head, b.subject)) - Number(namesSubject(v.head, a.subject)))}
             day={day}
             onPick={(id) => {
               setReview(id, parseReview(v.text), state.assignments.find((a) => a.id === id)?.note);
@@ -260,4 +268,11 @@ function ReviewPick({ text, setText, tests, day, onPick, onClose }: {
       )}
     </>
   );
+}
+
+function namesSubject(head: string, subject: string): boolean {
+  const h = head.toLowerCase();
+  const sub = subject.toLowerCase().replace(/\s*\d+$/, "").trim();
+  const first = h.split(/[:–-]/)[0].trim();
+  return (!!sub && h.includes(sub)) || (first.length >= 4 && sub.includes(first));
 }

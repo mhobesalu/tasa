@@ -112,3 +112,23 @@ describe("reading with pages", () => {
     expect(s[0].title).toBe("Kirjandus: Loe raamat „Kevade“, loe lk 41–50");
   });
 });
+
+describe("answer sheet (kordamisküsimused with answers)", () => {
+  // made-up sheet in the same shape: a topic line, then notes under it
+  const topics = ["Homeros", "Kreeka tempel", "Teater ja Dionysose kultus", "Delfi oraakel", "Olümpiamängud"];
+  const body = (t: string) => `Aeg: 8. saj eKr\nLühike selgitus teemast ${t}.\nTähtsus: oluline teema.`;
+  const sheet = (num: boolean) =>
+    ["Ajalugu: Kreeka ja Rooma – vastuste leht (KT 12.11)", "Lühivastused küsimustele. Loe ja ütle ise."]
+      .concat(topics.map((t, i) => `${num ? `${i + 1}. ` : ""}${t}\n${body(t)}`))
+      .join("\n");
+  it("takes the numbered topic lines", () => {
+    expect(parseReview(sheet(true))).toEqual(topics);
+  });
+  it("takes the topic lines when the numbers were lost in copying", () => {
+    expect(parseReview(sheet(false))).toEqual(topics);
+  });
+  it("keeps review to a sensible number of steps", () => {
+    const s = stepsOf(test({ minutes: 50, review: Array.from({ length: 20 }, (_, i) => `Teema ${i + 1}`) }));
+    expect(s).toHaveLength(4);
+  });
+});

@@ -41,7 +41,7 @@ export function parseReview(text: string): string[] {
     return [...new Set(out)].map(String);
   }
   const lines = t
-    .split(/\n|;/)
+    .split(t.includes("\n") ? /\n/ : /;/)
     .map((x) => x.trim())
     .filter((x) => x && !/^[–-]{2,}.*[–-]{2,}$/.test(x)); // screenshot breaks
   const NUM = /^(\d{1,3})\s*[.)]\s*(.*)$/;
@@ -49,6 +49,8 @@ export function parseReview(text: string): string[] {
   if (lines.filter((x) => NUM.test(x)).length >= 2) {
     // numbered list: wrapped lines join the item above, a heading before the first number is dropped
     const items: { n: number; body: string }[] = [];
+    const extra = new Map<object, number>(); // continuation lines per item
+    const head1 = new Map<object, string>(); // the numbered line itself
     for (const line of lines) {
       const m = line.match(NUM);
       const bm = line.match(BULLET);
@@ -56,6 +58,8 @@ export function parseReview(text: string): string[] {
       else if (bm) items.push({ n: (items[items.length - 1]?.n ?? 0) + 1, body: bm[1].trim() });
       else if (items.length) {
         const last = items[items.length - 1];
+        extra.set(last, (extra.get(last) ?? 0) + 1);
+        if (!head1.has(last)) head1.set(last, last.body);
         last.body = last.body ? `${last.body} ${line}` : line;
       }
     }
@@ -71,7 +75,20 @@ export function parseReview(text: string): string[] {
       const keep = topN >= 2 ? items.filter((it) => !it.body || head(it.body) === top) : items;
       return [...new Set(keep.map((it) => it.n))].sort((x, y) => x - y).map(String);
     }
-    return items.map((it) => it.body).filter(Boolean).slice(0, 100);
+    // An answer sheet (several lines under each number): the numbered line is the question / topic.
+    const many = items.filter((it) => (extra.get(it) ?? 0) >= 2).length > items.length / 2;
+    return items.map((it) => (many && head1.get(it) ? head1.get(it)! : it.body)).filter(Boolean).slice(0, 100);
+  }
+  // An answer sheet without numbers (numbering lost when copying): short heading lines with notes under them.
+  const isHead = (x: string) => x.length <= 60 && !/[.,;:!]$/.test(x) && !x.includes(":") && /^\p{Lu}/u.test(x);
+  if (lines.length >= 15) {
+    const heads = lines.map((x, i) => (isHead(x) && i + 1 < lines.length && !isHead(lines[i + 1]) ? i : -1)).filter((i) => i >= 0);
+    const gaps = heads.slice(1).map((h, k) => h - heads[k]);
+    const hs = new Set(heads);
+    const notes = lines.filter((_, i) => !hs.has(i) && i > (heads[0] ?? 0));
+    const noteLike = notes.filter((x) => /[.)]$/.test(x) || /^[^:]{2,30}:\s/.test(x)).length;
+    if (heads.length >= 4 && heads.length <= lines.length / 2.5 && gaps.filter((g) => g >= 2).length >= gaps.length * 0.8 && noteLike >= notes.length * 0.6)
+      return heads.map((i) => lines[i]).slice(0, 100);
   }
   const out: string[] = [];
   for (const line of lines) {
@@ -165,8 +182,9 @@ export function stepsOf(a: Assignment): Step[] {
   const n = Math.min(MAX_STEPS, Math.max(1, Math.ceil(a.minutes / STEP_MIN)));
   const base_n = n;
   if (a.kind === "test" && a.review?.length) {
-    // about 4 problems per 25-minute step, even if the parent guessed less time
-    const n = Math.min(12, Math.max(base_n, Math.ceil(a.review.length / 4)));
+    // about 4 problems or 5 questions per 25-minute step, even if the parent guessed less time
+    const per = a.review.every((x) => /^\d+$/.test(x)) ? 4 : 5;
+    const n = Math.min(8, Math.max(base_n, Math.ceil(a.review.length / per)));
     // the parent's kordamisküsimused / -ülesanded in order; any steps left over go over everything again
     const parts = splitEven(a.review, Math.min(n, a.review.length));
     const numeric = a.review.every((x) => /^\d+$/.test(x));

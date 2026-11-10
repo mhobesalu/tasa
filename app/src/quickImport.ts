@@ -31,7 +31,13 @@ export function planImport(text: string, day: Day, assignments: Assignment[]): Q
     else add.push(d);
   }
   const sheet = !drafts.length && !grades.length && text.split(/\n/).filter((l) => /^\s*\d{1,3}\s*[.)]\s*\S/.test(l) || /^\s*\d{1,3}\s*[.)]\s*$/.test(l)).length >= 3;
-  const review = sheet ? parseReview(text) : [];
+  let review = sheet ? parseReview(text) : [];
+  if (!review.length && !drafts.length && !grades.length) {
+    // an answer sheet whose numbers were lost in copying: topic lines with notes under them
+    const n = text.split(/\n/).filter((l) => l.trim()).length;
+    const r = parseReview(text);
+    if (n >= 15 && r.length >= 3 && r.length <= n / 2.5) review = r;
+  }
   const message = !drafts.length && !grades.length && !review.length ? parseMessage(text, day, assignments) : null;
   return { add, skipped, message, grades, missed: parseMissed(text, day).length, review };
 }
