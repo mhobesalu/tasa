@@ -256,7 +256,7 @@ const st = StyleSheet.create({
     fontFamily: F.body,
     fontSize: 15,
     color: C.ink,
-    backgroundColor: C.white,
+    backgroundColor: C.card,
   },
   row: {
     flexDirection: "row",
@@ -265,7 +265,7 @@ const st = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: C.line,
     borderRadius: 14,
-    backgroundColor: C.white,
+    backgroundColor: C.card,
   },
   check: {
     width: 22,

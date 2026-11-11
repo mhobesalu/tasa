@@ -7,6 +7,7 @@ import { freezeToday } from "./logic";
 import { buildPlan, type Plan } from "./planner";
 import { sampleData } from "./sample";
 import { emptyState } from "./state";
+import { matchSubject, renameSubject, tidySubjects } from "./subjects";
 import type { AppState, Assignment, FixedEvent, RewardConfig } from "./types";
 
 const KEY = "tasa:state:v1";
@@ -36,6 +37,8 @@ interface Ctx {
   /** Remember that a subject needs a järeltöö; the date comes later. Adds a step "agree the date". */
   savePendingRetake: (subject: string) => void;
   removePendingRetake: (id: string) => void;
+  /** Fix a misread subject name everywhere, or merge it into another subject. */
+  renameSubject: (from: string, to: string) => void;
   /** the student got the retake day from the teacher */
   studentRetake: (subject: string, due: Day) => void;
   setReview: (id: string, review: string[], note?: string) => void;
@@ -71,6 +74,7 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
         if (raw) s = { ...s, ...(JSON.parse(raw) as AppState) };
       } catch {}
       const t = today();
+      s = tidySubjects(s);
       if (s.setupDone) s = freezeToday(s, t);
       loaded.current = true;
       setDay(t);
@@ -155,15 +159,16 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
       parentUpdate((s) => ({
         ...s,
         seq: s.seq + 1,
-        assignments: [...s.assignments, { ...a, id: `p${s.seq + 1}`, createdOn: day, source: "parent" }],
+        assignments: [...s.assignments, { ...a, subject: matchSubject(a.subject, s), id: `p${s.seq + 1}`, createdOn: day, source: "parent" }],
         // a retake with a date replaces the "date not known yet" entry
         pendingRetakes:
           a.kind === "retake"
             ? (s.pendingRetakes ?? []).filter((r) => r.subject.toLowerCase() !== a.subject.toLowerCase())
             : s.pendingRetakes,
       })),
-    savePendingRetake: (subject) =>
+    savePendingRetake: (raw) =>
       parentUpdate((s) => {
+        const subject = matchSubject(raw, s);
         if ((s.pendingRetakes ?? []).some((r) => r.subject.toLowerCase() === subject.toLowerCase())) return s;
         const n = s.seq + 1;
         return {
@@ -198,10 +203,11 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
       parentUpdate((s) => ({
         ...s,
         seq: s.seq + list.length,
-        assignments: [...s.assignments, ...list.map((a, i) => ({ ...a, id: `p${s.seq + i + 1}`, createdOn: day, source: "parent" as const }))],
+        assignments: [...s.assignments, ...list.map((a, i) => ({ ...a, subject: matchSubject(a.subject, s), id: `p${s.seq + i + 1}`, createdOn: day, source: "parent" as const }))],
       }));
       return ids;
     },
+    renameSubject: (from, to) => parentUpdate((s) => renameSubject(s, from, to)),
     removeMany: (ids) => parentUpdate((s) => ({ ...s, assignments: s.assignments.filter((a) => !ids.includes(a.id)) })),
     setReminder: (r) => setState((s) => (s ? { ...s, reminder: r } : s)),
     studentRetake: (subject, due) =>

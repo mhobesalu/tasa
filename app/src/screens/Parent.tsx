@@ -661,23 +661,72 @@ function ParentHome({ onLock }: { onLock: () => void }) {
 }
 
 function Timetable() {
-  const { state, parentUpdate } = useStore();
+  const { state, parentUpdate, renameSubject } = useStore();
+  const fx = useCelebrate();
   const subjects = knownSubjects(state);
+  const [edit, setEdit] = useState<{ from: string; to: string } | null>(null);
+  const count = (sub: string) => state.assignments.filter((a) => a.subject.toLowerCase() === sub.toLowerCase()).length;
+  const save = () => {
+    if (!edit) return;
+    const to = edit.to.trim();
+    if (!to) return fx.toast("Kirjuta aine nimi.");
+    const into = subjects.find((x) => x.toLowerCase() === to.toLowerCase() && x.toLowerCase() !== edit.from.toLowerCase());
+    renameSubject(edit.from, to);
+    fx.toast(into ? `Liidetud: ${edit.from} → ${into}` : `Nimi muudetud: ${to}`);
+    setEdit(null);
+  };
   return (
     <Card>
       <Muted>
         TASA õpib tunnipäevad kodutööde tähtaegadest. Kontrolli ja paranda vajadusel: siis saab tegemata töö tähtajaks
-        järgmise tunni.
+        järgmise tunni. Kui aine nimi on valesti loetud, vajuta nimele ja paranda see. Kui kirjutad olemasoleva aine nime,
+        liidetakse need kokku.
       </Muted>
       {subjects.length ? (
         subjects.map((sub) => {
           const { days, manual } = lessonDays(state, sub);
+          if (edit && edit.from === sub) {
+            const others = subjects.filter((x) => x !== sub);
+            return (
+              <View key={sub} style={[st.rowLine, { gap: 8, paddingVertical: 8 }]}>
+                <Field
+                  label={`Aine nimi (${count(sub)} ülesannet)`}
+                  value={edit.to}
+                  onChangeText={(to) => setEdit({ ...edit, to })}
+                  autoFocus
+                  onSubmitEditing={save}
+                />
+                {others.length ? (
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                    <Muted>Või liida:</Muted>
+                    {others.map((o) => (
+                      <Pressable key={o} onPress={() => setEdit({ ...edit, to: o })} accessibilityRole="button" style={st.chip}>
+                        <T style={{ fontSize: 14 }}>{o}</T>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
+                <Row>
+                  <Btn small title="Salvesta" onPress={save} />
+                  <Btn small kind="ghost" title="Loobu" onPress={() => setEdit(null)} />
+                </Row>
+              </View>
+            );
+          }
           return (
             <View key={sub} style={[st.prow, st.rowLine, { flexWrap: "wrap" }]}>
-              <T style={{ flex: 1, minWidth: 120, fontSize: 15 }}>
-                {sub}
-                {!manual && days.length ? <T style={{ color: C.muted, fontSize: 13 }}> (õpitud)</T> : null}
-              </T>
+              <Pressable
+                style={{ flex: 1, minWidth: 120 }}
+                accessibilityRole="button"
+                accessibilityLabel={`Muuda aine nime: ${sub}`}
+                onPress={() => setEdit({ from: sub, to: sub })}
+              >
+                <T style={{ fontSize: 15 }}>
+                  {sub}
+                  {!manual && days.length ? <T style={{ color: C.muted, fontSize: 13 }}> (tähtaegade järgi)</T> : null}
+                  <T style={{ color: C.lakeInk, fontSize: 13 }}>  ✎</T>
+                </T>
+              </Pressable>
               <View style={{ flexDirection: "row", gap: 4 }}>
                 {WEEKDAY_SHORT.slice(0, 5).map((w, i) => {
                   const on = days.includes(i);
@@ -733,4 +782,5 @@ const st = StyleSheet.create({
   prow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10 },
   rowLine: { borderTopWidth: 1, borderTopColor: C.line },
   wd: { width: 34, height: 34, borderRadius: 9, borderWidth: 2, borderColor: C.line, alignItems: "center", justifyContent: "center", backgroundColor: C.card },
+  chip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 99, borderWidth: 1.5, borderColor: C.line, backgroundColor: C.card },
 });
