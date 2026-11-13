@@ -8,6 +8,10 @@ name: Android build for Google Play
 # Secret: EXPO_TOKEN
 on:
   workflow_dispatch:
+  # also runs when this file itself changes on a work branch, to test it before merging
+  push:
+    branches: ["claude/**"]
+    paths: [".github/workflows/android-build.yml"]
 
 jobs:
   build:
