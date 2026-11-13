@@ -180,23 +180,24 @@ export function stepsOf(a: Assignment): Step[] {
     return steps;
   }
 
-  if (a.kind === "retake") {
+  if (a.kind === "retake" && !a.review?.length) {
+    // older retakes kept the wrong problem numbers
     const chunks = retakeChunks(a.wrong ?? []);
-    if (!chunks.length)
-      // date added by the student: the wrong problems aren't known, so plan general review
-      return [0, 1].map((i) =>
-        mk(i, 2, `${a.subject}: järeltööks kordamine ${i + 1}/2`, STEP_MIN,
-          a.note || "Korda kontrolltöö teemat oma vihiku, töö ja kooli materjali järgi. Kui tead, mis läks valesti, harjuta just seda."),
+    if (chunks.length)
+      return chunks.map((c, i) =>
+        mk(i, chunks.length, `${a.subject} järeltöö: harjuta ${numList(c)}`, STEP_MIN,
+          "Need ülesanded läksid kontrolltöös valesti. Tee need oma töö ja kooli materjali järgi uuesti läbi."),
       );
-    return chunks.map((c, i) =>
-      mk(i, chunks.length, `${a.subject} järeltöö: harjuta ${numList(c)}`, STEP_MIN,
-        "Need ülesanded läksid kontrolltöös valesti. Tee need oma töö ja kooli materjali järgi uuesti läbi."),
+    // no kordamisküsimused yet: plan general review
+    return [0, 1].map((i) =>
+      mk(i, 2, `${a.subject}: järeltööks kordamine ${i + 1}/2`, STEP_MIN,
+        a.note || "Korda järeltöö teemat oma vihiku, töö ja kooli materjali järgi."),
     );
   }
 
-  const n = Math.min(MAX_STEPS, Math.max(1, Math.ceil(a.minutes / STEP_MIN)));
+  const n = Math.min(MAX_STEPS, Math.max(1, Math.ceil((a.minutes || STEP_MIN * 2) / STEP_MIN)));
   const base_n = n;
-  if (a.kind === "test" && a.review?.length) {
+  if ((a.kind === "test" || a.kind === "retake") && a.review?.length) {
     // about 4 problems or 5 questions per 25-minute step, even if the parent guessed less time
     const per = a.review.every((x) => /^\d+$/.test(x)) ? 4 : 5;
     const n = Math.min(8, Math.max(base_n, Math.ceil(a.review.length / per)));
@@ -204,8 +205,8 @@ export function stepsOf(a: Assignment): Step[] {
     const parts = splitEven(a.review, Math.min(n, a.review.length));
     const numeric = a.review.every((x) => /^\d+$/.test(x));
     return Array.from({ length: n }, (_, i) => {
-      const m = n > base_n || i < n - 1 ? STEP_MIN : Math.max(5, a.minutes - STEP_MIN * (n - 1));
-      const head = `${a.subject}: kontrolltööks kordamine${n > 1 ? ` ${i + 1}/${n}` : ""}`;
+      const m = n > base_n || i < n - 1 || !a.minutes ? STEP_MIN : Math.max(5, a.minutes - STEP_MIN * (n - 1));
+      const head = `${a.subject}: ${a.kind === "retake" ? "järeltööks" : "kontrolltööks"} kordamine${n > 1 ? ` ${i + 1}/${n}` : ""}`;
       const p = parts[i];
       if (!p) return mk(i, n, `${head}, kõik uuesti üle`, m, a.note || "Vaata kõik kordamisküsimused veel kord üle.");
       if (numeric) return mk(i, n, `${head}, ${numRange(p)}`, m, a.note || "");

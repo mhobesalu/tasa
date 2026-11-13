@@ -64,7 +64,7 @@ export function WeekScreen() {
         {[
           "Suured tööd jagatakse umbes 25-minutilisteks sammudeks, lähim tähtaeg ees.",
           "Kontrolltöö kordamine algab kuni 7 päeva enne.",
-          "Järeltöö puhul jagatakse valesti läinud ülesanded 2–3 päeva peale.",
+          "Järeltöö puhul jagatakse õpetaja kordamisküsimused päevade peale.",
           "Raamatu puhul saad iga päev täpsed leheküljed.",
           "Pooleli jäänud sammud tulevad järgmisel päeval kõige ette.",
           "TASA kasutab ainult kooli antud ja vanema lisatud materjali. Ise ülesandeid ei koostata ega lahendata.",

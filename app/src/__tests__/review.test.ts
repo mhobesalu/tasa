@@ -132,3 +132,22 @@ describe("answer sheet (kordamisküsimused with answers)", () => {
     expect(s).toHaveLength(4);
   });
 });
+
+describe("järeltöö", () => {
+it("with kordamisküsimused is planned like a kontrolltöö", () => {
+  const r: Assignment = {
+    id: "r1", kind: "retake", subject: "Ajalugu", title: "järeltöö", due: "2026-11-20", minutes: 0,
+    createdOn: "2026-11-13", source: "parent",
+    review: ["Kreeka linnriigid", "Ateena demokraatia", "Sparta", "Pärsia sõjad", "Peloponnesose sõda", "Aleksander Suur", "Hellenism"],
+  };
+  const s = stepsOf(r);
+  expect(s).toHaveLength(2);
+  expect(s[0].title).toMatch(/^Ajalugu: järeltööks kordamine 1\/2: Kreeka linnriigid/);
+  expect(s.every((x) => x.minutes === 25)).toBe(true);
+});
+
+it("without questions gets general review steps", () => {
+  const r: Assignment = { id: "r2", kind: "retake", subject: "Keemia", title: "järeltöö", due: "2026-11-20", minutes: 0, createdOn: "2026-11-13", source: "parent" };
+  expect(stepsOf(r).map((x) => x.title)).toEqual(["Keemia: järeltööks kordamine 1/2", "Keemia: järeltööks kordamine 2/2"]);
+});
+});

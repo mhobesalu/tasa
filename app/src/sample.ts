@@ -33,7 +33,7 @@ export function sampleData(t: Day): { assignments: Assignment[]; events: FixedEv
       a("ing", "homework", "Inglise keel", "sõnad lk 34", 2, 15, {
         note: "Õpi sõnad kaartidega. Ütle iga sõna kõva häälega.",
       }),
-      a("kee", "retake", "Keemia", "järeltöö", 3, 0, { wrong: [2, 5, 7, 8] }),
+      a("kee", "retake", "Keemia", "järeltöö", 3, 0, { review: ["Aatomi ehitus", "Perioodilisustabel", "Keemiline side", "Oksüdatsiooniaste", "Moolarvutused", "Lahused"] }),
       a("fys", "test", "Füüsika", "kontrolltöö: rõhk", 6, 100, {
         note: "Loe üle konspekt „Rõhk“ ja tee õpikust tunnis antud näidisülesanded.",
       }),
