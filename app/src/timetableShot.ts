@@ -2,7 +2,7 @@
 // different, so this only relies on weekday headings: a row of day columns
 // (a grid) or day headings with lessons below them (a list). The parent checks
 // the result before anything is saved.
-import { cleanSubject, isSubjectName } from "./subjects";
+import { cleanSubject } from "./subjects";
 
 /** One piece of text the phone read, with its place on the picture. */
 export interface Piece {
@@ -21,16 +21,76 @@ export interface FoundSubject {
 const DAY_WORDS = ["esmaspäev", "teisipäev", "kolmapäev", "neljapäev", "reede"];
 const LETTERS = ["E", "T", "K", "N", "R"];
 
-/** 0–4 when the text is a weekday heading ("E", "E 16.11", "Esmaspäev, 16. november"), else -1. */
+const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+function near(a: string, b: string, max: number): boolean {
+  if (Math.abs(a.length - b.length) > max) return false;
+  const d = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = d[0];
+    d[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const t = d[j];
+      d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = t;
+    }
+  }
+  return d[b.length] <= max;
+}
+
+/** 0–4 when the text is a weekday heading ("E", "E 16.11", "Esmaspäev, 16. november", misread "Esmaspääev"), else -1. */
 export function weekdayOf(text: string): number {
   const t = text.trim();
-  const l = t.toLowerCase();
+  if (t.length > 30) return -1;
+  const first = fold(t).split(/[\s,.]+/)[0] ?? "";
   for (let i = 0; i < 5; i++) {
-    if (l.startsWith(DAY_WORDS[i]) && t.length <= 30) return i;
-    if (l.startsWith(DAY_WORDS[i].slice(0, 3) + ".") && t.length <= 16) return i; // "Esm. 16.11"
+    const w = fold(DAY_WORDS[i]);
+    if (first === w || (first.length >= 6 && near(first, w, 2))) return i;
+    if (first === w.slice(0, 3) && /^\p{L}{3}\./u.test(t)) return i; // "Esm. 16.11"
   }
   const m = t.match(/^([ETKNR])(?:\s+\d{1,2}\.\s?\d{1,2}\.?)?$/);
   return m ? LETTERS.indexOf(m[1]) : -1;
+}
+
+/** Common school subjects, so teacher names, rooms and the canteen are left out. */
+const SUBJECTS = [
+  "matemaatika", "eesti keel", "kirjandus", "inglise keel", "vene keel", "saksa keel", "prantsuse keel", "soome keel",
+  "hispaania keel", "a-keel", "b-keel", "c-keel", "füüsika", "keemia", "bioloogia", "geograafia", "loodusõpetus",
+  "ajalugu", "ühiskonnaõpetus", "inimeseõpetus", "kehaline kasvatus", "muusika", "muusikaajalugu", "kunst",
+  "kunstiajalugu", "käsitöö", "tööõpetus", "tehnoloogia", "informaatika", "arvutiõpetus", "programmeerimine",
+  "robootika", "laulmine", "koor", "kammerkoor", "riigikaitse", "usundiõpetus", "religiooniõpetus",
+  "kristliku maailmapildi alused", "kristliku maailmapildi", "filosoofia", "psühholoogia", "majandus", "ettevõtlus", "eriala", "draama",
+  "teater", "filmiõpetus", "meedia", "kjt", "klassijuhataja tund", "klassijuhatajatund", "uurimistöö", "loovtöö",
+  "karjääriõpetus", "pärimus", "solfedžo", "rütmika", "tantsuline liikumine", "tants",
+];
+
+/** The subject part of a timetable cell line, or null when the line is not a subject. */
+export function subjectIn(text: string, known: string[]): string | null {
+  const l = fold(text).replace(/\s+/g, " ").trim();
+  for (const k of known) {
+    const f = fold(k);
+    if (l === f || l.startsWith(f + " ")) return k;
+  }
+  let best = "";
+  for (const sname of SUBJECTS) {
+    const f = fold(sname);
+    if ((l === f || l.startsWith(f + " ")) && f.length > best.length) best = f;
+  }
+  if (!best) return null;
+  // keep a group number that belongs to the name ("Eesti keel 1", "Mat 1")
+  const rest = l.slice(best.length).trim().match(/^(\d|i{1,3})\b/);
+  const raw = text.trim().slice(0, best.length + (rest ? rest[0].length + 1 : 0)).trim();
+  if (best === fold("kristliku maailmapildi")) return "Kristliku maailmapildi alused"; // name split over two lines
+  return tidyCase(raw);
+}
+
+/** "FÜÜSIKA" → "Füüsika", "FÜÜsiKA" → "Füüsika"; "KJT" stays. */
+export function tidyCase(s: string): string {
+  const letters = s.replace(/[^\p{L}]/gu, "");
+  const upper = letters.replace(/[^\p{Lu}]/gu, "").length;
+  if (letters.length <= 3 || upper < letters.length / 2) return s;
+  const low = s.toLowerCase();
+  return low.charAt(0).toUpperCase() + low.slice(1);
 }
 
 const key = (s: string) => s.replace(/\s+/g, " ").trim().toLowerCase();
@@ -60,15 +120,19 @@ export function matchKnown(name: string, known: string[]): string | null {
     const [a, b] = kx.length < k.length ? [kx, k] : [k, kx];
     return a.length >= 3 && b.startsWith(a);
   });
-  return short.length === 1 ? short[0] : null;
+  if (short.length === 1) return short[0];
+  // "Kirjandus" in the timetable, "Pärimus ja kirjandus" in the e-diary
+  const words = known.filter((x) => new RegExp(`(^|\\s)${k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|\\s)`).test(key(x)));
+  return words.length === 1 ? words[0] : null;
 }
 
 /** Group pieces into weekday → lesson names, for a grid or a list. */
 export function readTimetable(pieces: Piece[], known: string[]): FoundSubject[] {
   const days = new Map<string, { days: Set<number>; known: boolean }>();
   const add = (raw: string, d: number) => {
-    const n = lessonName(raw);
-    if (!n || n.length < 2 || !isSubjectName(n) || weekdayOf(n) >= 0) return;
+    const ln = lessonName(raw);
+    const n = (ln.length >= 3 ? matchKnown(ln, known) : null) ?? subjectIn(ln, known) ?? subjectIn(raw, known);
+    if (!n || weekdayOf(n) >= 0) return;
     const hit = matchKnown(n, known);
     const name = hit ?? n;
     const e = days.get(name) ?? { days: new Set<number>(), known: !!hit };
