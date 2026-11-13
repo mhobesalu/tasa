@@ -154,6 +154,16 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
           maxLength={60}
         />
       ) : null}
+      {kind === "retake" ? (
+        <View style={{ gap: 8 }}>
+          <Muted>
+            Kui õpetaja andis järeltööks kordamisküsimused või -ülesanded, lisa need: TASA jagab need päevade peale. Kui ei andnud,
+            kordab õpilane teemat oma vihiku ja kooli materjali järgi. Õpilane näeb ainult samme, mitte hinnet.
+          </Muted>
+          <ReviewFields review={review} setReview={setReview} from={reviewFrom} setFrom={setReviewFrom} />
+        </View>
+      ) : null}
+
       <DayPicker label={dueLabel} value={due} onChange={setDue} from={kind === "event" ? day : addDays(day, 1)} refDay={day} days={kind === "test" || kind === "book" ? 30 : 21} />
 
       {kind === "homework" || kind === "project" || kind === "test" ? (
@@ -175,16 +185,6 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
           <Field label="Alates leheküljest" value={pFrom} onChangeText={(v) => setPFrom(v.replace(/\D/g, ""))} keyboardType="number-pad" maxLength={4} />
           <Field label="Kuni leheküljeni" value={pTo} onChangeText={(v) => setPTo(v.replace(/\D/g, ""))} keyboardType="number-pad" maxLength={4} placeholder="nt 180" />
         </Row>
-      ) : null}
-
-      {kind === "retake" ? (
-        <View style={{ gap: 8 }}>
-          <Muted>
-            Kui õpetaja andis järeltööks kordamisküsimused või -ülesanded, lisa need: TASA jagab need päevade peale. Kui ei andnud,
-            kordab õpilane teemat oma vihiku ja kooli materjali järgi. Õpilane näeb ainult samme, mitte hinnet.
-          </Muted>
-          <ReviewFields review={review} setReview={setReview} from={reviewFrom} setFrom={setReviewFrom} />
-        </View>
       ) : null}
 
       {kind === "event" ? (
