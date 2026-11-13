@@ -37,7 +37,7 @@ export function nextLesson(state: AppState, subject: string, day: Day): Day | nu
 export function knownSubjects(state: AppState): string[] {
   const seen = new Map<string, string>();
   for (const a of state.assignments) if (!seen.has(key(a.subject))) seen.set(key(a.subject), a.subject);
-  for (const k of Object.keys(state.timetable ?? {})) if (!seen.has(k)) seen.set(k, k);
+  for (const k of Object.keys(state.timetable ?? {})) if (!seen.has(k)) seen.set(k, k.charAt(0).toUpperCase() + k.slice(1));
   return [...seen.values()].sort((a, b) => a.localeCompare(b, "et"));
 }
 
