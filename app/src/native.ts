@@ -14,7 +14,7 @@ export async function readClipboard(): Promise<string> {
 }
 
 interface Frame { top: number; left: number; height?: number; width?: number }
-interface Line { text: string; frame?: Frame }
+interface Line { text: string; frame?: Frame; elements?: { text: string; frame?: Frame }[] }
 interface Block { text: string; frame?: Frame; lines?: Line[] }
 
 /** Put between screenshots so the reader knows where one picture ends. */
@@ -65,6 +65,37 @@ export async function textFromScreenshots(): Promise<string | null> {
     parts.push(linesInOrder(r.blocks ?? [{ text: r.text }]).join("\n"));
   }
   return parts.join(`\n${SHOT_BREAK_LINE}\n`);
+}
+
+/**
+ * Timetable screenshots: every piece of text with its place, so day columns can be told apart.
+ * Returns null if the user cancelled.
+ */
+export async function piecesFromScreenshots(): Promise<import("./timetableShot").Piece[] | null> {
+  if (!canReadImages) return null;
+  const ImagePicker = require("expo-image-picker");
+  const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsMultipleSelection: true, selectionLimit: 4, quality: 1 });
+  if (res.canceled || !res.assets?.length) return null;
+  const TextRecognition = require("@react-native-ml-kit/text-recognition").default;
+  const { weekdayOf } = require("./timetableShot");
+  const out: import("./timetableShot").Piece[] = [];
+  const put = (text: string, f: Frame | undefined, shot: number) => {
+    if (!text.trim() || !f) return;
+    out.push({ text: text.trim(), x: f.left + (f.width ?? 0) / 2, y: f.top + (f.height ?? 0) / 2, shot });
+  };
+  for (let i = 0; i < res.assets.length; i++) {
+    const r = await TextRecognition.recognize(res.assets[i].uri);
+    for (const b of (r.blocks ?? []) as Block[]) {
+      for (const l of b.lines ?? [{ text: b.text, frame: b.frame }]) {
+        // a row of day headings read as one line ("E 16.11  T 17.11 …"): use the words
+        const words = l.elements ?? [];
+        const dayWords = words.filter((w) => weekdayOf(w.text) >= 0).length;
+        if (dayWords >= 2) for (const w of words) put(w.text, w.frame, i);
+        else put(l.text, l.frame ?? b.frame, i);
+      }
+    }
+  }
+  return out;
 }
 
 // ---- Daily reminder ----

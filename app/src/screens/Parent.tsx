@@ -9,7 +9,8 @@ import { dayItems, rewardSummary, weekStats } from "../logic";
 import { numList, parseReview, rangeText, READING, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
-import { askNotifications, canReadImages, readClipboard, textFromScreenshots } from "../native";
+import { askNotifications, canReadImages, piecesFromScreenshots, readClipboard, textFromScreenshots } from "../native";
+import { readTimetable, type FoundSubject } from "../timetableShot";
 import { knownSubjects, lessonDays, setDays } from "../timetable";
 import { PasteImport } from "./PasteImport";
 import type { Kind, RewardConfig } from "../types";
@@ -633,6 +634,28 @@ function Timetable() {
   const fx = useCelebrate();
   const subjects = knownSubjects(state);
   const [edit, setEdit] = useState<{ from: string; to: string } | null>(null);
+  const [found, setFound] = useState<(FoundSubject & { on: boolean })[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const fromShot = async () => {
+    setBusy(true);
+    try {
+      const pieces = await piecesFromScreenshots();
+      if (pieces) {
+        const r = readTimetable(pieces, subjects);
+        if (!r.length) fx.toast("Tunniplaani ei leidnud. Pildil peavad olema nädalapäevad (E, T, K… või Esmaspäev…).");
+        else setFound(r.map((x) => ({ ...x, on: x.known })));
+      }
+    } catch {
+      fx.toast("Pilti ei õnnestunud lugeda.");
+    }
+    setBusy(false);
+  };
+  const saveFound = () => {
+    const chosen = (found ?? []).filter((x) => x.on);
+    parentUpdate((s) => chosen.reduce((acc, x) => setDays(acc, x.name, x.days), s));
+    fx.toast(chosen.length === 1 ? "1 aine tunnipäevad salvestatud." : `${chosen.length} aine tunnipäevad salvestatud.`);
+    setFound(null);
+  };
   const count = (sub: string) => state.assignments.filter((a) => a.subject.toLowerCase() === sub.toLowerCase()).length;
   const save = () => {
     if (!edit) return;
@@ -650,6 +673,32 @@ function Timetable() {
         järgmise tunni. Kui aine nimi on valesti loetud, vajuta nimele ja paranda see. Kui kirjutad olemasoleva aine nime,
         liidetakse need kokku.
       </Muted>
+      {canReadImages && !found ? (
+        <Btn small kind="ghost" title={busy ? "Loen…" : "Lisa tunniplaan ekraanipildilt"} disabled={busy} onPress={fromShot} />
+      ) : null}
+      {found ? (
+        <View style={{ gap: 6 }}>
+          <T bold>Tunniplaanist leitud</T>
+          <Muted>Vali, mida salvestada. TASA-s olemas olevad ained on juba valitud. Pilt jääb telefoni.</Muted>
+          {found.map((x, i) => (
+            <Pressable
+              key={x.name}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: x.on }}
+              onPress={() => setFound(found.map((y, j) => (j === i ? { ...y, on: !y.on } : y)))}
+              style={[st.prow, st.rowLine]}
+            >
+              <T style={{ fontSize: 18, width: 26, color: x.on ? C.lakeInk : C.muted }}>{x.on ? "☑" : "☐"}</T>
+              <T style={{ flex: 1, fontSize: 15 }}>{x.name}</T>
+              <Muted>{x.days.map((d) => WEEKDAY_SHORT[d]).join(", ")}</Muted>
+            </Pressable>
+          ))}
+          <Row>
+            <Btn small title="Salvesta" onPress={saveFound} />
+            <Btn small kind="ghost" title="Loobu" onPress={() => setFound(null)} />
+          </Row>
+        </View>
+      ) : null}
       {subjects.length ? (
         subjects.map((sub) => {
           const { days, manual } = lessonDays(state, sub);
