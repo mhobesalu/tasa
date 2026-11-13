@@ -24,7 +24,10 @@ export function cleanSubject(raw: string): string {
 }
 
 /** A name with no letters (e.g. "14" from the screenshot clock) is not a subject. */
-export const isSubjectName = (s: string) => /\p{L}{2}/u.test(s);
+export const isSubjectName = (s: string) =>
+  /\p{L}{2}/u.test(s) &&
+  /^\p{Lu}/u.test(s) && // e-diary subject names start with a capital letter
+  !/\d[.,]\d/.test(s); // "V3.0,25": a version or decimal number, not a subject
 
 /** Use the spelling already in the plan when the cleaned name matches one. */
 export function matchSubject(raw: string, state: AppState): string {

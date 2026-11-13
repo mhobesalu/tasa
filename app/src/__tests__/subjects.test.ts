@@ -28,6 +28,9 @@ test("a name with no letters is not a subject", () => {
   expect(isSubjectName("14")).toBe(false);
   expect(isSubjectName("|")).toBe(false);
   expect(isSubjectName("Ke")).toBe(true);
+  expect(isSubjectName("um V3.0,25")).toBe(false);
+  expect(isSubjectName("Mat 1")).toBe(true);
+  expect(isSubjectName("Eesti keel I")).toBe(true);
 });
 
 test("a new task joins the subject already in the plan", () => {
