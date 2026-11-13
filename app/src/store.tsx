@@ -7,8 +7,9 @@ import { freezeToday } from "./logic";
 import { buildPlan, type Plan } from "./planner";
 import { sampleData } from "./sample";
 import { emptyState } from "./state";
+import { makeLighter, setMood as withMood } from "./mood";
 import { matchSubject, renameSubject, tidySubjects } from "./subjects";
-import type { AppState, Assignment, FixedEvent, RewardConfig } from "./types";
+import type { AppState, Assignment, FixedEvent, Mood, RewardConfig } from "./types";
 
 const KEY = "tasa:state:v1";
 
@@ -49,6 +50,10 @@ interface Ctx {
   toggleExcuse: (stepId: string) => void;
   saveReward: (r: Omit<RewardConfig, "since">) => void;
   pay: (amount: number, note: string) => void;
+  /** the student's own check-in for today (null clears it); never shown to the parent */
+  setMood: (m: Mood | null) => void;
+  /** the student asked for a lighter plan tomorrow */
+  lighterTomorrow: () => void;
   wipe: () => Promise<void>;
 }
 
@@ -253,6 +258,8 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
       }),
     pay: (amount, note) =>
       parentUpdate((s) => ({ ...s, payouts: [{ day, amount, note }, ...s.payouts] })),
+    setMood: (m) => setState((s) => (s ? withMood(s, day, m) : s)),
+    lighterTomorrow: () => setState((s) => (s ? makeLighter(s, addDays(day, 1)) : s)),
     wipe: async () => {
       await AsyncStorage.removeItem(KEY).catch(() => {});
       setState(emptyState(today()));
