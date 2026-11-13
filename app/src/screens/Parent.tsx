@@ -6,7 +6,7 @@ import { PagesAsk } from "../components/PagesAsk";
 import { Btn, Card, Choice, Field, H, Muted, Row, Section, T } from "../components/ui";
 import { addDays, diffDays, relDate, shortDate, WEEKDAY_NAMES, WEEKDAY_SHORT, type Day } from "../dates";
 import { dayItems, rewardSummary, weekStats } from "../logic";
-import { numList, parseReview, rangeText, READING, retakeChunks, stepsOf } from "../planner";
+import { numList, parseReview, rangeText, READING, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
 import { askNotifications, canReadImages, readClipboard, textFromScreenshots } from "../native";
@@ -89,8 +89,6 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
   const [minutes, setMinutes] = useState(50);
   const [pFrom, setPFrom] = useState("1");
   const [pTo, setPTo] = useState("");
-  const [problems, setProblems] = useState(8);
-  const [wrong, setWrong] = useState<number[]>([]);
   const [review, setReview] = useState("");
   const [reviewFrom, setReviewFrom] = useState("");
   const [time, setTime] = useState("15:00–15:45");
@@ -98,7 +96,6 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
 
   const reset = () => {
     setTitle("");
-    setWrong([]);
     setPTo("");
     setReview("");
     setReviewFrom("");
@@ -118,8 +115,12 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
       if (!(a > 0 && b >= a)) return fx.toast("Kirjuta leheküljed, näiteks 41 kuni 180.");
       addAssignment({ kind, subject: subj, title: title.trim() || "raamat", due, minutes: 0, pageFrom: a, pageTo: b });
     } else if (kind === "retake") {
-      if (!wrong.length) return fx.toast("Vali, millised ülesanded läksid valesti.");
-      addAssignment({ kind, subject: subj, title: "järeltöö", due, minutes: 0, wrong });
+      const r = parseReview(review);
+      addAssignment({
+        kind, subject: subj, title: "järeltöö", due, minutes: 0,
+        ...(r.length ? { review: r } : {}),
+        ...(reviewFrom.trim() ? { note: reviewFrom.trim() } : {}),
+      });
     } else {
       if (kind !== "test" && !title.trim()) return fx.toast("Kirjuta, mis on vaja teha.");
       const r = kind === "test" ? parseReview(review) : [];
@@ -134,7 +135,6 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
   };
 
   const dueLabel = { homework: "Tähtaeg", project: "Tähtaeg", test: "Kontrolltöö päev", book: "Loetud peab olema", retake: "Järeltöö päev", event: "Päev" }[kind];
-  const chunks = retakeChunks(wrong);
 
   return (
     <Card>
@@ -154,6 +154,16 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
           maxLength={60}
         />
       ) : null}
+      {kind === "retake" ? (
+        <View style={{ gap: 8 }}>
+          <Muted>
+            Kui õpetaja andis järeltööks kordamisküsimused või -ülesanded, lisa need: TASA jagab need päevade peale. Kui ei andnud,
+            kordab õpilane teemat oma vihiku ja kooli materjali järgi. Õpilane näeb ainult samme, mitte hinnet.
+          </Muted>
+          <ReviewFields review={review} setReview={setReview} from={reviewFrom} setFrom={setReviewFrom} />
+        </View>
+      ) : null}
+
       <DayPicker label={dueLabel} value={due} onChange={setDue} from={kind === "event" ? day : addDays(day, 1)} refDay={day} days={kind === "test" || kind === "book" ? 30 : 21} />
 
       {kind === "homework" || kind === "project" || kind === "test" ? (
@@ -175,49 +185,6 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
           <Field label="Alates leheküljest" value={pFrom} onChangeText={(v) => setPFrom(v.replace(/\D/g, ""))} keyboardType="number-pad" maxLength={4} />
           <Field label="Kuni leheküljeni" value={pTo} onChangeText={(v) => setPTo(v.replace(/\D/g, ""))} keyboardType="number-pad" maxLength={4} placeholder="nt 180" />
         </Row>
-      ) : null}
-
-      {kind === "retake" ? (
-        <View style={{ gap: 8 }}>
-          <Muted>
-            Vaata parandatud tööd ja vali, millised ülesanded olid valed. Laps näeb ainult samme, mitte hinnet. TASA ei lahenda ega koosta ülesandeid: laps harjutab oma tööd ja kooli materjali.
-          </Muted>
-          <Choice
-            label="Mitu ülesannet töös oli?"
-            value={problems}
-            onChange={(n) => {
-              setProblems(n);
-              setWrong((w) => w.filter((x) => x <= n));
-            }}
-            options={[4, 6, 8, 10, 12, 15].map((n) => ({ value: n, label: String(n) }))}
-          />
-          <T style={{ color: C.muted, fontSize: 14 }}>Valesti läinud ülesanded</T>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {Array.from({ length: problems }, (_, i) => i + 1).map((n) => {
-              const on = wrong.includes(n);
-              return (
-                <Pressable
-                  key={n}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: on }}
-                  accessibilityLabel={`Ülesanne ${n}`}
-                  onPress={() => setWrong(on ? wrong.filter((x) => x !== n) : [...wrong, n])}
-                  style={[st.numChip, on && { backgroundColor: C.boatSoft, borderColor: C.boat }]}
-                >
-                  <Text style={{ fontFamily: F.bodyBold, fontSize: 17, color: on ? C.boatInk : C.ink }}>{n}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          {chunks.length ? (
-            <Muted>
-              Plaan: {chunks.map((c, i) => `${i + 1}. päev ${numList(c)}`).join("; ")}.
-            </Muted>
-          ) : null}
-          <Muted style={{ fontStyle: "italic" }}>
-            Tulekul: pildista parandatud töö ja TASA loeb ise, millised numbrid olid valed. Sina kinnitad. Foto kustutatakse kohe pärast lugemist.
-          </Muted>
-        </View>
       ) : null}
 
       {kind === "event" ? (
@@ -253,7 +220,7 @@ function PlannedList() {
           <View key={a.id} style={[st.prow, i > 0 && st.rowLine]}>
             <View style={{ flex: 1, gap: 2 }}>
               <T>
-                {a.subject}: {a.kind === "book" ? `${a.title}, lk ${a.pageFrom}–${a.pageTo}` : a.kind === "retake" ? (a.wrong?.length ? `järeltöö, ${numList(a.wrong)}` : "järeltöö") : a.title}
+                {a.subject}: {a.kind === "book" ? `${a.title}, lk ${a.pageFrom}–${a.pageTo}` : a.kind === "retake" ? (a.wrong?.length && !a.review?.length ? `järeltöö, ${numList(a.wrong)}` : "järeltöö") : a.title}
               </T>
               <Muted>
                 {kindLabel[a.kind]} · {relDate(a.due, day)} · {done} / {steps.length} sammu tehtud
@@ -268,7 +235,7 @@ function PlannedList() {
                   </Pressable>
                 )
               ) : null}
-              {a.kind === "test" ? (
+              {a.kind === "test" || a.kind === "retake" ? (
                 editing === a.id ? (
                   <ReviewEditor a={a} onDone={() => setEditing(null)} />
                 ) : (
@@ -606,7 +573,7 @@ function ParentHome({ onLock }: { onLock: () => void }) {
       <PasteImport
         onRetake={(subject) => {
           setPrefill((p) => ({ kind: "retake", subject, n: (p?.n ?? 0) + 1 }));
-          fx.toast("Järeltöö on all valmis: vali kuupäev ja valed ülesanded.");
+          fx.toast("Järeltöö on all valmis: vali kuupäev ja lisa kordamisküsimused, kui need on.");
         }}
         onHomework={(subject, title) => {
           setPrefill((p) => ({ kind: "homework", subject, title, n: (p?.n ?? 0) + 1 }));
@@ -626,7 +593,7 @@ function ParentHome({ onLock }: { onLock: () => void }) {
                   title="Lisa kuupäev"
                   onPress={() => {
                     setPrefill((p) => ({ kind: "retake", subject: r.subject, n: (p?.n ?? 0) + 1 }));
-                    fx.toast("Järeltöö on all valmis: vali kuupäev ja valed ülesanded.");
+                    fx.toast("Järeltöö on all valmis: vali kuupäev ja lisa kordamisküsimused, kui need on.");
                   }}
                 />
                 <Btn small kind="ghost" title="Eemalda" onPress={() => removePendingRetake(r.id)} />
@@ -778,7 +745,6 @@ const st = StyleSheet.create({
     maxWidth: 220,
   },
   dayChip: { borderWidth: 2, borderColor: C.line, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8, minHeight: 44, justifyContent: "center", backgroundColor: C.card },
-  numChip: { width: 46, height: 46, borderRadius: 12, borderWidth: 2, borderColor: C.line, alignItems: "center", justifyContent: "center", backgroundColor: C.card },
   prow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10 },
   rowLine: { borderTopWidth: 1, borderTopColor: C.line },
   wd: { width: 34, height: 34, borderRadius: 9, borderWidth: 2, borderColor: C.line, alignItems: "center", justifyContent: "center", backgroundColor: C.card },

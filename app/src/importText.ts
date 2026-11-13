@@ -253,7 +253,7 @@ export function isDuplicate(d: Draft, existing: Assignment[]): boolean {
 // ---- Grades table (Stuudium "Hinded") ----
 // Copying the table loses which date each grade belongs to, but each subject
 // row still comes with its marks. TASA only uses this to suggest a retake for a
-// subject with a failing mark; the parent picks the date and the wrong problems.
+// subject with a failing mark; the parent picks the date and adds any kordamisküsimused.
 // Grades are not stored.
 
 const MARK = /^(?:[1-5][+-]?|AR|MA|A|P|H|T|X|E|K)$/i;
