@@ -1,11 +1,12 @@
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useMemo, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { DayPicker } from "../components/DayPicker";
 import { Btn, Card, H, Muted, Pill, Section, T, Tick } from "../components/ui";
 import { addDays, diffDays, longDate, mondayOf, WEEKDAY_SHORT, type Day } from "../dates";
 import { dayFull, dayItems, rewardSummary, weekStillPossible, type TodayItem } from "../logic";
+import { HELP_LINKS, MOODS, offerLighter } from "../mood";
 import { buildPlan, eventsOn, type DayEvent } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
@@ -162,6 +163,8 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
           </Card>
         </>
       ) : null}
+
+      <MoodCard />
 
       {onAdd ? (
         <Btn kind="ghost" title="＋ Lisa e-päevikust" onPress={onAdd} style={{ marginTop: 16 }} accessibilityHint="Kleebi või pildista kodutööde nimekiri" />
@@ -358,6 +361,66 @@ function RewardCard({ open, setOpen }: { open: boolean; setOpen: (b: boolean) =>
   );
 }
 
+/** Optional end-of-day check-in. Only on this phone; the parent view never shows it. Used only to offer a lighter day. */
+function MoodCard() {
+  const { state, day, setMood, lighterTomorrow } = useStore();
+  const fx = useCelebrate();
+  const mood = state.moods?.[day];
+  const heavy = (mood ?? 0) >= 3;
+  const offer = offerLighter(state, day);
+  const tomorrowLight = state.lighter?.includes(addDays(day, 1));
+  return (
+    <Card style={{ marginTop: 18, gap: 10 }}>
+      <H size={20}>Kuidas tänane päev tundus?</H>
+      <Muted>Ainult sinu jaoks. Lapsevanem seda ei näe.</Muted>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        {MOODS.map((o) => {
+          const on = mood === o.m;
+          return (
+            <Pressable
+              key={o.m}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: on }}
+              accessibilityLabel={o.label}
+              onPress={() => setMood(on ? null : o.m)}
+              style={[st.mood, on && { borderColor: C.lake, backgroundColor: C.lakeSoft }]}
+            >
+              <Text style={{ fontSize: 28 }}>{o.face}</Text>
+              <Text style={{ fontFamily: F.body, fontSize: 13, color: C.ink, textAlign: "center" }}>{o.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {offer ? (
+        <View style={{ gap: 8 }}>
+          <T style={{ fontSize: 15 }}>Viimased päevad on olnud rasked. Kas teeme homse päeva kergemaks? Osa töid liigub hilisematele päevadele, kui tähtaeg lubab.</T>
+          <Btn
+            small
+            title="Jah, kergem homme"
+            onPress={() => {
+              lighterTomorrow();
+              fx.toast("Homme on kergem päev.");
+            }}
+          />
+        </View>
+      ) : tomorrowLight ? (
+        <Muted>Homme on kergem päev.</Muted>
+      ) : null}
+      {heavy ? (
+        <View style={{ gap: 6 }}>
+          <T style={{ fontSize: 15 }}>Kui on raske, räägi kellegagi, keda usaldad. Siit leiad ka abi:</T>
+          {HELP_LINKS.map((l) => (
+            <Pressable key={l.url} accessibilityRole="link" onPress={() => Linking.openURL(l.url).catch(() => {})} style={{ paddingVertical: 6, minHeight: 44, justifyContent: "center" }}>
+              <Text style={{ fontFamily: F.bodyBold, fontSize: 16, color: C.lakeInk, textDecorationLine: "underline" }}>{l.title}</Text>
+              <Muted style={{ fontSize: 13 }}>{l.sub}</Muted>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+    </Card>
+  );
+}
+
 /** Asked when the student ticks "Lepi õpetajaga kokku järeltöö aeg". No grades shown. */
 function RetakeDayModal({ subject, onClose }: { subject: string | null; onClose: () => void }) {
   const { day, studentRetake } = useStore();
@@ -437,6 +500,7 @@ const st = StyleSheet.create({
   chk: { width: 36, height: 36, borderRadius: 12, borderWidth: 2.5, borderColor: C.lake, alignItems: "center", justifyContent: "center", marginTop: 1 },
   nav: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   req: { flexDirection: "row", gap: 10, alignItems: "center", padding: 12, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.line },
+  mood: { flex: 1, alignItems: "center", gap: 2, paddingVertical: 8, borderRadius: 14, borderWidth: 2, borderColor: C.line, minHeight: 64 },
   dot: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: C.line, alignItems: "center", justifyContent: "center" },
   scrim: { flex: 1, backgroundColor: "rgba(15,20,35,.45)", justifyContent: "flex-end" },
   sheet: { backgroundColor: C.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40, gap: 10 },

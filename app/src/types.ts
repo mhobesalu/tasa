@@ -94,7 +94,13 @@ export interface AppState {
   pendingRetakes?: { id: string; subject: string; since: Day }[];
   /** Lesson weekdays (0 = Monday) the parent set by hand, by subject (lower case). */
   timetable?: Record<string, number[]>;
+  /** The student's own "how did today feel" (1 = hästi … 4 = väga raske). Only on this phone, never shown to the parent. */
+  moods?: Record<Day, Mood>;
+  /** Days the student asked to be lighter after heavy days: the planner uses a smaller budget there. */
+  lighter?: Day[];
 }
+
+export type Mood = 1 | 2 | 3 | 4;
 
 export interface Step {
   id: string;

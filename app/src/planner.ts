@@ -269,7 +269,8 @@ export interface Plan {
  * keeping each day near the study-time budget. Steps already done today stay on today,
  * so ticking never changes the rest of today's plan.
  */
-export function buildPlan(s: Pick<AppState, "assignments" | "done" | "excused" | "budget">, t: Day): Plan {
+export function buildPlan(s: Pick<AppState, "assignments" | "done" | "excused" | "budget"> & Pick<Partial<AppState>, "lighter">, t: Day): Plan {
+  const budgetOn = (d: Day) => (s.lighter?.includes(d) ? Math.round(s.budget * LIGHTER) : s.budget);
   const byDay: Record<Day, PlannedStep[]> = {};
   const all: Record<string, PlannedStep> = {};
   const put = (st: PlannedStep) => {
@@ -310,13 +311,14 @@ export function buildPlan(s: Pick<AppState, "assignments" | "done" | "excused" |
       const list = byDay[d];
       if (!list) continue;
       let mins = list.reduce((m, x) => m + x.minutes, 0);
-      if (mins <= s.budget) continue;
+      const cap = budgetOn(d);
+      if (mins <= cap) continue;
       const movable = list
         .filter((x) => !(d === t && s.done[x.id] === t) && diffDays(d, lastOf[x.aid]) > 0)
         // latest deadline first, last step of it first
         .sort((a, b) => diffDays(a.due, b.due) || b.index - a.index);
       for (const x of movable) {
-        if (mins <= s.budget) break;
+        if (mins <= cap) break;
         const next = addDays(d, 1);
         byDay[d] = byDay[d].filter((y) => y.id !== x.id);
         const moved = { ...x, day: next };
@@ -332,6 +334,9 @@ export function buildPlan(s: Pick<AppState, "assignments" | "done" | "excused" |
   }
   return { byDay, all };
 }
+
+/** A lighter day keeps this share of the usual study time (only steps whose deadline allows are moved). */
+export const LIGHTER = 0.6;
 
 /** Fixed required events and test / retake days that fall on a given day. */
 export interface DayEvent {
