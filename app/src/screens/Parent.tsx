@@ -278,6 +278,7 @@ function ReviewFields({ review, setReview, from, setFrom }: { review: string; se
   // read questions from a screenshot / photo or the clipboard, then show them one per line to check
   const take = (raw: string | null) => {
     if (raw === null) return;
+    if (!raw.trim()) return fx.toast("Vajuta kasti „Või kirjuta“ ja kleebi seal (Ctrl+V või pikk vajutus).");
     const got = parseReview(raw);
     if (!got.length) return fx.toast("Küsimusi ei leidnud. Proovi teist pilti või kirjuta need.");
     setReview(got.every((x) => /^\d+$/.test(x)) ? rangeText(got) : got.join("\n"));

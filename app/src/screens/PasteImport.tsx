@@ -101,7 +101,16 @@ export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: stri
         textAlignVertical="top"
       />
       <Row style={{ flexWrap: "wrap" }}>
-        <Btn small kind="ghost" title="Kleebi" onPress={async () => setText(await readClipboard())} />
+        <Btn
+          small
+          kind="ghost"
+          title="Kleebi"
+          onPress={async () => {
+            const t = await readClipboard();
+            if (t) setText(t);
+            else fx.toast("Vajuta kasti ja kleebi seal (Ctrl+V või pikk vajutus).");
+          }}
+        />
         {canReadImages ? (
           <Btn
             small

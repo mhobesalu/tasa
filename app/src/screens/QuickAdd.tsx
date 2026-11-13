@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Modal, Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { PagesAsk } from "../components/PagesAsk";
 import { Btn, Field, Muted, T } from "../components/ui";
@@ -29,6 +29,9 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
   const { state, day, addMany, removeMany, attachNote, addEvent, addAssignment, setReminder, setReview } = useStore();
   const fx = useCelebrate();
   const [v, setV] = useState<View_>({ s: "start" });
+  // a browser won't let the page read the clipboard: paste into a box instead
+  const web = Platform.OS === "web";
+  const [box, setBox] = useState("");
 
   const close = () => {
     setV({ s: "start" });
@@ -45,7 +48,7 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
       return;
     }
     if (text === null) return setV({ s: "start" });
-    if (!text.trim()) return setV({ s: "none", why: "Lõikelaud on tühi. Kopeeri e-päevikust kodutööde nimekiri ja proovi uuesti." });
+    if (!text.trim()) return setV({ s: "none", why: web ? "Kast on tühi. Kopeeri e-päevikust kodutööde nimekiri ja kleebi see kasti." : "Lõikelaud on tühi. Kopeeri e-päevikust kodutööde nimekiri ja proovi uuesti." });
     const r = planImport(text, day, state.assignments);
     if (r.add.length) {
       const ids = addMany(
@@ -94,7 +97,29 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
               <ActivityIndicator color={C.lake} style={{ marginVertical: 24 }} />
             ) : (
               <View style={{ gap: 10, marginTop: 6 }}>
-                <Btn title="Kleebi kopeeritud tekst" onPress={() => run(readClipboard)} />
+                {web ? (
+                  <>
+                    <TextInput
+                      value={box}
+                      onChangeText={(t) => {
+                        setBox(t);
+                        if (t.length - box.length > 40) {
+                          setBox("");
+                          run(async () => t);
+                        }
+                      }}
+                      multiline
+                      placeholder="Kleebi siia (Ctrl+V või pikk vajutus)…"
+                      placeholderTextColor="#9AA0AE"
+                      accessibilityLabel="Kleebi e-päeviku tekst"
+                      style={st.box}
+                      textAlignVertical="top"
+                    />
+                    <Btn title="Loe" onPress={() => { const t = box; setBox(""); run(async () => t); }} />
+                  </>
+                ) : (
+                  <Btn title="Kleebi kopeeritud tekst" onPress={() => run(readClipboard)} />
+                )}
                 {canReadImages ? <Btn kind="ghost" title="Loe ekraanipildilt" onPress={() => run(textFromScreenshots)} /> : null}
                 <Btn kind="ghost" title="Sulge" onPress={close} />
               </View>
@@ -219,6 +244,18 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
 }
 
 const st = StyleSheet.create({
+  box: {
+    minHeight: 110,
+    maxHeight: 200,
+    borderWidth: 1.5,
+    borderColor: C.line,
+    borderRadius: 14,
+    padding: 12,
+    fontFamily: F.body,
+    fontSize: 15,
+    color: C.ink,
+    backgroundColor: C.card,
+  },
   back: { flex: 1, backgroundColor: "rgba(20,30,50,0.35)" },
   sheet: {
     backgroundColor: C.paper,
