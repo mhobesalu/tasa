@@ -1,0 +1,47 @@
+name: Android build for Google Play
+
+# Run by hand: Actions -> "Android build for Google Play" -> Run workflow.
+# Builds the Android app bundle (.aab) here on a free GitHub Linux machine
+# (not counted in Expo's free build plan). The signing key is kept on Expo.
+# The first upload to Google Play is done by hand in Play Console:
+# download "tasa-android" from this run's Artifacts and upload the .aab file.
+# Secret: EXPO_TOKEN
+on:
+  workflow_dispatch:
+  # also runs when this file itself changes on a work branch, to test it before merging
+  push:
+    branches: ["claude/**"]
+    paths: [".github/workflows/android-build.yml"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Build the app bundle
+        timeout-minutes: 60
+        env:
+          EAS_NO_VCS: 1
+        run: npx --yes eas-cli@latest build --local --platform android --profile production --non-interactive --output "$RUNNER_TEMP/tasa.aab"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tasa-android
+          path: ${{ runner.temp }}/tasa.aab
+          retention-days: 30
