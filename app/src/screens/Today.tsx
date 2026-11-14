@@ -57,16 +57,16 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
   const [askFor, setAskFor] = useState<string | null>(null); // subject whose retake day we ask
   const [offset, setOffset] = useState(0); // -1 yesterday, 0 today, 1 tomorrow
   const [open, setOpen] = useState(true);
+  const [showRest, setShowRest] = useState(false);
   const [timerFor, setTimerFor] = useState<TodayItem | null>(null);
 
-  useEffect(() => setOffset(0), [day]);
+  useEffect(() => { setOffset(0); setShowRest(false); }, [day]);
 
   const items = useMemo(() => dayItems(state, day), [state, day]);
   const active = items.filter((x) => !x.excused);
   const doneN = active.filter((x) => x.done).length;
   const full = dayFull(state, day);
   const next = active.find((x) => !x.done);
-  const leftMin = active.filter((x) => !x.done).reduce((m, x) => m + x.minutes, 0);
   const events = eventsOn(state, day, day);
 
   const doTick = (id: string) => {
@@ -104,19 +104,10 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
   return (
     <View>
       <DayHead title="Täna" sub={longDate(day)} onPrev={() => setOffset(-1)} onNext={() => setOffset(1)} />
-      {active.length ? (
-        <>
-          <View
-            style={st.bar}
-            accessibilityRole="progressbar"
-            accessibilityValue={{ min: 0, max: active.length, now: doneN }}
-          >
-            <View style={[st.barFill, { width: `${(doneN / active.length) * 100}%` }]} />
-          </View>
-          <Muted style={{ marginTop: 6 }}>
-            {doneN} / {active.length} tehtud{leftMin ? ` · umbes ${leftMin} min jäänud` : " · kõik tehtud!"}
-          </Muted>
-        </>
+      {doneN && next ? (
+        <Muted style={{ marginTop: 6 }}>
+          {doneN === 1 ? "1 samm juba tehtud ✓" : `${doneN} sammu juba tehtud ✓`}
+        </Muted>
       ) : null}
 
       {state.reward.on ? <RewardCard open={open} setOpen={setOpen} /> : null}
@@ -151,16 +142,22 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
         </Card>
       )}
 
-      {items.length > (next ? 1 : 0) ? (
+      {next && items.length > 1 ? (
         <>
-          <Section>{next ? "Ülejäänud tänane" : "Tänased sammud"}</Section>
-          <Card style={{ paddingVertical: 4, gap: 0 }}>
-            {items
-              .filter((x) => x !== next)
-              .map((x, i) => (
-                <ItemRow key={x.id} x={x} day={day} first={i === 0} onTick={() => doTick(x.id)} />
-              ))}
-          </Card>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showRest }}
+            onPress={() => setShowRest(!showRest)}
+            style={st.restBtn}
+          >
+            <Text style={st.restTxt}>{showRest ? "Peida ülejäänud" : "Mis veel tänaseks?"}</Text>
+          </Pressable>
+          {showRest ? <RestList items={items.filter((x) => x !== next)} day={day} onTick={doTick} /> : null}
+        </>
+      ) : !next && items.length ? (
+        <>
+          <Section>Tänased sammud</Section>
+          <RestList items={items} day={day} onTick={doTick} />
         </>
       ) : null}
 
@@ -181,6 +178,16 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
     if (r.per === "day" && full) return `+${r.amount} ${r.unit} on sinu. Puhka nüüd.`;
     return `Täna kogusid ${rewardSummary(state, day).today} ${r.unit}. Puhka nüüd.`;
   }
+}
+
+function RestList({ items, day, onTick }: { items: TodayItem[]; day: Day; onTick: (id: string) => void }) {
+  return (
+    <Card style={{ paddingVertical: 4, gap: 0 }}>
+      {items.map((x, i) => (
+        <ItemRow key={x.id} x={x} day={day} first={i === 0} onTick={() => onTick(x.id)} />
+      ))}
+    </Card>
+  );
 }
 
 export function ItemRow({ x, day, first, onTick, readOnly }: { x: TodayItem; day: Day; first?: boolean; onTick?: () => void; readOnly?: boolean }) {
@@ -275,7 +282,7 @@ function OtherDay({ offset, setOffset }: { offset: number; setOffset: (n: number
       {items.length ? (
         <>
           <Section>
-            {offset < 0 ? "Eilsed sammud" : `Homme ${items.length} sammu · umbes ${mins} min`}
+            {offset < 0 ? "Eilsed sammud" : "Homsed sammud"}
           </Section>
           <Card style={{ paddingVertical: 4, gap: 0 }}>
             {items.map((x, i) => (
@@ -495,6 +502,8 @@ const st = StyleSheet.create({
   now: { marginTop: 16, backgroundColor: C.lake, borderRadius: 22, padding: 20, gap: 12 },
   eyebrow: { fontFamily: F.bodyBold, color: C.sun, fontSize: 14, textTransform: "uppercase", letterSpacing: 1 },
   note: { color: C.white, fontFamily: F.body, fontSize: 16, lineHeight: 23 },
+  restBtn: { alignItems: "center", paddingVertical: 12, minHeight: 44, justifyContent: "center", marginTop: 8 },
+  restTxt: { color: C.lake, fontFamily: F.bodyBold, fontSize: 16 },
   timerBtn: { alignItems: "center", paddingVertical: 10, minHeight: 44, justifyContent: "center" },
   item: { flexDirection: "row", gap: 12, paddingVertical: 12, alignItems: "flex-start" },
   chk: { width: 36, height: 36, borderRadius: 12, borderWidth: 2.5, borderColor: C.lake, alignItems: "center", justifyContent: "center", marginTop: 1 },

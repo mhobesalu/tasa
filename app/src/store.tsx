@@ -54,6 +54,8 @@ interface Ctx {
   setMood: (m: Mood | null) => void;
   /** the student asked for a lighter plan tomorrow */
   lighterTomorrow: () => void;
+  /** the student's own daily study time, only when the parent allows it */
+  setBudget: (m: number) => void;
   wipe: () => Promise<void>;
 }
 
@@ -259,6 +261,7 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
     pay: (amount, note) =>
       parentUpdate((s) => ({ ...s, payouts: [{ day, amount, note }, ...s.payouts] })),
     setMood: (m) => setState((s) => (s ? withMood(s, day, m) : s)),
+    setBudget: (m) => parentUpdate((s) => (s.studentBudget ? { ...s, budget: m } : s)),
     lighterTomorrow: () => setState((s) => (s ? makeLighter(s, addDays(day, 1)) : s)),
     wipe: async () => {
       await AsyncStorage.removeItem(KEY).catch(() => {});

@@ -91,6 +91,8 @@ export interface AppState {
   /** Subjects that need a järeltöö whose date isn't known yet (no grade is stored). */
   /** false = only the parent adds the retake day (default: the student may add it) */
   studentRetakeDate?: boolean;
+  /** true = the student may choose the daily study time themselves (in Nädal, never on the day view) */
+  studentBudget?: boolean;
   pendingRetakes?: { id: string; subject: string; since: Day }[];
   /** Lesson weekdays (0 = Monday) the parent set by hand, by subject (lower case). */
   timetable?: Record<string, number[]>;

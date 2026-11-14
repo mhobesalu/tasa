@@ -337,6 +337,8 @@ export function buildPlan(s: Pick<AppState, "assignments" | "done" | "excused" |
 
 /** A lighter day keeps this share of the usual study time (only steps whose deadline allows are moved). */
 export const LIGHTER = 0.6;
+/** daily study time choices (minutes) */
+export const BUDGETS = [50, 75, 100, 125, 150, 180];
 
 /** Fixed required events and test / retake days that fall on a given day. */
 export interface DayEvent {

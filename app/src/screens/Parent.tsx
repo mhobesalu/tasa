@@ -6,7 +6,7 @@ import { PagesAsk } from "../components/PagesAsk";
 import { Btn, Card, Choice, Field, H, Muted, Row, Section, T } from "../components/ui";
 import { addDays, diffDays, relDate, shortDate, WEEKDAY_NAMES, WEEKDAY_SHORT, type Day } from "../dates";
 import { dayItems, rewardSummary, weekStats } from "../logic";
-import { numList, parseReview, rangeText, READING, stepsOf } from "../planner";
+import { BUDGETS, numList, parseReview, rangeText, READING, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { C, F } from "../theme";
 import { askNotifications, canReadImages, piecesFromScreenshots, readClipboard, textFromScreenshots } from "../native";
@@ -492,8 +492,21 @@ function Settings() {
         label="Õppimise aeg päevas (umbes)"
         value={state.budget}
         onChange={(budget) => parentUpdate((s) => ({ ...s, budget }))}
-        options={[50, 75, 100, 125, 150].map((m) => ({ value: m, label: `${m} min` }))}
+        options={BUDGETS.map((m) => ({ value: m, label: `${m} min` }))}
       />
+      <Muted>TASA jagab sammud päevade peale nii, et päeva kokku tuleks umbes nii palju. Õpilane seda numbrit tänases vaates ei näe.</Muted>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <Switch
+          value={!!state.studentBudget}
+          onValueChange={(on) => parentUpdate((s) => ({ ...s, studentBudget: on }))}
+          trackColor={{ true: C.lake, false: C.line }}
+          accessibilityLabel="Õpilane valib ise päeva õppimise aja"
+        />
+        <View style={{ flex: 1 }}>
+          <T>Õpilane valib ise päeva õppimise aja</T>
+          <Muted>Sobib vanemale õpilasele. Valik on vaates „Nädal“.</Muted>
+        </View>
+      </View>
       <Btn
         small
         kind="ghost"

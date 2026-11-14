@@ -1,15 +1,15 @@
 import React from "react";
 import { View } from "react-native";
-import { Card, H, Muted, Pill, Section, T } from "../components/ui";
+import { Card, Choice, H, Muted, Pill, Section, T } from "../components/ui";
 import { addDays, longDate, type Day } from "../dates";
 import { dayItems } from "../logic";
-import { eventsOn } from "../planner";
+import { BUDGETS, eventsOn } from "../planner";
 import { useStore } from "../store";
 import { C } from "../theme";
 import { tagFor } from "./Today";
 
 export function WeekScreen() {
-  const { state, day, plan } = useStore();
+  const { state, day, plan, setBudget } = useStore();
   const days: Day[] = Array.from({ length: 7 }, (_, i) => addDays(day, i));
   return (
     <View>
@@ -26,12 +26,11 @@ export function WeekScreen() {
               ? dayItems(state, d).map((x) => ({ ...x }))
               : (plan.byDay[d] ?? []).map((x) => ({ ...x, done: false, excused: false, leftover: false }));
           const ev = eventsOn(state, d, day);
-          const mins = items.filter((x) => !x.excused).reduce((m, x) => m + x.minutes, 0);
           return (
             <Card key={d} style={[{ gap: 8 }, i === 0 && { borderWidth: 2, borderColor: C.lake }]}>
               <View style={{ gap: 0 }}>
                 <H size={21}>{i === 0 ? "Täna · " : i === 1 ? "Homme · " : ""}{longDate(d)}</H>
-                <Muted>{items.length ? `${items.length} sammu · umbes ${mins} min` : "Vaba päev"}</Muted>
+                <Muted>{items.length ? `${items.length} sammu` : "Vaba päev"}</Muted>
               </View>
               {ev.map((e) => (
                 <View key={e.key} style={{ flexDirection: "row", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -58,6 +57,20 @@ export function WeekScreen() {
           );
         })}
       </View>
+
+      {state.studentBudget ? (
+        <>
+          <Section>Minu õppimise aeg päevas</Section>
+          <Card style={{ gap: 8 }}>
+            <Choice
+              value={state.budget}
+              onChange={setBudget}
+              options={BUDGETS.map((m) => ({ value: m, label: `${m} min` }))}
+            />
+            <Muted>TASA jagab sammud nii, et päeva kokku tuleks umbes nii palju. Tänases vaates näed alati ainult järgmist sammu.</Muted>
+          </Card>
+        </>
+      ) : null}
 
       <Section>Kuidas TASA plaani teeb</Section>
       <Card style={{ gap: 8 }}>
