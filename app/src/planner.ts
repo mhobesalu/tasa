@@ -150,7 +150,7 @@ export const READING = /\b(loe(?:ge)?|lugeda|lugemine|lugemiseks|raamat\w*|kohus
 
 /** Turn one assignment into its fixed list of ~25-minute steps. Ids stay stable. */
 export function stepsOf(a: Assignment): Step[] {
-  const base = { aid: a.id, kind: a.kind, subject: a.subject };
+  const base = { aid: a.id, kind: a.kind, subject: a.subject, ...(a.links?.length ? { links: a.links } : {}) };
   const mk = (i: number, total: number, title: string, minutes: number, note: string): Step => ({
     ...base,
     id: `${a.id}#${i}`,

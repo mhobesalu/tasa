@@ -43,6 +43,8 @@ interface Ctx {
   /** the student got the retake day from the teacher */
   studentRetake: (subject: string, due: Day) => void;
   setReview: (id: string, review: string[], note?: string) => void;
+  /** fix a task: title, deadline, time, note, links */
+  updateAssignment: (id: string, patch: Partial<Pick<Assignment, "title" | "due" | "minutes" | "note" | "links">>) => void;
   /** a reading task: from which page to which; it is then planned as exact pages per day */
   setPages: (id: string, from: number, to: number) => void;
   addEvent: (e: Omit<FixedEvent, "id">) => void;
@@ -226,6 +228,17 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
           { id: `p${s.seq + 1}`, kind: "retake", subject, title: "järeltöö", due, minutes: 0, wrong: [], createdOn: day, source: "parent" },
         ],
         pendingRetakes: (s.pendingRetakes ?? []).filter((r) => r.subject.toLowerCase() !== subject.toLowerCase()),
+      })),
+    updateAssignment: (id, patch) =>
+      parentUpdate((s) => ({
+        ...s,
+        assignments: s.assignments.map((a) => {
+          if (a.id !== id) return a;
+          const b = { ...a, ...patch };
+          if (!b.note) delete b.note;
+          if (!b.links?.length) delete b.links;
+          return b;
+        }),
       })),
     setReview: (id, review, note) =>
       parentUpdate((s) => ({

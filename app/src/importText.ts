@@ -3,6 +3,7 @@
 // and pastes it here. Everything is read on the phone; nothing is sent anywhere.
 // TASA only copies what the school wrote. It never makes up or solves tasks.
 
+import { joinWrapped, withoutLinks } from "./links";
 import { addDays, diffDays, toDay, weekdayIndex, type Day } from "./dates";
 import { cleanSubject, isSubjectName } from "./subjects";
 import type { Assignment, Kind } from "./types";
@@ -149,8 +150,8 @@ export function parsePasted(raw: string, t: Day): Draft[] {
 
   const flush = () => {
     if (cur && day) {
-      const text = cur.text.join("\n").trim();
-      const words = text.split("\n").filter((x) => !URL.test(x)).join(" ").trim();
+      const text = joinWrapped(cur.text).trim();
+      const words = withoutLinks(text.split("\n").filter((x) => !URL.test(x)).join(" "));
       const kind: Kind = cur.test ? "test" : "homework";
       const title = kind === "test" ? (words ? shortTitle(words) : "kontrolltöö") : words ? shortTitle(words) : "kodune töö";
       const bring = kind === "homework" && cur.minutes === null && BRING.test(words) && words.length < 200;

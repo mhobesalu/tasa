@@ -106,7 +106,7 @@ function Shell() {
           {state.setupDone ? (
             <View style={st.brand}>
               <Logo width={96} />
-              <Text style={st.kid}>
+              <Text style={st.kid} numberOfLines={1}>
                 {state.child.name}
                 {state.child.grade ? `, ${state.child.grade}` : ""}
               </Text>
@@ -154,7 +154,7 @@ function TabBtn({ label, on, onPress, icon }: { label: string; on: boolean; onPr
 
 const st = StyleSheet.create({
   brand: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
-  kid: { fontFamily: F.bodyBold, color: C.muted, fontSize: 15 },
+  kid: { fontFamily: F.bodyBold, color: C.muted, fontSize: 15, flexShrink: 1, marginLeft: 12, textAlign: "right" },
   tabs: {
     flexDirection: "row",
     backgroundColor: C.card,

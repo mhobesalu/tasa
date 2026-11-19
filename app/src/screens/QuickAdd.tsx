@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Modal, Platform, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { PagesAsk } from "../components/PagesAsk";
 import { Btn, Field, Muted, T } from "../components/ui";
@@ -10,6 +10,7 @@ import { parseReview, rangeText, READING } from "../planner";
 import { diffDays } from "../dates";
 import { planImport } from "../quickImport";
 import { useStore } from "../store";
+import { EntryEditor } from "./EntryEditor";
 import { C, F } from "../theme";
 
 type View_ =
@@ -32,9 +33,11 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
   // a browser won't let the page read the clipboard: paste into a box instead
   const web = Platform.OS === "web";
   const [box, setBox] = useState("");
+  const [fix, setFix] = useState<string | null>(null);
 
   const close = () => {
     setV({ s: "start" });
+    setFix(null);
     onClose();
   };
 
@@ -77,8 +80,13 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
   const act = (msg: ParsedMessage, a: MessageAction) => {
     if (a.type === "attach") attachNote(a.aid, `Õpetaja sõnum: ${msg.text}`);
     else if (a.type === "event") addEvent({ title: a.title, day: a.day, time: a.time, weekly: false });
-    else addAssignment({ kind: "homework", subject: a.subject, title: a.title, due: a.due, minutes: 10, note: msg.text });
-    fx.toast(a.type === "attach" ? "Sõnum lisatud kontrolltöö juurde." : a.type === "event" ? "Lisatud kohustuslik aeg." : "Meeldetuletus lisatud.");
+    else {
+      // show it like any other import, so the date and text can still be fixed
+      const ids = addMany([{ kind: "homework", subject: a.subject, title: a.title, due: a.due, minutes: 10, note: msg.text }]);
+      setV({ s: "added", items: [{ key: ids[0], kind: "homework", subject: a.subject, title: a.title, due: a.due, minutes: 10, note: msg.text }], ids, skipped: 0, missed: 0 });
+      return;
+    }
+    fx.toast(a.type === "attach" ? "Sõnum lisatud kontrolltöö juurde." : "Lisatud kohustuslik aeg.");
     done();
   };
 
@@ -125,16 +133,40 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
               </View>
             )}
           </>
+        ) : v.s === "added" && fix && state.assignments.some((a) => a.id === fix) ? (
+          <ScrollView style={{ maxHeight: 560 }} contentContainerStyle={{ gap: 8 }} keyboardShouldPersistTaps="handled">
+            <T bold style={st.h}>Muuda</T>
+            {(() => {
+              const a = state.assignments.find((x) => x.id === fix)!;
+              return (
+                <>
+                  <Muted>{a.subject}</Muted>
+                  <EntryEditor a={a} onDone={() => setFix(null)} />
+                </>
+              );
+            })()}
+          </ScrollView>
         ) : v.s === "added" ? (
           <>
             <T bold style={st.h}>{v.items.length === 1 ? "Lisatud 1 ülesanne" : `Lisatud ${v.items.length} ülesannet`}</T>
             <View style={{ gap: 6 }}>
-              {v.items.slice(0, 8).map((d) => (
-                <T key={d.key} style={{ fontSize: 15 }}>
-                  <T bold style={{ fontSize: 15 }}>{d.subject}</T> · {relDate(d.due, day)}
-                  {d.kind === "test" ? " · kontrolltöö" : ""}
-                </T>
-              ))}
+              {v.ids.slice(0, 8).map((id, i) => {
+                const a = state.assignments.find((x) => x.id === id);
+                const d = a ?? v.items[i];
+                return (
+                  <View key={id} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <T style={{ fontSize: 15, flex: 1 }}>
+                      <T bold style={{ fontSize: 15 }}>{d.subject}</T> · {relDate(d.due, day)}
+                      {d.kind === "test" ? " · kontrolltöö" : ""}
+                    </T>
+                    {a ? (
+                      <Pressable accessibilityRole="button" accessibilityLabel={`Muuda: ${d.subject}`} onPress={() => setFix(id)} hitSlop={6} style={{ minHeight: 40, justifyContent: "center", paddingHorizontal: 6 }}>
+                        <T bold style={{ color: C.lakeInk, fontSize: 15 }}>muuda</T>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                );
+              })}
               {v.items.length > 8 ? <Muted>ja veel {v.items.length - 8}</Muted> : null}
               {v.skipped ? <Muted>{v.skipped} oli juba plaanis või tähtaeg on möödas.</Muted> : null}
               {state.assignments

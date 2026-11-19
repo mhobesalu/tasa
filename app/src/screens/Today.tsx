@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Linking, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { DayPicker } from "../components/DayPicker";
+import { LinkList, LinkText } from "../components/Links";
 import { Btn, Card, H, Muted, Pill, Section, T, Tick } from "../components/ui";
 import { addDays, diffDays, longDate, mondayOf, WEEKDAY_SHORT, type Day } from "../dates";
 import { dayFull, dayItems, rewardSummary, weekStillPossible, type TodayItem } from "../logic";
@@ -124,7 +125,8 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
             </Text>
             {tagFor(next, day) ? <Pill tag={tagFor(next, day)!} /> : null}
           </View>
-          {next.note ? <Text style={st.note}>{next.note}</Text> : null}
+          {next.note ? <LinkText text={next.note} style={st.note} linkColor={C.sun} /> : null}
+          <LinkList links={next.links} color={C.white} />
           <Btn title="Tehtud" kind="sun" icon={<Tick color={C.onSun} />} onPress={() => doTick(next.id)} />
           <Pressable accessibilityRole="button" onPress={() => setTimerFor(next)} style={st.timerBtn}>
             <Text style={{ color: C.white, fontFamily: F.bodyBold, fontSize: 16 }}>Käivita {next.minutes} min taimer</Text>
