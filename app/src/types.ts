@@ -34,6 +34,8 @@ export interface Assignment {
   review?: string[];
   /** "Lepi õpetajaga kokku järeltöö aeg": when ticked, the student is asked for the day */
   askDate?: boolean;
+  /** web links the parent or student added (e-diary text links stay in the note and are tappable there) */
+  links?: string[];
 }
 
 /** A fixed, required thing at a set time (e.g. a weekly maths consultation). */
@@ -93,6 +95,8 @@ export interface AppState {
   studentRetakeDate?: boolean;
   /** true = the student may choose the daily study time themselves (in Nädal, never on the day view) */
   studentBudget?: boolean;
+  /** true = the student (13+) may add and edit their own homework without the PIN; rewards and settings stay behind it */
+  studentEdits?: boolean;
   pendingRetakes?: { id: string; subject: string; since: Day }[];
   /** Lesson weekdays (0 = Monday) the parent set by hand, by subject (lower case). */
   timetable?: Record<string, number[]>;
@@ -114,6 +118,7 @@ export interface Step {
   note: string;
   index: number;
   total: number;
+  links?: string[];
 }
 
 export interface PlannedStep extends Step {

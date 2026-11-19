@@ -15,7 +15,7 @@ export function Onboarding() {
   const [err, setErr] = useState("");
 
   const go = async () => {
-    if (!name.trim()) return setErr("Kirjuta lapse nimi.");
+    if (!name.trim()) return setErr("Kirjuta õpilase nimi.");
     if (!/^\d{4}$/.test(pin)) return setErr("PIN-kood peab olema 4 numbrit.");
     if (pin !== pin2) return setErr("PIN-koodid ei ole samad.");
     await finishSetup({ name: name.trim(), grade: grade.trim(), pin, sample });
@@ -35,7 +35,7 @@ export function Onboarding() {
 
       <Card>
         <Row>
-          <Field label="Lapse nimi" value={name} onChangeText={setName} placeholder="nt Mia" maxLength={20} />
+          <Field label="Õpilase nimi" value={name} onChangeText={setName} placeholder="nt Mia Tamm" maxLength={60} autoCapitalize="words" autoComplete="name" />
           <Field label="Klass" value={grade} onChangeText={setGrade} placeholder="nt 7.b" maxLength={10} style={{ maxWidth: 110 }} />
         </Row>
         <Row>

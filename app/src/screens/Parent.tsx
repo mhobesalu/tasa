@@ -8,6 +8,8 @@ import { addDays, diffDays, relDate, shortDate, WEEKDAY_NAMES, WEEKDAY_SHORT, ty
 import { dayItems, rewardSummary, weekStats } from "../logic";
 import { BUDGETS, numList, parseReview, rangeText, READING, stepsOf } from "../planner";
 import { useStore } from "../store";
+import { LinkList } from "../components/Links";
+import { EntryEditor, LinksField } from "./EntryEditor";
 import { C, F } from "../theme";
 import { askNotifications, canReadImages, piecesFromScreenshots, readClipboard, textFromScreenshots } from "../native";
 import { readTimetable, type FoundSubject } from "../timetableShot";
@@ -80,7 +82,7 @@ const KINDS: { value: Kind | "event"; label: string }[] = [
 ];
 
 
-function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?: string } }) {
+export function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?: string } }) {
   const { day, addAssignment, addEvent } = useStore();
   const fx = useCelebrate();
   const [kind, setKind] = useState<Kind | "event">(prefill?.kind ?? "homework");
@@ -94,12 +96,14 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
   const [reviewFrom, setReviewFrom] = useState("");
   const [time, setTime] = useState("15:00–15:45");
   const [weekly, setWeekly] = useState(true);
+  const [links, setLinks] = useState<string[]>([]);
 
   const reset = () => {
     setTitle("");
     setPTo("");
     setReview("");
     setReviewFrom("");
+    setLinks([]);
   };
 
   const submit = () => {
@@ -114,13 +118,14 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
     if (kind === "book") {
       const a = parseInt(pFrom, 10), b = parseInt(pTo, 10);
       if (!(a > 0 && b >= a)) return fx.toast("Kirjuta leheküljed, näiteks 41 kuni 180.");
-      addAssignment({ kind, subject: subj, title: title.trim() || "raamat", due, minutes: 0, pageFrom: a, pageTo: b });
+      addAssignment({ kind, subject: subj, title: title.trim() || "raamat", due, minutes: 0, pageFrom: a, pageTo: b, ...(links.length ? { links } : {}) });
     } else if (kind === "retake") {
       const r = parseReview(review);
       addAssignment({
         kind, subject: subj, title: "järeltöö", due, minutes: 0,
         ...(r.length ? { review: r } : {}),
         ...(reviewFrom.trim() ? { note: reviewFrom.trim() } : {}),
+        ...(links.length ? { links } : {}),
       });
     } else {
       if (kind !== "test" && !title.trim()) return fx.toast("Kirjuta, mis on vaja teha.");
@@ -129,6 +134,7 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
         kind, subject: subj, title: title.trim() || "kontrolltöö", due, minutes,
         ...(r.length ? { review: r } : {}),
         ...(kind === "test" && reviewFrom.trim() ? { note: reviewFrom.trim() } : {}),
+        ...(links.length ? { links } : {}),
       });
     }
     fx.toast("Lisatud plaani.");
@@ -198,15 +204,18 @@ function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?:
         </>
       ) : null}
 
+      {kind !== "event" ? <LinksField links={links} setLinks={setLinks} /> : null}
+
       <Btn title="Lisa plaani" onPress={submit} />
     </Card>
   );
 }
 
-function PlannedList() {
+export function PlannedList() {
   const { state, day, removeAssignment, removeEvent } = useStore();
   const [confirm, setConfirm] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
+  const [fixing, setFixing] = useState<string | null>(null);
   const list = [...state.assignments]
     .filter((a) => diffDays(day, a.due) >= -1)
     .sort((a, b) => a.due.localeCompare(b.due));
@@ -227,6 +236,14 @@ function PlannedList() {
                 {kindLabel[a.kind]} · {relDate(a.due, day)} · {done} / {steps.length} sammu tehtud
                 {a.source === "sample" ? " · näidis" : ""}
               </Muted>
+              <LinkList links={a.links} />
+              {fixing === a.id ? (
+                <EntryEditor a={a} onDone={() => setFixing(null)} />
+              ) : (
+                <Pressable accessibilityRole="button" accessibilityLabel={`Muuda: ${a.subject}`} onPress={() => setFixing(a.id)} style={{ minHeight: 36, justifyContent: "center" }}>
+                  <T style={{ color: C.lakeInk, fontSize: 15 }} bold>Muuda</T>
+                </Pressable>
+              )}
               {a.kind === "homework" && READING.test(a.title) && diffDays(day, a.due) >= 2 ? (
                 editing === a.id ? (
                   <PagesAsk a={a} compact onDone={() => setEditing(null)} />
@@ -460,7 +477,7 @@ function Settings() {
   return (
     <Card>
       <Row>
-        <Field label="Lapse nimi" value={name} onChangeText={setName} maxLength={20} />
+        <Field label="Õpilase nimi" value={name} onChangeText={setName} maxLength={60} autoCapitalize="words" autoComplete="name" />
         <Field label="Klass" value={grade} onChangeText={setGrade} maxLength={10} style={{ maxWidth: 110 }} />
       </Row>
       <Choice
@@ -505,6 +522,18 @@ function Settings() {
         <View style={{ flex: 1 }}>
           <T>Õpilane valib ise päeva õppimise aja</T>
           <Muted>Sobib vanemale õpilasele. Valik on vaates „Nädal“.</Muted>
+        </View>
+      </View>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <Switch
+          value={!!state.studentEdits}
+          onValueChange={(on) => parentUpdate((s) => ({ ...s, studentEdits: on }))}
+          trackColor={{ true: C.lake, false: C.line }}
+          accessibilityLabel="Õpilane lisab ja muudab ise kodutöid"
+        />
+        <View style={{ flex: 1 }}>
+          <T>Õpilane lisab ja muudab ise kodutöid</T>
+          <Muted>Sobib alates 13. eluaastast. Õpilane saab vaates „Nädal“ ülesandeid lisada, tähtaegu ja linke muuta ilma PIN-koodita. Preemia, seaded ja lapsevanema vaade jäävad PIN-koodi taha.</Muted>
         </View>
       </View>
       <Btn

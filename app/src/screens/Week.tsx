@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
-import { Card, Choice, H, Muted, Pill, Section, T } from "../components/ui";
+import { Btn, Card, Choice, H, Muted, Pill, Section, T } from "../components/ui";
+import { AddForm, PlannedList } from "./Parent";
 import { addDays, longDate, type Day } from "../dates";
 import { dayItems } from "../logic";
 import { BUDGETS, eventsOn } from "../planner";
@@ -10,6 +11,7 @@ import { tagFor } from "./Today";
 
 export function WeekScreen() {
   const { state, day, plan, setBudget } = useStore();
+  const [edit, setEdit] = useState(false);
   const days: Day[] = Array.from({ length: 7 }, (_, i) => addDays(day, i));
   return (
     <View>
@@ -69,6 +71,21 @@ export function WeekScreen() {
             />
             <Muted>TASA jagab sammud nii, et päeva kokku tuleks umbes nii palju. Tänases vaates näed alati ainult järgmist sammu.</Muted>
           </Card>
+        </>
+      ) : null}
+
+      {state.studentEdits ? (
+        <>
+          <Section>Minu kodutööd</Section>
+          {edit ? (
+            <View style={{ gap: 12 }}>
+              <AddForm />
+              <PlannedList />
+              <Btn kind="ghost" title="Sulge" onPress={() => setEdit(false)} />
+            </View>
+          ) : (
+            <Btn kind="ghost" title="＋ Lisa või muuda kodutöid" onPress={() => setEdit(true)} />
+          )}
         </>
       ) : null}
 
