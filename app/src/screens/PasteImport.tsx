@@ -93,8 +93,9 @@ export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: stri
   return (
     <Card>
       <Muted>
-        Kopeeri või pildista e-päevikust kodutööde nimekiri (Stuudiumis „Ülesanded, kodutööd ja kontrolltööd“), hinnete kokkuvõte või
-        õpetaja sõnum ja kleebi siia. Kõik loetakse selles telefonis, midagi ei saadeta kuhugi ja hindeid ei salvestata.
+        Tee e-päevikust ekraanipilt või kopeeri tekst: kodutööde nimekiri (Stuudiumis „Ülesanded, kodutööd ja kontrolltööd“), hinnete
+        kokkuvõte või õpetaja sõnum. Ekraanipilt on kõige lihtsam. Kõik loetakse selles telefonis, midagi ei saadeta kuhugi ja hindeid ei
+        salvestata.
       </Muted>
       <TextInput
         value={text}
@@ -107,16 +108,6 @@ export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: stri
         textAlignVertical="top"
       />
       <Row style={{ flexWrap: "wrap" }}>
-        <Btn
-          small
-          kind="ghost"
-          title="Kleebi"
-          onPress={async () => {
-            const t = await readClipboard();
-            if (t) setText(t);
-            else fx.toast("Vajuta kasti ja kleebi seal (Ctrl+V või pikk vajutus).");
-          }}
-        />
         {canReadImages ? (
           <Btn
             small
@@ -132,6 +123,16 @@ export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: stri
             }}
           />
         ) : null}
+        <Btn
+          small
+          kind="ghost"
+          title="Kleebi"
+          onPress={async () => {
+            const t = await readClipboard();
+            if (t) setText(t);
+            else fx.toast("Vajuta kasti ja kleebi seal (Ctrl+V või pikk vajutus).");
+          }}
+        />
       </Row>
       <Row>
         <Btn title="Loe" onPress={read} />

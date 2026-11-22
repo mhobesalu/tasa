@@ -9,6 +9,11 @@ Rules for whoever changes the app (people and coding agents):
 - When a build goes to TestFlight / Google Play with new changes, raise `version` in `app.json` and start a new entry with the same number (a test checks they match).
 - Write for parents, in plain words. Describe security and privacy fixes only in general terms ("Turva- ja privaatsusparandused"), never how a weakness worked.
 
+## 0.2.1 (November 2026)
+
+- Adding from the e-diary now suggests a screenshot first, and the "Ekraanipildilt" button comes first.
+- The privacy notes in the parent view say more exactly how tasks get into TASA.
+
 ## 0.2.0 (November 2026)
 
 - Student name takes a full name (first and last name).
