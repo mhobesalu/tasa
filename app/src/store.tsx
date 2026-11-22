@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { APP_VERSION } from "./changelog";
 import * as Crypto from "expo-crypto";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState as RNAppState } from "react-native";
@@ -156,7 +157,7 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
       const pinHash = await hashPin(pin, salt);
       const base = emptyState(t);
       const data = sample ? sampleData(t) : { assignments: [], events: [] };
-      setState(freezeToday({ ...base, ...data, setupDone: true, child: { name, grade }, pinSalt: salt, pinHash }, t));
+      setState(freezeToday({ ...base, ...data, setupDone: true, child: { name, grade }, pinSalt: salt, pinHash, seenVersion: APP_VERSION }, t));
     },
     checkPin: async (pin) => (await hashPin(pin, state.pinSalt)) === state.pinHash,
     setPin: async (pin) => {

@@ -34,10 +34,9 @@ export function Onboarding() {
       <Muted>Selle seadistab lapsevanem. Perele on TASA alati tasuta.</Muted>
 
       <Card>
-        <Row>
-          <Field label="Õpilase nimi" value={name} onChangeText={setName} placeholder="nt Mia Tamm" maxLength={60} autoCapitalize="words" autoComplete="name" />
-          <Field label="Klass" value={grade} onChangeText={setGrade} placeholder="nt 7.b" maxLength={10} style={{ maxWidth: 110 }} />
-        </Row>
+        {/* full width, so a full name (first and last, or two first names) fits */}
+        <Field label="Õpilase nimi (ees- ja perenimi)" value={name} onChangeText={setName} placeholder="nt Mia-Liisa Tamm" maxLength={80} autoCapitalize="words" autoComplete="name" textContentType="name" style={{ flexGrow: 0, flexShrink: 0, flexBasis: "auto" }} />
+        <Field label="Klass" value={grade} onChangeText={setGrade} placeholder="nt 7.b" maxLength={10} style={{ flexGrow: 0, flexShrink: 0, flexBasis: "auto", maxWidth: 140 }} />
         <Row>
           <Field
             label="Vanema PIN-kood"

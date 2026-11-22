@@ -106,7 +106,7 @@ function Shell() {
           {state.setupDone ? (
             <View style={st.brand}>
               <Logo width={96} />
-              <Text style={st.kid} numberOfLines={1}>
+              <Text style={st.kid} numberOfLines={2}>
                 {state.child.name}
                 {state.child.grade ? `, ${state.child.grade}` : ""}
               </Text>

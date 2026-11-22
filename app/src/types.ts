@@ -104,6 +104,8 @@ export interface AppState {
   moods?: Record<Day, Mood>;
   /** Days the student asked to be lighter after heavy days: the planner uses a smaller budget there. */
   lighter?: Day[];
+  /** The app version whose "Mis on uut" the parent has already seen (see changelog.ts). */
+  seenVersion?: string;
 }
 
 export type Mood = 1 | 2 | 3 | 4;

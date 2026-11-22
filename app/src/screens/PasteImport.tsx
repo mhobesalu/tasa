@@ -3,18 +3,19 @@ import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { Btn, Card, Muted, Pill, Row, T } from "../components/ui";
 import { longDate, relDate } from "../dates";
-import { isDuplicate, parseGrades, parseMessage, parseMissed, parsePasted, type Draft, type MessageAction, type MissedWork, type ParsedMessage, type RetakeHint } from "../importText";
+import { isDuplicate, parseGrades, parseMessage, parseMissed, parsePasted, reminderLabel, type Draft, type MessageAction, type MissedWork, type ParsedMessage, type RetakeHint } from "../importText";
 import { canReadImages, readClipboard, textFromScreenshots } from "../native";
 import { useStore } from "../store";
 import { nextLesson } from "../timetable";
 import { C, F } from "../theme";
+import { EntryEditor } from "./EntryEditor";
 
 /**
  * Paste the homework list (or the grades summary) copied from the e-diary.
  * Read on the phone only. The parent checks the list before anything is added.
  */
 export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: string) => void; onHomework: (subject: string, title: string) => void }) {
-  const { state, day, addAssignment, addEvent, attachNote, savePendingRetake } = useStore();
+  const { state, day, addAssignment, addMany, addEvent, attachNote, savePendingRetake } = useStore();
   const fx = useCelebrate();
   const [text, setText] = useState("");
   const [drafts, setDrafts] = useState<Draft[] | null>(null);
@@ -22,6 +23,8 @@ export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: stri
   const [missed, setMissed] = useState<MissedWork[]>([]);
   const [on, setOn] = useState<Record<string, boolean>>({});
   const [msg, setMsg] = useState<ParsedMessage | null>(null);
+  // the task just added from a message: shown open, so its date and links can be fixed right away
+  const [fix, setFix] = useState<string | null>(null);
 
   const why = (d: Draft) =>
     d.due <= day ? "tähtaeg möödas" : isDuplicate(d, state.assignments) ? "juba plaanis" : null;
@@ -62,8 +65,11 @@ export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: stri
       addEvent({ title: a.title, day: a.day, time: a.time, weekly: false });
       fx.toast("Lisatud kohustuslik aeg.");
     } else {
-      addAssignment({ kind: "homework", subject: a.subject, title: a.title, due: a.due, minutes: 10, note: msg.text });
-      fx.toast("Meeldetuletus lisatud tänasesse plaani.");
+      const [id] = addMany([{ kind: "homework", subject: a.subject, title: a.title, due: a.due, minutes: a.minutes, note: msg.text }]);
+      clear();
+      setFix(id);
+      fx.toast("Lisatud. Kontrolli tähtaeg üle.");
+      return;
     }
     clear();
   };
@@ -73,7 +79,7 @@ export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: stri
       ? `Lisa kordamise juurde (${a.label.replace(/ \d{4}-\d{2}-\d{2}$/, "")})`
       : a.type === "event"
         ? `Lisa kohustuslik aeg: ${longDate(a.day).toLowerCase()} kell ${a.time}`
-        : "Lisa meeldetuletus tänasesse plaani";
+        : reminderLabel(a, day);
 
   const chosen = (drafts ?? []).filter((d) => on[d.key]);
   const add = () => {
@@ -168,6 +174,14 @@ export function PasteImport({ onRetake, onHomework }: { onRetake: (subject: stri
             title={chosen.length ? `Lisa ${chosen.length} plaani` : "Vali vähemalt üks"}
             onPress={() => (chosen.length ? add() : fx.toast("Vali vähemalt üks ülesanne."))}
           />
+        </View>
+      ) : null}
+
+      {fix && state.assignments.some((a) => a.id === fix) ? (
+        <View style={{ gap: 4 }}>
+          <T bold>Lisatud plaani</T>
+          <Muted>Kontrolli tähtaeg üle. Saad lisada ka lingid (ekraanipildil neid ei ole).</Muted>
+          <EntryEditor a={state.assignments.find((a) => a.id === fix)!} onDone={() => setFix(null)} />
         </View>
       ) : null}
 
