@@ -607,9 +607,9 @@ function Privacy() {
   return (
     <Card style={{ gap: 6 }}>
       {[
-        "Lapsevanem on konto omanik ja annab nõusoleku.",
+        "Lapsevanem annab nõusoleku. Lapsevanema vaade on PIN-koodi taga.",
         "Praegu on kõik andmed ainult selles telefonis. Neid ei saadeta kuhugi.",
-        "E-päeviku parooli ei küsita kunagi. Ülesanded kleebid sina e-päevikust.",
+        "E-päeviku parooli ei küsita kunagi. Ülesanded lisad sina e-päevikust: ekraanipildiga, kopeerides või käsitsi.",
         "Õpetajad ei näe midagi. Diagnoose ei salvestata.",
         "Kui kustutad TASA telefonist, kustuvad ka TASA andmed (ülesanded, tehtud sammud, preemia). TASA-l pole serverit, kust neid tagasi saaks. Telefoni enda varukoopia (iCloud või Google'i konto) võib need alles hoida.",
         "Rakenduse uuendamine andmeid ei kustuta. Androidis ei kustuta neid ka „Tühjenda vahemälu“, aga rakenduse andmete või salvestusruumi kustutamine kustutab.",
@@ -654,7 +654,7 @@ function ParentHome({ onLock }: { onLock: () => void }) {
         <Stat n={String(w.missedDeadlines)} l="tähtaega mööda" />
       </View>
 
-      <Section>Kleebi e-päevikust</Section>
+      <Section>Lisa e-päevikust</Section>
       <PasteImport
         onRetake={(subject) => {
           setPrefill((p) => ({ kind: "retake", subject, n: (p?.n ?? 0) + 1 }));

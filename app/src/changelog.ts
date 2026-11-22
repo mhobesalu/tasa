@@ -13,6 +13,14 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.2.1",
+    date: "november 2026",
+    changes: [
+      "E-päevikust lisamise juhis soovitab nüüd esimesena ekraanipilti, nupp „Ekraanipildilt“ on eespool.",
+      "Lapsevanema vaate privaatsusinfo ütleb täpsemalt, kuidas ülesanded TASA-sse jõuavad.",
+    ],
+  },
+  {
     version: "0.2.0",
     date: "november 2026",
     changes: [

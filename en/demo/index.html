@@ -115,7 +115,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .p-proj{background:var(--sun-soft);color:var(--ink)}
 .p-old{background:var(--sun-soft);color:var(--ink)}
 .p-exc{background:var(--track);color:var(--muted)}
-.note{margin:12px 0 16px;font-size:16px}
+.note{margin:12px 0 16px;font-size:16px;white-space:pre-line}
 .btn{border:0;border-radius:14px;padding:13px 22px;font-weight:700;font-size:18px;background:var(--lake);color:var(--on-lake);display:inline-flex;align-items:center;gap:8px;transition:transform .1s}
 .btn:active{transform:scale(.96)}
 .btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
@@ -167,7 +167,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .pcard{padding:16px;display:grid;gap:12px}
 .field{display:grid;gap:4px;font-size:15px}
 .field label{color:var(--muted)}
-.field input,.field select{font:inherit;font-size:17px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
+.field input,.field select,.field textarea{font:inherit;font-size:17px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .prow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
 .prow:first-child{border-top:0}
@@ -179,10 +179,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .hist{font-size:14px;color:var(--muted);margin:0}
 .facts{margin:0;padding-left:20px;display:grid;gap:6px;font-size:15px}
 
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chips button{width:44px;height:44px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-weight:700;font-size:17px}
-.chips button[aria-pressed="true"]{background:var(--boat-soft);border-color:var(--boat);color:var(--boat-ink)}
-.testimg{display:block;width:100%;max-width:240px;border-radius:10px;border:1px solid var(--line)}
 .linkbtn{border:0;background:none;text-decoration:underline;color:var(--lake-ink);padding:4px 2px;font-size:15px}
 .tog{display:flex;gap:10px;align-items:center;font-weight:700}
 .tog input{width:22px;height:22px;accent-color:var(--lake)}
@@ -249,7 +245,7 @@ const TICK='<svg aria-hidden="true"><use href="#tick"/></svg>';
 
 const WEEK=["M","T","W","T","F","S","S"];
 const DAYNAMES=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-const TAGS={due:["Due today","p-due"],fix:["To fix: grade 2","p-fix"],test:["Test","p-test"],req:["Required","p-req"],book:["Book","p-book"],proj:["Project","p-proj"],retake:["Retake","p-fix"],own:["Added by parent","p-proj"],dl:["Deadline","p-due"],old:["From yesterday","p-old"]};
+const TAGS={due:["Due today","p-due"],fix:["Retake","p-fix"],test:["Test","p-test"],req:["Required","p-req"],book:["Book","p-book"],proj:["Project","p-proj"],retake:["Retake","p-fix"],own:["Added by parent","p-proj"],dl:["Deadline","p-due"],old:["From yesterday","p-old"]};
 
 /* ---------- fake sample data (week of 2–8 Nov) ---------- */
 const MONDAY=[
@@ -261,7 +257,7 @@ const MONDAY=[
 ];
 const TODAY0=[
   {id:"a",s:"Maths",t:"Maths: worksheet problems 4–7",m:25,tag:"due",n:"Half of the worksheet was done yesterday. Today, the other half."},
-  {id:"b",s:"Chemistry",t:"Chemistry: retake, revision 2/3",m:25,tag:"fix",n:"The test grade was 2, so TASA made a plan to fix it. The retake is on Thursday at 14:40. Today: problems 5–8 on the revision sheet."},
+  {id:"b",s:"Chemistry",t:"Chemistry: retake, revision 2/3",m:25,tag:"fix",n:"The retake is on Thursday at 14:40. Revision is spread over 3 days. Today: problems 5–8 on the revision sheet."},
   {id:"c",s:"Estonian",t:"Estonian: read pages 41–60",m:25,tag:"book",n:"“Kevade” is 180 pages and has to be read by 13 November. 20 pages a day, and you will get there calmly."},
   {id:"d",s:"Physics",t:"Physics: revision for the test 1/4",m:25,tag:"test",n:"The test is next Monday. Today: read through your notes on “Pressure” and do 3 example problems."},
   {id:"e",s:"English",t:"English: words 1–15",m:15,n:"Learn the words with flashcards. Say each word out loud."}
@@ -406,9 +402,9 @@ function viewWeek(){
   const nextMon=[{t:"Physics test",m:0,tag:"test"}].concat(S.extra[7]||[]);
   return'<div class="head"><h1>Week</h1></div><p class="sub">2–8 November. The child usually sees only today. This view is an overview.</p>'+
     '<section class="card flow"><b>How TASA makes the plan</b><ol>'+
-    '<li>A parent copies homework, deadlines and tests from the e-diary (eKool or Stuudium).</li>'+
+    '<li>A parent adds homework, deadlines and tests from the e-diary (eKool or Stuudium): with a screenshot, by copying, or by hand.</li>'+
     '<li>Big work is split into steps of about 25 minutes, nearest deadline first.</li>'+
-    '<li>Test revision starts up to 7 days before. If a test went badly, the parent can add the marked test, and the problems that went wrong are spread over 2–3 days.</li>'+
+    '<li>Test revision starts up to 7 days before. If there is a retake, the parent adds the revision questions the teacher gave, and they are spread over 2–3 days.</li>'+
     '<li>TASA only uses material from the school or the parent. It never writes or solves problems itself.</li>'+
     '<li>If a teacher gives a task only in class, the parent can add it, and TASA splits it into steps too.</li>'+
     '<li>Unfinished steps go to the top of the next day\'s list.</li></ol></section>'+
@@ -425,42 +421,35 @@ function pinView(){
   '<section class="card pcard pin"><div class="field"><label for="pin">Parent PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••"></div>'+
   '<button class="btn" type="button" data-act="unlock">Open</button><p class="hist" style="margin:0">In the demo, any 4 digits work.</p></section>';
 }
-const SAMPLE_WRONG=[1,3,4,6,7];
-function testSvg(){
-  const rows=[1,2,3,4,5,6,7,8].map(n=>{const y=78+n*26,bad=SAMPLE_WRONG.includes(n);
-    return'<text x="18" y="'+y+'" font-size="13" fill="#2b2b2b">'+n+'.</text><path d="M38 '+(y-4)+' q20 -6 40 0 t40 0 t40 0" stroke="#555" fill="none" stroke-width="1.2"/>'+
-      (bad?'<path d="M180 '+(y-12)+'l12 12M192 '+(y-12)+'l-12 12" stroke="#d23" stroke-width="2.6" stroke-linecap="round"/>':'<path d="M178 '+(y-5)+'l5 5 10-11" stroke="#d23" stroke-width="2.4" fill="none" stroke-linecap="round"/>');}).join("");
-  return'<svg class="testimg" viewBox="0 0 230 310" role="img" aria-label="Sample photo of a marked test"><rect width="230" height="310" fill="#fbfaf6"/>'+
-   '<text x="18" y="30" font-size="12.5" font-weight="700" fill="#2b2b2b">Maths test</text><text x="18" y="50" font-size="12" fill="#555">Name: Mia · 7b</text>'+
-   '<circle cx="207" cy="40" r="15" fill="none" stroke="#d23" stroke-width="2.5"/><text x="201" y="48" font-size="22" fill="#d23" font-weight="700">2</text>'+rows+'</svg>';
-}
-function numList(ns){return ns.length===1?"problem "+ns[0]:"problems "+ns.slice(0,-1).join(", ")+" and "+ns[ns.length-1];}
+const SAMPLE_Q={
+  "Maths":["What is a quadratic equation?","How do you find the roots of a quadratic equation?","Textbook p. 54, problems 3–6","What is the discriminant and what does it tell you?","Worksheet “Quadratic equations”, problems 1–4","How do you check that a root is correct?","Give an example of an equation with no roots"],
+  "Physics":["What is pressure and what is its unit?","How do you calculate pressure?","Textbook p. 40, problems 1–3","Why is it easier to cut with a sharp knife?","What is air pressure?","Worksheet “Pressure”, problems 2–5"],
+  "Chemistry":["What is an acid and what is a base?","Give three examples of acids","What is pH and what does it show?","Textbook p. 72, problems 1–4","What happens when an acid meets a base?","How does an indicator change colour?"]
+};
 function retakePlan(){
-  const t=S.test,w=t.wrong.slice().sort((a,b)=>a-b),n=w.length;
-  if(!n)return[];
-  const want=Math.min(3,Math.max(1,Math.ceil(n/2)));
+  const t=S.test,q=t.qs,n=q.length;
+  const want=n?Math.min(3,Math.max(2,Math.ceil(n/5))):2;
   const ds=[];for(let d=Math.max(1,t.when-want);d<t.when;d++)ds.push(d);
+  if(!n)return ds.map((d,i)=>({day:d,qs:[],i,of:ds.length}));
   const per=Math.ceil(n/ds.length);
-  return ds.map((d,i)=>({day:d,nums:w.slice(i*per,(i+1)*per)})).filter(c=>c.nums.length);
+  return ds.map((d,i)=>({day:d,qs:q.slice(i*per,(i+1)*per),i,of:ds.length})).filter(c=>c.qs.length);
 }
 const DAYLBL=["Mon 2 Nov","today","Wed 4 Nov","Thu 5 Nov","Fri 6 Nov","Sat 7 Nov","Sun 8 Nov","Mon 9 Nov"];
 function testCard(){
   const t=S.test;
-  if(!t)return'<section class="card pcard"><p style="margin:0">Did a test go badly? Take a photo of the marked test. TASA only reads <b>which problems were wrong</b> and spreads them over 2–3 days before the retake.</p>'+
-    '<p class="hist" style="margin:0">TASA does not solve, explain or write new problems. The child practises with their own test and the school\'s material.</p>'+
-    '<div class="two"><div class="field"><label for="tSubj">Subject</label><select id="tSubj"><option>Maths</option><option>Physics</option><option>Chemistry</option></select></div>'+
-    '<div class="field"><label for="tWhen">Retake</label><select id="tWhen"><option value="4">Friday 6 Nov</option><option value="7">Monday 9 Nov</option></select></div></div>'+
-    '<button class="btn small" type="button" data-act="photo" style="justify-self:start">Photograph the test (demo)</button></section>';
-  if(t.stage==="read")return'<section class="card pcard test">'+testSvg()+'<p class="hist" style="margin:0" role="status">Reading which problems are marked wrong…</p></section>';
-  if(t.stage==="check")return'<section class="card pcard test">'+testSvg()+
-    '<p style="margin:0">TASA found <b>'+t.wrong.length+(t.wrong.length===1?' wrong problem':' wrong problems')+'</b>. Check them and correct if needed.</p>'+
-    '<div class="chips" role="group" aria-label="Problems that went wrong">'+[1,2,3,4,5,6,7,8].map(n=>'<button type="button" data-act="chip" data-n="'+n+'" aria-pressed="'+t.wrong.includes(n)+'">'+n+'</button>').join("")+'</div>'+
-    '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn small" type="button" data-act="makeplan"'+(t.wrong.length?"":" disabled")+'>Make a plan</button><button class="btn small ghost" type="button" data-act="cancelTest">Cancel</button></div>'+
-    '<p class="hist" style="margin:0">In the real app, the photo is deleted right after reading. Only the problem numbers are kept.</p></section>';
+  if(!t||t.stage!=="done"){const d=S.qd||{subj:"Maths",when:4,text:""};
+    const opt=(v,l,cur)=>'<option'+(v!==undefined?' value="'+v+'"':'')+((v!==undefined?v:l)==cur?' selected':'')+'>'+l+'</option>';
+    return'<section class="card pcard"><p style="margin:0">Is there a retake coming? Add the <b>revision questions or problems</b> the teacher gave: take a screenshot, copy them or type them. TASA spreads them over 2–3 days before the retake.</p>'+
+    '<p class="hist" style="margin:0">TASA does not solve, explain or write new problems. The child revises with the school\'s material.</p>'+
+    '<div class="two"><div class="field"><label for="tSubj">Subject</label><select id="tSubj">'+["Maths","Physics","Chemistry"].map(s=>opt(undefined,s,d.subj)).join("")+'</select></div>'+
+    '<div class="field"><label for="tWhen">Retake</label><select id="tWhen">'+opt(4,"Friday 6 Nov",d.when)+opt(7,"Monday 9 Nov",d.when)+'</select></div></div>'+
+    '<div class="field"><label for="tQs">Revision questions, one per line</label><textarea id="tQs" rows="6" placeholder="e.g. What is a quadratic equation?">'+esc(d.text)+'</textarea></div>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn small ghost" type="button" data-act="sampleqs">Read from a screenshot (demo)</button><button class="btn small" type="button" data-act="makeplan">Make a plan</button></div>'+
+    '<p class="hist" style="margin:0">If the teacher gave no questions, leave the box empty: the child revises the topic from their notebook and the school\'s material. In the real app, the screenshot is read on the phone and the picture stays on the phone.</p></section>';}
   const plan=retakePlan();
   return'<section class="card pcard"><p style="margin:0"><b>'+esc(t.subj)+' retake plan</b> · retake '+DAYLBL[t.when]+'</p><ul class="facts">'+
-    plan.map(c=>'<li><b>'+DAYLBL[c.day]+':</b> practise '+numList(c.nums)+' (25 min)</li>').join("")+'</ul>'+
-    '<p class="hist" style="margin:0">The child sees only the steps, not the photo or the grade. Have a look at “Today” or “Week”.</p>'+
+    plan.map(c=>'<li><b>'+DAYLBL[c.day]+':</b> '+(c.qs.length?c.qs.length+(c.qs.length===1?" question":" questions"):"topic revision")+' (25 min)</li>').join("")+'</ul>'+
+    '<p class="hist" style="margin:0">The child sees only the steps, not the grade. Have a look at “Today” or “Week”.</p>'+
     '<button class="btn small ghost" type="button" data-act="cancelTest" style="justify-self:start">Remove plan</button></section>';
 }
 const DL_OPTS=[[2,"Wednesday 4 Nov"],[3,"Thursday 5 Nov"],[4,"Friday 6 Nov"],[5,"Saturday 7 Nov"],[6,"Sunday 8 Nov"],[7,"Monday 9 Nov"]];
@@ -515,15 +504,16 @@ function viewParent(){
     '<div class="field"><label for="rwBonus">Full week bonus</label><input id="rwBonus" type="number" min="0" max="1000" value="'+r.bonus+'" data-rw="bonus"></div></div>'+
     '<p class="hist" style="margin:0">Try: <button class="linkbtn" type="button" data-act="preset" data-p="ekraan">Screen time · minutes</button> <button class="linkbtn" type="button" data-act="preset" data-p="film">Movie night with a parent · stars</button> <button class="linkbtn" type="button" data-act="preset" data-p="ps4">PS4 · stars</button></p>'+pay
     :'<p class="hist" style="margin:0">The child sees only progress and celebrations.</p>')+'</section>'+
-    '<div class="sec">Marked test</div>'+testCard()+
+    '<div class="sec">Retake</div>'+testCard()+
     '<div class="sec">A task that isn\'t in the e-diary</div>'+manualCard()+
     '<div class="sec">Today\'s tasks</div><section class="card pcard"><p class="hist" style="margin:0">If the child is ill, you can excuse a task. It then doesn\'t count towards the day\'s result.</p>'+
     S.tasks.map(t=>'<div class="prow"><div class="it"><div>'+esc(t.t)+'</div><div class="hist">'+(t.exc?"Excused":t.done?"Done ✓":"Not done")+'</div></div><button class="btn small ghost" type="button" data-act="excuse" data-id="'+t.id+'">'+(t.exc?"Restore":"Excuse")+'</button></div>').join("")+'</section>'+
     '<div class="sec">Data and privacy</div><section class="card pcard"><ul class="facts">'+
-    '<li>The parent owns the account and gives consent.</li>'+
-    '<li>We never ask for e-diary passwords. A parent pastes the tasks from the e-diary.</li>'+
-    '<li>By default, teachers see nothing.</li><li>No diagnoses are stored. Data is kept in the EU.</li>'+
-    '<li>The parent can download or delete all data.</li></ul></section>'+
+    '<li>A parent gives consent. Students aged 13 or older also give their own consent.</li>'+
+    '<li>All data is only on this phone. TASA has no server and nothing is sent anywhere.</li>'+
+    '<li>We never ask for e-diary passwords. Screenshots are read on the phone.</li>'+
+    '<li>Teachers see nothing. No diagnoses are stored.</li>'+
+    '<li>The parent can delete all data with one button.</li></ul></section>'+
     '<div class="sec">Demo</div><section class="card pcard"><div class="field"><label for="kid">Child\'s name in the demo</label><input id="kid" type="text" maxlength="20" value="'+esc(S.kid)+'"></div><button class="btn ghost small" type="button" data-act="reset" style="justify-self:start">Restart the demo</button></section>';
 }
 
@@ -542,8 +532,7 @@ document.addEventListener("click",ev=>{
   else if(a==="preset"){S.rw=Object.assign({},PRESETS[b.dataset.p]);S.paid=0;S.hist=[];render();toast("Reward: "+S.rw.name+" ("+S.rw.unit+")");}
   else if(a==="excuse"){const t=S.tasks.find(x=>x.id===id);t.exc=!t.exc;if(t.exc)t.done=false;render();}
   else if(a==="pay")pay();
-  else if(a==="photo"){S.test={stage:"read",subj:$("#tSubj").value,when:+$("#tWhen").value,wrong:[]};render();setTimeout(()=>{if(S.test&&S.test.stage==="read"){S.test.stage="check";S.test.wrong=SAMPLE_WRONG.slice();render();}},1300);}
-  else if(a==="chip"){const n=+b.dataset.n,w=S.test.wrong;S.test.wrong=w.includes(n)?w.filter(x=>x!==n):w.concat(n);render();}
+  else if(a==="sampleqs"){const s=$("#tSubj").value;S.qd={subj:s,when:+$("#tWhen").value,text:SAMPLE_Q[s].join("\n")};render();toast("Demo: "+SAMPLE_Q[s].length+" questions read.");}
   else if(a==="makeplan")makePlan();
   else if(a==="addManual")addManual();
   else if(a==="delManual")delManual(id);
@@ -556,6 +545,7 @@ document.addEventListener("input",ev=>{
   const el=ev.target;
   if(el.id==="kid"){S.kid=el.value.trim()||"Mia";$("#kidName").textContent=S.kid+", grade 7";return;}
   if(el.id==="pin"&&/^\d{4}$/.test(el.value)){unlock();return;}
+  if(el.id==="tQs"||el.id==="tSubj"||el.id==="tWhen"){S.qd={subj:$("#tSubj").value,when:+$("#tWhen").value,text:$("#tQs").value};return;}
   const k=el.dataset.rw;if(!k||k==="on")return;
   S.rw[k]=el.type==="number"?Math.max(0,parseInt(el.value||"0",10)):el.value;
   if(k==="name"&&!el.value.trim())S.rw.name="Reward";
@@ -570,14 +560,16 @@ document.addEventListener("change",ev=>{
 function clearPlan(){S.tasks=S.tasks.filter(t=>t.src!=="retake");for(const k in S.extra)S.extra[k]=S.extra[k].filter(t=>t.src!=="retake");}
 function makePlan(){
   clearPlan();
+  const qs=($("#tQs").value||"").split("\n").map(x=>x.replace(/^\s*(?:[-•*]|\d+[.)])\s*/,"").trim()).filter(Boolean).slice(0,40);
+  S.test={stage:"done",subj:$("#tSubj").value,when:+$("#tWhen").value,qs};S.qd=null;
   const t=S.test,plan=retakePlan();
   plan.forEach((c,i)=>{
-    const item={id:"r"+i,src:"retake",s:t.subj,t:t.subj+" retake: practise "+numList(c.nums),m:25,tag:"retake",done:false,exc:false,
-      n:"These problems went wrong in the test. Go through them again using your own test and the school's material. Retake "+DAYLBL[t.when]+"."};
+    const item={id:"r"+i,src:"retake",s:t.subj,t:t.subj+": revision for the retake "+(c.i+1)+"/"+c.of,m:25,tag:"retake",done:false,exc:false,
+      n:c.qs.length?c.qs.map(x=>"• "+x).join("\n"):"Revise the retake topic using your notebook, the test and the school's material. Retake "+DAYLBL[t.when]+"."};
     if(c.day===1)S.tasks.push(item);else(S.extra[c.day]=S.extra[c.day]||[]).push(item);
   });
   (S.extra[t.when]=S.extra[t.when]||[]).push({src:"retake",s:t.subj,t:t.subj+" retake",m:0,tag:"req"});
-  t.stage="done";render();toast("Plan made: "+plan.length+(plan.length===1?" day.":" days."));
+  render();toast("Plan made: "+plan.length+(plan.length===1?" day.":" days."));
 }
 function pay(){
   const r=S.rw,bal=balance();
@@ -621,7 +613,7 @@ function sheet(html){
 }
 function closeSheet(){clearInterval(tmrInt);$("#sheetHost").innerHTML="";}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet();});
-$("#aboutBtn").onclick=()=>sheet('<h2>TASA: a study planner for children</h2><p>TASA helps children who find it hard to get started with homework or to plan their time. The child sees only today and one thing at a time.</p><ul class="facts"><li>A parent copies homework, deadlines and tests from the e-diary (eKool or Stuudium) and pastes them into TASA. Teachers don\'t need to do anything extra.</li><li>Big work is split into steps of about 25 minutes.</li><li>Every tick gets a celebration. The parent sets the reward, for example screen time in minutes, stars for a movie night with a parent or a family trip at the end of the year. Or no reward at all.</li><li>If a test went badly, the parent takes a photo of the marked test and the problems that went wrong are spread over 2–3 days. TASA never solves problems for the child.</li><li>Always free for families.</li></ul><p class="hist">This demo uses made-up data and doesn\'t connect to any e-diary. Try it: press “Done”, look at tomorrow with the arrow, and open the “Parent” view (PIN: any 4 digits).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Try it</button>');
+$("#aboutBtn").onclick=()=>sheet('<h2>TASA: a study planner for children</h2><p>TASA helps children who find it hard to get started with homework or to plan their time. The child sees only today and one thing at a time.</p><ul class="facts"><li>A parent adds homework, deadlines and tests from the e-diary (eKool or Stuudium): they take a screenshot or copy the text. TASA reads it on the phone. Teachers don\'t need to do anything extra.</li><li>Big work is split into steps of about 25 minutes.</li><li>Every tick gets a celebration. The parent sets the reward, for example screen time in minutes, stars for a movie night with a parent or a family trip at the end of the year. Or no reward at all.</li><li>If there is a retake, the parent adds the revision questions the teacher gave and TASA spreads them over 2–3 days. TASA never solves problems for the child.</li><li>Always free for families.</li></ul><p class="hist">This demo uses made-up data and doesn\'t connect to any e-diary. Try it: press “Done”, look at tomorrow with the arrow, and open the “Parent” view (PIN: any 4 digits).</p><p class="hist">Sild Growth OÜ · tasaplan.ee</p><button class="btn" type="button" data-act="close">Try it</button>');
 
 /* ---------- toast ---------- */
 let tt;
