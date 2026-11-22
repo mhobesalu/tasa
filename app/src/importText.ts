@@ -3,8 +3,8 @@
 // and pastes it here. Everything is read on the phone; nothing is sent anywhere.
 // TASA only copies what the school wrote. It never makes up or solves tasks.
 
-import { joinWrapped, withoutLinks } from "./links";
-import { addDays, diffDays, toDay, weekdayIndex, type Day } from "./dates";
+import { joinWrapped, tidyBreaks, withoutLinks } from "./links";
+import { addDays, diffDays, relDate, toDay, weekdayIndex, type Day } from "./dates";
 import { cleanSubject, isSubjectName } from "./subjects";
 import type { Assignment, Kind } from "./types";
 
@@ -345,7 +345,13 @@ export function parseGrades(raw: string): RetakeHint[] {
 export type MessageAction =
   | { type: "attach"; aid: string; label: string }
   | { type: "event"; day: Day; time: string; title: string }
-  | { type: "reminder"; due: Day; subject: string; title: string };
+  /** a task from the message: homework with its own deadline ("Kodutöö tähtajaga T 24.11: …"), or a short reminder */
+  | { type: "reminder"; due: Day; subject: string; title: string; minutes: number; homework?: boolean };
+
+/** Button text for a task from a message: says the deadline, which can be changed after adding. */
+export function reminderLabel(a: Extract<MessageAction, { type: "reminder" }>, t: Day): string {
+  return `${a.homework ? "Lisa kodutööna" : "Lisa meeldetuletus"}, tähtaeg ${relDate(a.due, t)}`;
+}
 
 export interface ParsedMessage {
   title: string;
@@ -433,10 +439,12 @@ export function parseMessage(raw: string, t: Day, assignments: Assignment[]): Pa
     .map((l) => l.replace(/\s+/g, " ").trim())
     .filter((l) => l && !MSG_NOISE.some((r) => r.test(l)));
   if (!lines.length) return null;
-  const text = lines.join("\n");
-  const body = lines.filter((l) => !GREETING.test(l));
-  const title = shortTitle(body[0] ?? lines[0]);
+  // screenshots break lines where the screen ended: join them back into sentences
+  const text = tidyBreaks(lines.join("\n"));
   const subject = subjectIn(text);
+  // the subject heading on its own ("Inglise keel I") is not what to do
+  const body = text.split("\n").filter((l) => !GREETING.test(l) && l.toLowerCase().replace(/\s+[ivx\d]+$/i, "") !== subjectIn(l)?.toLowerCase());
+  const title = shortTitle(body[0] ?? lines[0]);
   const when = dateIn(text, t) ?? weekdayIn(text, t)?.day ?? null;
   const time = timeIn(text);
   const actions: MessageAction[] = [];
@@ -456,7 +464,16 @@ export function parseMessage(raw: string, t: Day, assignments: Assignment[]): Pa
     actions.push({ type: "event", day: when, time, title: what });
   }
 
-  // Otherwise (or as well): a short reminder for tomorrow.
-  actions.push({ type: "reminder", due: addDays(t, 1), subject: subject ?? "Kool", title });
+  // Stuudium lesson text: "Kodutöö tähtajaga T 24.11: Complete the short topic evaluation"
+  const hw = text.match(/kodutöö\s+tähtaja(?:ga|ks)\s+([^:\n]{1,30}):\s*([^\n]+)/i);
+  const hwDay = hw ? dateIn(hw[1], t) ?? weekdayIn(hw[1], t)?.day ?? null : null;
+  if (hw && hwDay && hwDay > t) {
+    actions.unshift({ type: "reminder", due: hwDay, subject: subject ?? "Kool", title: shortTitle(hw[2]), minutes: STEP_MIN, homework: true });
+    return { title, text, actions };
+  }
+
+  // Otherwise (or as well): a short reminder, due on the day the message names (or tomorrow).
+  const due = !time && when && when > t ? when : addDays(t, 1);
+  actions.push({ type: "reminder", due, subject: subject ?? "Kool", title, minutes: 10 });
   return { title, text, actions };
 }

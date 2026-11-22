@@ -85,8 +85,40 @@ describe("messages", () => {
   test("a notice becomes a reminder for tomorrow", () => {
     const m = parseMessage(MSG_NOTEBOOK, T, tests)!;
     expect(m.title).toBe("Teie eesti keele vihikud");
-    expect(m.actions).toEqual([{ type: "reminder", due: "2026-11-11", subject: "Eesti keel", title: "Teie eesti keele vihikud" }]);
+    expect(m.actions).toEqual([{ type: "reminder", due: "2026-11-11", subject: "Eesti keel", title: "Teie eesti keele vihikud", minutes: 10 }]);
     expect(m.text).not.toMatch(/Sõnumit näevad/);
+  });
+
+  test("a lesson text from a screenshot: homework with its own deadline, lines joined", () => {
+    const shot = [
+      "Inglise keel I",
+      "2nd round of Call my Bluff deliveries",
+      "Kodutöö tähtajaga T 24.11: Complete the short",
+      "topic evaluation",
+      "& submit by Tues 24th Nov",
+      "Google Drive",
+      "Additional reminder about the change of day for",
+      "the Formal",
+    ].join("\n");
+    const m = parseMessage(shot, "2026-11-20", [])!;
+    expect(m.text).toBe(
+      [
+        "Inglise keel I",
+        "2nd round of Call my Bluff deliveries",
+        "Kodutöö tähtajaga T 24.11: Complete the short topic evaluation & submit by Tues 24th Nov",
+        "Google Drive",
+        "Additional reminder about the change of day for the Formal",
+      ].join("\n"),
+    );
+    expect(m.actions[0]).toEqual({
+      type: "reminder",
+      due: "2026-11-24",
+      subject: "Inglise keel",
+      title: "Complete the short topic evaluation & submit by Tues 24th Nov",
+      minutes: 25,
+      homework: true,
+    });
+    expect(m.title).toBe("2nd round of Call my Bluff deliveries");
   });
 
   test("a retake time becomes a fixed appointment on the next Wednesday", () => {

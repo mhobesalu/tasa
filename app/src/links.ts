@@ -1,6 +1,8 @@
 // Web links in task texts: find them, tidy them, and split text so links can be tapped.
 
-const FIND = /\b(?:https?:\/\/|www\.)[^\s<>"]+/gi;
+// Full addresses, "www." ones, and bare ones on common endings ("opiq.ee/kit/12"), but not e-mail addresses.
+const TLD = "ee|com|org|net|eu|io|me|edu|info|app|fi|lv|lt|ly|gl|be|to|tv";
+const FIND = new RegExp(`(?<![@\\w.])(?:(?:https?:\\/\\/|www\\.)[^\\s<>"]+|[a-z0-9][a-z0-9-]*(?:\\.[a-z0-9-]+)*\\.(?:${TLD})(?![@\\w-]|\\.\\w)(?:\\/[^\\s<>"]*)?)`, "gi");
 
 /** Trailing punctuation that belongs to the sentence, not the link. */
 function trim(u: string): string {
@@ -72,6 +74,29 @@ export function joinWrapped(lines: string[]): string {
     // "kodu-" + "töö": a word split over two lines
     else if (/\p{L}-$/u.test(prev) && /^\p{Ll}/u.test(l)) out[out.length - 1] = prev.slice(0, -1) + l;
     else out[out.length - 1] = `${prev} ${l}`;
+  }
+  return out.join("\n");
+}
+
+/**
+ * Text read from a screenshot keeps the screen's line breaks ("Complete the short" / "topic evaluation").
+ * Join a line onto the one before when it clearly goes on from it: it starts in lower case or with
+ * "&" or "(", or the line before ends mid-sentence with a comma or a split word.
+ * A line that starts with a capital after a finished line stays a new line (a new item or sentence).
+ */
+export function tidyBreaks(text: string): string {
+  const out: string[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const l = raw.replace(/\s+/g, " ").trim();
+    if (!l) continue;
+    const prev = out[out.length - 1];
+    const link = (x: string) => /^(?:https?:\/\/|www\.)\S+$/i.test(x);
+    // a long address the screen broke in two: "https://docs.google.com/d/" + "1AbC/edit"
+    if (prev !== undefined && link(prev) && !/\s/.test(l) && /[\/=?&_.-]$/.test(prev) && /^[\w%~#=&?\/.-]+$/.test(l)) out[out.length - 1] = prev + l;
+    else if (prev === undefined || link(l) || link(prev)) out.push(l);
+    else if (/\p{L}-$/u.test(prev) && /^\p{Ll}/u.test(l)) out[out.length - 1] = prev.slice(0, -1) + l;
+    else if (/^[\p{Ll}&(+]/u.test(l) || /[,;&+–—]$/.test(prev)) out[out.length - 1] = `${prev} ${l}`;
+    else out.push(l);
   }
   return out.join("\n");
 }

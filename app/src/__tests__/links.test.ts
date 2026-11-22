@@ -1,6 +1,6 @@
 import { HOMEWORK_SHOTS } from "../testdata/stuudium";
 import { parsePasted } from "../importText";
-import { findLinks, joinWrapped, linkLabel, normalizeUrl, splitLinks } from "../links";
+import { findLinks, tidyBreaks, joinWrapped, linkLabel, normalizeUrl, splitLinks } from "../links";
 
 describe("links", () => {
   it("finds links in running text and leaves the full stop out", () => {
@@ -37,4 +37,18 @@ describe("links", () => {
     expect(d.length).toBeGreaterThan(0);
     for (const x of d) for (const line of x.note.split("\n")) if (!/^https?:/.test(line)) expect(line).not.toMatch(/^\p{Ll}/u);
   });
+});
+
+test("screenshot line breaks: joined inside a sentence, kept between items", () => {
+  expect(tidyBreaks("Loe läbi\nlk 12–15 ja\nvasta küsimustele.\nVõta kaasa vihik")).toBe("Loe läbi lk 12–15 ja vasta küsimustele.\nVõta kaasa vihik");
+  expect(tidyBreaks("Tee kodu-\ntöö valmis")).toBe("Tee kodutöö valmis");
+  expect(tidyBreaks("Vaata\nhttps://opiq.ee/x\nja tee")).toBe("Vaata\nhttps://opiq.ee/x\nja tee");
+  expect(tidyBreaks("Esimene,\nTeine")).toBe("Esimene, Teine");
+});
+
+test("bare addresses in pasted text become links, e-mail addresses and numbers don't", () => {
+  expect(findLinks("Materjal: opiq.ee/kit/12. Küsimused: mari@kool.ee, lk 24.11 ja 1.5")).toEqual(["https://opiq.ee/kit/12"]);
+  expect(findLinks("Vaata ka miksike.ee.")).toEqual(["https://miksike.ee"]);
+  expect(tidyBreaks("Töö: https://docs.google.com/document/d/\n1AbC-xyz/edit\nTee ära")).toBe("Töö: https://docs.google.com/document/d/\n1AbC-xyz/edit\nTee ära");
+  expect(tidyBreaks("https://docs.google.com/document/d/\n1AbC-xyz/edit\nTee ära")).toBe("https://docs.google.com/document/d/1AbC-xyz/edit\nTee ära");
 });

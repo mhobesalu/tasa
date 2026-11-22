@@ -9,6 +9,8 @@ import { dayItems, rewardSummary, weekStats } from "../logic";
 import { BUDGETS, numList, parseReview, rangeText, READING, stepsOf } from "../planner";
 import { useStore } from "../store";
 import { LinkList } from "../components/Links";
+import { findLinks } from "../links";
+import { APP_VERSION, CHANGELOG } from "../changelog";
 import { EntryEditor, LinksField } from "./EntryEditor";
 import { C, F } from "../theme";
 import { askNotifications, canReadImages, piecesFromScreenshots, readClipboard, textFromScreenshots } from "../native";
@@ -236,7 +238,7 @@ export function PlannedList() {
                 {kindLabel[a.kind]} · {relDate(a.due, day)} · {done} / {steps.length} sammu tehtud
                 {a.source === "sample" ? " · näidis" : ""}
               </Muted>
-              <LinkList links={a.links} />
+              <LinkList links={[...new Set([...(a.links ?? []), ...findLinks(a.note ?? "")])]} />
               {fixing === a.id ? (
                 <EntryEditor a={a} onDone={() => setFixing(null)} />
               ) : (
@@ -476,10 +478,8 @@ function Settings() {
   const [pin1, setPin1] = useState("");
   return (
     <Card>
-      <Row>
-        <Field label="Õpilase nimi" value={name} onChangeText={setName} maxLength={60} autoCapitalize="words" autoComplete="name" />
-        <Field label="Klass" value={grade} onChangeText={setGrade} maxLength={10} style={{ maxWidth: 110 }} />
-      </Row>
+      <Field label="Õpilase nimi (ees- ja perenimi)" value={name} onChangeText={setName} maxLength={80} autoCapitalize="words" autoComplete="name" textContentType="name" style={{ flexGrow: 0, flexShrink: 0, flexBasis: "auto" }} />
+      <Field label="Klass" value={grade} onChangeText={setGrade} maxLength={10} style={{ flexGrow: 0, flexShrink: 0, flexBasis: "auto", maxWidth: 140 }} />
       <Choice
         label="Meeldetuletus: lisa homsed kodutööd"
         value={state.reminder?.on ? state.reminder.hour : 0}
@@ -563,6 +563,44 @@ function Settings() {
   );
 }
 
+/** Once after an update: what changed in this version. */
+function WhatsNewNotice() {
+  const { state, parentUpdate } = useStore();
+  if (state.seenVersion === APP_VERSION) return null;
+  const r = CHANGELOG[0];
+  return (
+    <Card style={{ marginTop: 14, gap: 6, borderWidth: 2, borderColor: C.lake }}>
+      <T bold>TASA uuenes (versioon {r.version}). Mis on uut:</T>
+      {r.changes.map((c) => (
+        <T key={c} style={{ fontSize: 15, lineHeight: 22 }}>• {c}</T>
+      ))}
+      <Btn small kind="ghost" title="Selge" onPress={() => parentUpdate((s) => ({ ...s, seenVersion: APP_VERSION }))} style={{ marginTop: 4 }} />
+    </Card>
+  );
+}
+
+/** Every version's changes, newest first. */
+function WhatsNew() {
+  const [all, setAll] = useState(false);
+  const list = all ? CHANGELOG : CHANGELOG.slice(0, 1);
+  return (
+    <Card style={{ gap: 6 }}>
+      <Muted>Sinu versioon: {APP_VERSION}. Uue versiooni saad App Store’ist, TestFlightist või Google Playst.</Muted>
+      {list.map((r) => (
+        <View key={r.version} style={{ gap: 4, marginTop: 4 }}>
+          <T bold>
+            {r.version} <T style={{ color: C.muted, fontSize: 14 }}>· {r.date}</T>
+          </T>
+          {r.changes.map((c) => (
+            <T key={c} style={{ fontSize: 15, lineHeight: 22 }}>• {c}</T>
+          ))}
+        </View>
+      ))}
+      {CHANGELOG.length > 1 ? <Btn small kind="ghost" title={all ? "Näita ainult viimast" : "Näita varasemaid"} onPress={() => setAll(!all)} style={{ marginTop: 4 }} /> : null}
+    </Card>
+  );
+}
+
 function Privacy() {
   const { wipe } = useStore();
   const [sure, setSure] = useState(false);
@@ -573,6 +611,8 @@ function Privacy() {
         "Praegu on kõik andmed ainult selles telefonis. Neid ei saadeta kuhugi.",
         "E-päeviku parooli ei küsita kunagi. Ülesanded kleebid sina e-päevikust.",
         "Õpetajad ei näe midagi. Diagnoose ei salvestata.",
+        "Kui kustutad TASA telefonist, kustuvad ka TASA andmed (ülesanded, tehtud sammud, preemia). TASA-l pole serverit, kust neid tagasi saaks. Telefoni enda varukoopia (iCloud või Google'i konto) võib need alles hoida.",
+        "Rakenduse uuendamine andmeid ei kustuta. Androidis ei kustuta neid ka „Tühjenda vahemälu“, aga rakenduse andmete või salvestusruumi kustutamine kustutab.",
       ].map((t) => (
         <T key={t} style={{ fontSize: 15, lineHeight: 22 }}>• {t}</T>
       ))}
@@ -604,6 +644,7 @@ function ParentHome({ onLock }: { onLock: () => void }) {
         <Btn small kind="ghost" title="Lukusta" onPress={onLock} />
       </View>
       <Muted style={{ fontSize: 16 }}>Laps seda vaadet ei näe. Hindeid näed e-päevikust, TASA näitab pingutust.</Muted>
+      <WhatsNewNotice />
 
       <Section>See nädal</Section>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
@@ -667,6 +708,9 @@ function ParentHome({ onLock }: { onLock: () => void }) {
 
       <Section>Andmed ja privaatsus</Section>
       <Privacy />
+
+      <Section>Mis on uut</Section>
+      <WhatsNew />
     </View>
   );
 }

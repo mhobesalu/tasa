@@ -4,7 +4,7 @@ import { useCelebrate } from "../components/Celebrate";
 import { DayPicker } from "../components/DayPicker";
 import { Btn, Choice, Field, Muted, T } from "../components/ui";
 import { addDays, diffDays } from "../dates";
-import { linkLabel, normalizeUrl } from "../links";
+import { findLinks, linkLabel, normalizeUrl } from "../links";
 import { useStore } from "../store";
 import { C } from "../theme";
 import type { Assignment } from "../types";
@@ -19,7 +19,9 @@ export function LinksField({ links, setLinks }: { links: string[]; setLinks: (l:
   const fx = useCelebrate();
   const [box, setBox] = useState("");
   const add = () => {
-    const found = box.split(/\s+/).map(normalizeUrl).filter((u): u is string => !!u);
+    // one address, or a whole pasted text: every address in it is taken
+    const one = normalizeUrl(box);
+    const found = one ? [one] : findLinks(box);
     if (!found.length) return fx.toast("See ei ole veebiaadress. Näiteks: https://www.opiq.ee/…");
     setLinks([...links, ...found.filter((u) => !links.includes(u))]);
     setBox("");
@@ -36,7 +38,7 @@ export function LinksField({ links, setLinks }: { links: string[]; setLinks: (l:
         </View>
       ))}
       <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-end" }}>
-        <Field label="Kleebi link" value={box} onChangeText={setBox} placeholder="https://…" autoCapitalize="none" autoCorrect={false} keyboardType="url" onSubmitEditing={add} maxLength={2000} />
+        <Field label="Kleebi link (või mitu)" value={box} onChangeText={setBox} placeholder="https://…" autoCapitalize="none" autoCorrect={false} keyboardType="url" onSubmitEditing={add} maxLength={2000} />
         <Btn small kind="ghost" title="Lisa link" onPress={add} />
       </View>
     </View>

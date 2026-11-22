@@ -4,7 +4,7 @@ import { useCelebrate } from "../components/Celebrate";
 import { PagesAsk } from "../components/PagesAsk";
 import { Btn, Field, Muted, T } from "../components/ui";
 import { longDate, relDate } from "../dates";
-import { type Draft, type MessageAction, type ParsedMessage } from "../importText";
+import { reminderLabel, type Draft, type MessageAction, type ParsedMessage } from "../importText";
 import { askNotifications, canReadImages, readClipboard, syncReminder, textFromScreenshots } from "../native";
 import { parseReview, rangeText, READING } from "../planner";
 import { diffDays } from "../dates";
@@ -82,8 +82,8 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
     else if (a.type === "event") addEvent({ title: a.title, day: a.day, time: a.time, weekly: false });
     else {
       // show it like any other import, so the date and text can still be fixed
-      const ids = addMany([{ kind: "homework", subject: a.subject, title: a.title, due: a.due, minutes: 10, note: msg.text }]);
-      setV({ s: "added", items: [{ key: ids[0], kind: "homework", subject: a.subject, title: a.title, due: a.due, minutes: 10, note: msg.text }], ids, skipped: 0, missed: 0 });
+      const ids = addMany([{ kind: "homework", subject: a.subject, title: a.title, due: a.due, minutes: a.minutes, note: msg.text }]);
+      setV({ s: "added", items: [{ key: ids[0], kind: "homework", subject: a.subject, title: a.title, due: a.due, minutes: a.minutes, note: msg.text }], ids, skipped: 0, missed: 0 });
       return;
     }
     fx.toast(a.type === "attach" ? "Sõnum lisatud kontrolltöö juurde." : "Lisatud kohustuslik aeg.");
@@ -224,7 +224,7 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
                       ? `Lisa kordamise juurde (${a.label.replace(/ \d{4}-\d{2}-\d{2}$/, "")})`
                       : a.type === "event"
                         ? `Lisa kohustuslik aeg: ${longDate(a.day).toLowerCase()} kell ${a.time}`
-                        : "Lisa meeldetuletus tänasesse plaani"
+                        : reminderLabel(a, day)
                   }
                   onPress={() => act(v.msg, a)}
                 />
