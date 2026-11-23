@@ -148,3 +148,42 @@ export function onReminderTap(cb: () => void): () => void {
     return () => {};
   }
 }
+
+// ---- Backup file (see backup.ts) ----
+
+/**
+ * Save text as a file and open the phone's share sheet, so the parent can choose where to keep it
+ * (Files, Google Drive, e-mail to themselves…). On the web the file is downloaded.
+ * Returns false if sharing isn't possible on this device.
+ */
+export async function shareFile(name: string, text: string): Promise<boolean> {
+  if (Platform.OS === "web") {
+    const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return true;
+  }
+  const { File, Paths } = require("expo-file-system");
+  const Sharing = require("expo-sharing");
+  if (!(await Sharing.isAvailableAsync())) return false;
+  const f = new File(Paths.cache, name);
+  if (f.exists) f.delete();
+  f.create();
+  f.write(text);
+  await Sharing.shareAsync(f.uri, { mimeType: "application/json", dialogTitle: "Salvesta TASA varukoopia", UTI: "public.json" });
+  return true;
+}
+
+/** Let the parent pick a file and return its text, or null if they cancelled. */
+export async function pickTextFile(): Promise<string | null> {
+  const DocumentPicker = require("expo-document-picker");
+  const r = await DocumentPicker.getDocumentAsync({ type: ["application/json", "text/plain", "*/*"], copyToCacheDirectory: true, multiple: false });
+  if (r.canceled || !r.assets?.length) return null;
+  const a = r.assets[0];
+  if (a.file) return await a.file.text(); // web
+  const { File } = require("expo-file-system");
+  return await new File(a.uri).text();
+}

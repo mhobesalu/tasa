@@ -68,6 +68,7 @@ export function Onboarding() {
 
       <Muted>
         Kõik andmed on ainult selles telefonis. Ülesanded kleebib lapsevanem e-päevikust (eKool, Stuudium) või lisab käsitsi.
+        Kui sul on TASA varukoopia fail, seadista TASA ja taasta see vaates „Lapsevanem“.
       </Muted>
     </View>
   );
