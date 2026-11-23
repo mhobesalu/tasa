@@ -60,6 +60,8 @@ interface Ctx {
   /** the student's own daily study time, only when the parent allows it */
   setBudget: (m: number) => void;
   wipe: () => Promise<void>;
+  /** Replace everything with a state read from a backup file (see backup.ts). */
+  restore: (s: AppState) => void;
 }
 
 const StoreCtx = createContext<Ctx | null>(null);
@@ -281,6 +283,7 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
       await AsyncStorage.removeItem(KEY).catch(() => {});
       setState(emptyState(today()));
     },
+    restore: (r) => setState(freezeToday(tidySubjects(r), today())),
   };
 
   if (!ctx) return null;

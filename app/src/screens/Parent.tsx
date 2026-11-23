@@ -11,9 +11,10 @@ import { useStore } from "../store";
 import { LinkList } from "../components/Links";
 import { findLinks } from "../links";
 import { APP_VERSION, CHANGELOG } from "../changelog";
+import { backupName, makeBackup, readBackup, type Restored } from "../backup";
 import { EntryEditor, LinksField } from "./EntryEditor";
 import { C, F } from "../theme";
-import { askNotifications, canReadImages, piecesFromScreenshots, readClipboard, textFromScreenshots } from "../native";
+import { askNotifications, canReadImages, piecesFromScreenshots, readClipboard, pickTextFile, shareFile, textFromScreenshots } from "../native";
 import { readTimetable, type FoundSubject } from "../timetableShot";
 import { knownSubjects, lessonDays, setDays } from "../timetable";
 import { PasteImport } from "./PasteImport";
@@ -608,14 +609,15 @@ function Privacy() {
     <Card style={{ gap: 6 }}>
       {[
         "Lapsevanem annab nõusoleku. Lapsevanema vaade on PIN-koodi taga.",
-        "Praegu on kõik andmed ainult selles telefonis. Neid ei saadeta kuhugi.",
+        "Kõik andmed on ainult selles telefonis. TASA ei saada neid kuhugi. Androidis ei lähe need Google'i automaatsesse varukoopiasse. iPhone'is võib telefoni enda iCloudi varukoopia need sisaldada, kui see on sisse lülitatud.",
         "E-päeviku parooli ei küsita kunagi. Ülesanded lisad sina e-päevikust: ekraanipildiga, kopeerides või käsitsi.",
         "Õpetajad ei näe midagi. Diagnoose ei salvestata.",
-        "Kui kustutad TASA telefonist, kustuvad ka TASA andmed (ülesanded, tehtud sammud, preemia). TASA-l pole serverit, kust neid tagasi saaks. Telefoni enda varukoopia (iCloud või Google'i konto) võib need alles hoida.",
+        "Kui kustutad TASA telefonist, kaovad ka TASA andmed. TASA-l pole serverit, kust neid tagasi saaks. Et andmed alles jääksid (ka uue telefoni jaoks), salvesta allpool varukoopia fail.",
         "Rakenduse uuendamine andmeid ei kustuta. Androidis ei kustuta neid ka „Tühjenda vahemälu“, aga rakenduse andmete või salvestusruumi kustutamine kustutab.",
       ].map((t) => (
         <T key={t} style={{ fontSize: 15, lineHeight: 22 }}>• {t}</T>
       ))}
+      <Backup />
       {sure ? (
         <View style={{ gap: 8, marginTop: 6 }}>
           <T bold>Kas kustutada kõik TASA andmed sellest telefonist? Seda ei saa tagasi võtta.</T>
@@ -628,6 +630,68 @@ function Privacy() {
         <Btn small kind="ghost" title="Kustuta kõik andmed" onPress={() => setSure(true)} style={{ marginTop: 6 }} />
       )}
     </Card>
+  );
+}
+
+/** Save all data to a file the family keeps, or restore it (e.g. on a new phone). */
+function Backup() {
+  const { state, day, restore } = useStore();
+  const fx = useCelebrate();
+  const [found, setFound] = useState<Extract<Restored, { ok: true }> | null>(null);
+  const save = async () => {
+    try {
+      const ok = await shareFile(backupName(state, day), makeBackup(state, day, APP_VERSION));
+      if (!ok) fx.toast("Selles telefonis ei saa faili jagada.");
+    } catch {
+      fx.toast("Varukoopiat ei õnnestunud salvestada.");
+    }
+  };
+  const open = async () => {
+    try {
+      const text = await pickTextFile();
+      if (text === null) return;
+      const r = readBackup(text, state, day);
+      if (!r.ok) return fx.toast(r.why);
+      setFound(r);
+    } catch {
+      fx.toast("Faili ei õnnestunud lugeda.");
+    }
+  };
+  return (
+    <View style={{ gap: 8, marginTop: 10 }}>
+      <T bold>Varukoopia</T>
+      <Muted>
+        Salvesta kõik TASA andmed ühte faili ja hoia seda, kus soovid (nt Failid, oma pilv või e-post iseendale). Uues telefonis
+        seadista TASA, siis vali „Taasta failist“. PIN-koodi ja õpilase enesetunde vastuseid faili ei panda. Fail on sinu oma:
+        TASA ei saada seda kuhugi.
+      </Muted>
+      {found ? (
+        <View style={{ gap: 8 }}>
+          <T>
+            Varukoopia {shortDate(found.savedOn)}: {found.state.child.name}, {found.tasks} ülesannet. Kas asendada selle telefoni
+            TASA andmed varukoopiaga? PIN-kood jääb samaks.
+          </T>
+          <Row>
+            <Btn
+              small
+              kind="danger"
+              title="Jah, taasta"
+              onPress={() => {
+                restore(found.state);
+                setFound(null);
+                fx.toast("Andmed taastatud.");
+              }}
+            />
+            <Btn small kind="ghost" title="Ei" onPress={() => setFound(null)} />
+          </Row>
+        </View>
+      ) : (
+        <Row style={{ flexWrap: "wrap" }}>
+          <Btn small title="Salvesta varukoopia" onPress={save} />
+          <Btn small kind="ghost" title="Taasta failist" onPress={open} />
+        </Row>
+      )}
+    </View>
   );
 }
 

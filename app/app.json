@@ -2,7 +2,7 @@
   "expo": {
     "name": "TASA",
     "slug": "tasa-plan",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -25,6 +25,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "ee.tasaplan.app",
+      "allowBackup": false,
       "blockedPermissions": [
         "com.google.android.gms.permission.AD_ID"
       ]
@@ -51,7 +52,8 @@
         {
           "color": "#2A8C8C"
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "scheme": "tasa",
     "backgroundColor": "#FFF7E8",

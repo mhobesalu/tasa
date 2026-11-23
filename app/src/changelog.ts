@@ -13,6 +13,14 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.3.0",
+    date: "november 2026",
+    changes: [
+      "Uus: varukoopia. Lapsevanem saab salvestada kõik TASA andmed ühte faili ja need uues telefonis taastada („Andmed ja privaatsus“).",
+      "Androidis ei lähe TASA andmed enam Google'i automaatsesse varukoopiasse: andmed on ainult telefonis ja varukoopia failis, kui sa selle salvestad.",
+    ],
+  },
+  {
     version: "0.2.1",
     date: "november 2026",
     changes: [
