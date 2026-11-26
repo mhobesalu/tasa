@@ -13,6 +13,13 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.3.1",
+    date: "november 2026",
+    changes: [
+      "Parandus: hinnete ekraanipildilt lisamisel ei loeta telefoni kella (nt „09“) enam aineks, nii et vale järeltöö sammu ei teki.",
+    ],
+  },
+  {
     version: "0.3.0",
     date: "november 2026",
     changes: [

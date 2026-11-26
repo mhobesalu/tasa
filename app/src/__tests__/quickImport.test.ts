@@ -1,5 +1,5 @@
 import { planImport } from "../quickImport";
-import { GRADES_SHOTS, HOMEWORK_SHOTS, MSG_SHOT, HOMEWORK_PHONE, MSG_NOTEBOOK } from "../testdata/stuudium";
+import { GRADES_SHOTS, GRADES_SHOTS_CLOCK, HOMEWORK_SHOTS, MSG_SHOT, HOMEWORK_PHONE, MSG_NOTEBOOK } from "../testdata/stuudium";
 import { parseGrades } from "../importText";
 import type { Assignment } from "../types";
 
@@ -81,4 +81,11 @@ describe("worksheet photo in quick import", () => {
     expect(r.review).toEqual(["41", "42", "43", "44"]);
     expect(r.message).toBeNull();
   });
+});
+
+test("the phone clock in a grade screenshot never becomes a subject (\"09\")", () => {
+  const g = parseGrades(GRADES_SHOTS_CLOCK);
+  expect(g.map((h) => h.subject)).toEqual(["Mat 1", "Üldajalugu", "Keemia alused", "Fü 1"]);
+  // the same with the clock read as "09: 23"
+  expect(parseGrades(GRADES_SHOTS_CLOCK.replace(/09:237/g, "09: 23")).map((h) => h.subject)).not.toContain("09");
 });

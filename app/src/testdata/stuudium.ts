@@ -202,3 +202,44 @@ Märgi lemmikuks
 Vastuseid veel pole
 Vasta sõnumile
 + Lisa vestlusesse uusi osalisi`;
+
+// Maria's grade screenshots (26 Nov), as read on the phone: the clock's
+// location arrow is read as a digit, so "09:23" comes out as "09:237".
+export const GRADES_SHOTS_CLOCK = `09:237
+miikael.ope.ee
+Rootsi keel I
+Kerttu Pihkva
+Kursus
+september — november P P 5 P 4- 4 4
+Mat 1: Arvuhulgad. Avaldised. (K)
+Lenneli Aasa
+Hindamisjuhend Tegevuste kava
+Kursus
+september — november P P 2 P 2 2
+––– pilt –––
+09:237
+miikael.ope.ee
+Üldajalugu
+Ilvar Saar
+Hindamisjuhend Ainekaart
+Kursus
+september — november P 2
+Keemia alused
+Krista Kõiv
+Kursus
+oktoober — november H P 2 H
+––– pilt –––
+09:237
+miikael.ope.ee
+Tegevuste kava Kirjandus ja materjalid
+Kursus
+oktoober — november H P 2 H
+Fü 1: Füüsika meetod. Kinemaatika.
+August Alop
+Kursus
+september — november P 5 H 2 P 2
+Muusikaajalugu I
+Pille Raitmaa
+Ainekaart
+Kursus
+september — november P 5- 3+`;

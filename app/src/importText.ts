@@ -54,7 +54,7 @@ const STOP = [
 const NOISE = [
   /^stuudium\b/i,
   /^v\d+\.\d+(\.\d+)?$/i,
-  /^\d{1,2}:\d{2}\b/, // phone clock in a screenshot
+  /^\d{1,2}\s?:\s?\d{2}/, // phone clock in a screenshot, also when its arrow icon is read as a digit ("09:237")
   /^sa pole seda lehte/i,
   /^lisa e\S*$/i, // "Lisa endale ülesanne" cut by the tab bar
   /^näita vanemaid/i, /^kalender$/i, /^ülesanded, kodutööd/i, /^märgi tehtuks/i, /^töö peitmiseks/i];
@@ -234,7 +234,7 @@ export function parseMissed(raw: string, t: Day): MissedWork[] {
     if (!inList || NOISE.some((r) => r.test(line)) || line === SHOT_BREAK) continue;
     const m = line.match(/^(.+?),\s*(.+)$/);
     const d = m ? parseDayHeader(m[2], t) : null;
-    if (m && d) {
+    if (m && d && isSubjectName(parseSubjectLine(m[1]).subject)) {
       cur = { key: `${d}|${m[1]}`, subject: parseSubjectLine(m[1]).subject, lessonDay: d, topic: "" };
       if (!out.some((x) => x.key === cur!.key)) out.push(cur);
       continue;
@@ -270,6 +270,9 @@ export interface RetakeHint {
 // Summary view ("Kokkuvõte"): subject + teacher(s), some link lines, "Kursus",
 // then "september — oktoober P P 2 P" with the marks on one line.
 const LINK_LINES = /^(hindamisjuhend|ainekaart|kirjandus ja materjalid|eesmärgid ja õpiväljundid|tegevuste kava|kursus|päevik|tera|suhtlus|kokkuvõte|kommentaaridega|salvesta\/prindi|\d{4}\/\d{4})$/i;
+// Two link buttons side by side read as one line: "Tegevuste kava Kirjandus ja materjalid".
+const LINK_WORDS = /hindamisjuhend|ainekaart|kirjandus ja materjalid|eesmärgid ja õpiväljundid|tegevuste kava/gi;
+const isLinkRow = (line: string) => line.replace(LINK_WORDS, "") !== line && !line.replace(LINK_WORDS, "").trim();
 // The page intro; the first subject comes right after it.
 const INTRO = /^tunni kuupäeva ja teema/i;
 // Case-sensitive: Stuudium writes months in lower case, and a teacher called "August" must not match.
@@ -307,10 +310,10 @@ function parseSummary(lines: string[]): { subject: string; marks: string[] }[] |
       candidate = null;
       continue;
     }
-    if (LINK_LINES.test(line) || line === SHOT_BREAK || NOISE.some((r) => r.test(line)) || /^[\w.-]+\.(ee|com|eu)$/i.test(line)) continue;
+    if (LINK_LINES.test(line) || isLinkRow(line) || line === SHOT_BREAK || NOISE.some((r) => r.test(line)) || /^[\w.-]+\.(ee|com|eu)$/i.test(line)) continue;
     // The subject is the first line of each block. In the phone copy the teachers
     // follow on their own line, so later lines are ignored.
-    if (candidate === null) candidate = line;
+    if (candidate === null && isSubjectName(parseSubjectLine(stripTeachers(line)).subject)) candidate = line;
   }
   return rows;
 }
@@ -333,7 +336,8 @@ export function parseGrades(raw: string): RetakeHint[] {
   const bySubject = new Map<string, string[]>();
   for (const r of rows) {
     const bad = r.marks.filter((m) => FAILING.test(m));
-    if (bad.length) bySubject.set(r.subject, [...(bySubject.get(r.subject) ?? []), ...bad]);
+    // never a retake for "09" (the phone clock) or other non-subject text
+    if (bad.length && isSubjectName(r.subject)) bySubject.set(r.subject, [...(bySubject.get(r.subject) ?? []), ...bad]);
   }
   return [...bySubject].map(([subject, marks]) => ({ subject, marks }));
 }
