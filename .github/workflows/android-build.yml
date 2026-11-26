@@ -6,7 +6,8 @@ name: Android build for Google Play
 # Makes two files (see this run's Artifacts):
 #   tasa-android      .aab for Google Play (first upload by hand in Play Console)
 #   tasa-android-apk  .apk to install directly on an Android phone, before TASA is on Play
-# Secret: EXPO_TOKEN
+# Secrets: EXPO_TOKEN; GOOGLE_PLAY_JSON (optional: the Play service account key; when set, the .aab
+# goes straight to Google Play internal testing, so no manual upload is needed)
 on:
   workflow_dispatch:
   # also runs when this file itself changes on a work branch, to test it before merging
@@ -31,6 +32,7 @@ jobs:
         working-directory: app
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      HAS_PLAY_KEY: ${{ secrets.GOOGLE_PLAY_JSON != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -55,3 +57,12 @@ jobs:
           name: ${{ matrix.name }}
           path: ${{ runner.temp }}/${{ matrix.file }}
           retention-days: 30
+      - name: Send to Google Play internal testing
+        if: matrix.profile == 'production' && env.HAS_PLAY_KEY == 'true' && github.ref == 'refs/heads/main'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON }}
+          packageName: ee.tasaplan.app
+          releaseFiles: ${{ runner.temp }}/${{ matrix.file }}
+          track: internal
+          status: completed
