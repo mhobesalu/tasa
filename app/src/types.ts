@@ -44,8 +44,10 @@ export interface FixedEvent {
   title: string;
   /** First (or only) day */
   day: Day;
-  time: string; // "15:00–15:45"
+  time: string; // "15:00–15:45", may be empty for an activity
   weekly: boolean;
+  /** true = not school work: trenn, huviring, arstiaeg… The student may add these on the Täna screen. */
+  activity?: boolean;
 }
 
 export interface RewardConfig {
@@ -102,6 +104,12 @@ export interface AppState {
   timetable?: Record<string, number[]>;
   /** The student's own "how did today feel" (1 = hästi … 4 = väga raske). Only on this phone, never shown to the parent. */
   moods?: Record<Day, Mood>;
+  /**
+   * After weeks of "väga raske" the student is asked whether the parent may know.
+   * Only the student's yes/no is kept, never the moods. `yes` shows one gentle note in the parent view
+   * until the parent marks it seen (`seen`). Not put in the backup file.
+   */
+  moodShare?: { asked: Day; yes: boolean; seen?: Day };
   /** Days the student asked to be lighter after heavy days: the planner uses a smaller budget there. */
   lighter?: Day[];
   /** The app version whose "Mis on uut" the parent has already seen (see changelog.ts). */

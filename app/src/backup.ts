@@ -5,6 +5,7 @@
 // Left out on purpose:
 // - the PIN (hash and salt): a 4-digit PIN is easy to guess from its hash; the phone keeps its own PIN
 // - the student's moods: they are only for the student and never shown to the parent
+// - the student's answer to "may the parent know the last weeks were hard" (it belongs with the moods)
 
 import type { Day } from "./dates";
 import { emptyState } from "./state";
@@ -18,11 +19,11 @@ export interface BackupFile {
   format: number;
   appVersion: string;
   savedOn: Day;
-  data: Omit<AppState, "pinHash" | "pinSalt" | "moods">;
+  data: Omit<AppState, "pinHash" | "pinSalt" | "moods" | "moodShare">;
 }
 
 export function makeBackup(s: AppState, savedOn: Day, appVersion: string): string {
-  const { pinHash, pinSalt, moods, ...data } = s;
+  const { pinHash, pinSalt, moods, moodShare, ...data } = s;
   const file: BackupFile = { app: MARK, format: FORMAT, appVersion, savedOn, data };
   return JSON.stringify(file, null, 1);
 }
@@ -36,7 +37,7 @@ export function backupName(s: AppState, savedOn: Day): string {
 export type Restored = { ok: true; state: AppState; savedOn: Day; tasks: number } | { ok: false; why: string };
 
 /**
- * Read a backup file. The current phone keeps its own PIN and the student's moods;
+ * Read a backup file. The current phone keeps its own PIN and the student's moods (and the answer about sharing them);
  * everything else comes from the file.
  */
 export function readBackup(text: string, current: AppState, t: Day): Restored {
@@ -58,6 +59,7 @@ export function readBackup(text: string, current: AppState, t: Day): Restored {
     pinHash: current.pinHash,
     pinSalt: current.pinSalt,
     moods: current.moods,
+    moodShare: current.moodShare,
   } as AppState;
   return { ok: true, state, savedOn: (f.savedOn as Day) ?? t, tasks: d.assignments.length };
 }

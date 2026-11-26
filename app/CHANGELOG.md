@@ -9,6 +9,12 @@ Rules for whoever changes the app (people and coding agents):
 - When a build goes to TestFlight / Google Play with new changes, raise `version` in `app.json` and start a new entry with the same number (a test checks they match).
 - Write for parents, in plain words. Describe security and privacy fixes only in general terms ("Turva- ja privaatsusparandused"), never how a weakness worked.
 
+## 0.4.0 (November 2026)
+
+- New: today's lessons as short names under the date (e.g. est · mat · keem), from homework due dates or the timetable the parent added.
+- New: "Lisa trenn või muu tegevus". Practice, a hobby group, a doctor's visit or anything else that isn't homework shows on its day, weekly if wanted. Parents can add them too ("Trenn või muu").
+- New: after weeks of "väga raske" days, TASA asks the student whether their parent may know. Only on a yes does the parent view show one sentence ("the last weeks have been hard"). The day-by-day answers are never shown and are not put in the backup file.
+
 ## 0.3.1 (November 2026)
 
 - Fix: when grades are added from a screenshot, the phone's clock (e.g. "09") is no longer read as a subject, so no wrong retake step appears.

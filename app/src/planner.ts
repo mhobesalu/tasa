@@ -345,7 +345,11 @@ export interface DayEvent {
   key: string;
   title: string;
   when: string;
-  tag: "req" | "test" | "retake" | "due";
+  tag: "req" | "act" | "test" | "retake" | "due";
+  /** trenn, huviring… (not school work) */
+  activity?: boolean;
+  /** clock time of a fixed event or activity, e.g. "17:00–18:30" */
+  time?: string;
 }
 
 export function eventsOn(s: Pick<AppState, "assignments" | "events">, day: Day, ref: Day): DayEvent[] {
@@ -353,7 +357,7 @@ export function eventsOn(s: Pick<AppState, "assignments" | "events">, day: Day, 
   for (const e of s.events) {
     const n = diffDays(e.day, day);
     if (n === 0 || (e.weekly && n > 0 && n % 7 === 0)) {
-      out.push({ key: e.id, title: e.title, when: `${relDate(day, ref)} ${e.time}`.trim(), tag: "req" });
+      out.push({ key: e.id, title: e.title, when: `${relDate(day, ref)} ${e.time}`.trim(), tag: e.activity ? "act" : "req", activity: e.activity, time: e.time || undefined });
     }
   }
   for (const a of s.assignments) {

@@ -13,6 +13,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.4.0",
+    date: "november 2026",
+    changes: [
+      "Uus: kuupäeva all on tänased tunnid lühidalt (nt est · mat · keem). TASA võtab need kodutööde tähtaegadest või tunniplaanist, mille lisad.",
+      "Uus: „Lisa trenn või muu tegevus“. Trenn, huviring, arstiaeg või muu, mis pole kodutöö, on näha selle päeva juures. Ka iga nädal.",
+      "Uus: kui õpilane on mitu nädalat märkinud päeva „väga raskeks“, küsib TASA temalt, kas lapsevanem võib sellest teada. Ainult kui ta ütleb jah, näed lapsevanema vaates ühte lauset. Päevade kaupa vastuseid ei näidata ja varukoopiasse neid ei panda.",
+    ],
+  },
+  {
     version: "0.3.1",
     date: "november 2026",
     changes: [

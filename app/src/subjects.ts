@@ -68,3 +68,46 @@ export function tidySubjects(state: AppState): AppState {
   }
   return s;
 }
+
+/** Short names as students write them in the timetable: "Eesti keel" -> "est", "Keemia" -> "keem". */
+const SHORT: [RegExp, string][] = [
+  [/^eesti keel/, "est"],
+  [/^kirjandus/, "kirj"],
+  [/^matemaatika/, "mat"],
+  [/^keemia/, "keem"],
+  [/^füüsika/, "füüs"],
+  [/^bioloogia/, "bio"],
+  [/^geograafia/, "geo"],
+  [/^ajalugu/, "ajal"],
+  [/^inglise keel/, "ingl"],
+  [/^vene keel/, "vene"],
+  [/^saksa keel/, "saksa"],
+  [/^prantsuse keel/, "pr"],
+  [/^soome keel/, "soome"],
+  [/^rootsi keel/, "rootsi"],
+  [/^hispaania keel/, "hisp"],
+  [/^ühiskonna/, "ühisk"],
+  [/^inimeseõpetus/, "inim"],
+  [/^loodusõpetus/, "lood"],
+  [/^kunst/, "kunst"],
+  [/^muusika/, "muus"],
+  [/^kehaline/, "keh"],
+  [/^liikumis/, "liik"],
+  [/^tööõpetus/, "töö"],
+  [/^käsitöö/, "käsit"],
+  [/^tehnoloogia/, "tehn"],
+  [/^informaatika/, "info"],
+  [/^arvutiõpetus/, "arvuti"],
+  [/^usundi/, "usund"],
+  [/^karjääri/, "karj"],
+  [/^majandus/, "maj"],
+  [/^psühholoogia/, "psüh"],
+  [/^filosoofia/, "filos"],
+];
+
+export function shortSubject(name: string): string {
+  const k = key(name);
+  for (const [re, s] of SHORT) if (re.test(k)) return s;
+  const first = k.split(" ")[0].replace(/[^\p{L}]/gu, "");
+  return first.length <= 5 ? first : first.slice(0, 4);
+}

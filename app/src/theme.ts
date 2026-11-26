@@ -75,6 +75,7 @@ export const TAGS: Record<string, { label: string; bg: string; fg: string }> = {
   retake: { label: "Järeltöö", bg: C.boatSoft, fg: C.boatInk },
   test: { label: "Kontrolltöö", bg: C.violetSoft, fg: C.violetInk },
   req: { label: "Kohustuslik", bg: C.lakeSoft, fg: C.lakeInk },
+  act: { label: "Tegevus", bg: C.violetSoft, fg: C.violetInk },
   book: { label: "Raamat", bg: C.lakeSoft, fg: C.lakeInk },
   project: { label: "Projekt", bg: C.violetSoft, fg: C.violetInk },
   own: { label: "Vanem lisas", bg: C.violetSoft, fg: C.violetInk },

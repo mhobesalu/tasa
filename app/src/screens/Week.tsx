@@ -37,7 +37,7 @@ export function WeekScreen() {
               {ev.map((e) => (
                 <View key={e.key} style={{ flexDirection: "row", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                   <Pill tag={e.tag === "due" ? "dueToday" : e.tag} label={e.tag === "due" ? "Ära anda" : undefined} />
-                  <T style={{ fontSize: 15, flexShrink: 1 }}>{e.title}{e.tag === "req" ? `, ${e.when.replace(/^\S+\s/, "")}` : ""}</T>
+                  <T style={{ fontSize: 15, flexShrink: 1 }}>{e.title}{e.time ? `, ${e.time}` : ""}</T>
                 </View>
               ))}
               {items.map((x) => {

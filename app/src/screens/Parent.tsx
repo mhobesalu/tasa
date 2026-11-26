@@ -8,6 +8,7 @@ import { addDays, diffDays, relDate, shortDate, WEEKDAY_NAMES, WEEKDAY_SHORT, ty
 import { dayItems, rewardSummary, weekStats } from "../logic";
 import { BUDGETS, numList, parseReview, rangeText, READING, stepsOf } from "../planner";
 import { useStore } from "../store";
+import { parentNote } from "../mood";
 import { LinkList } from "../components/Links";
 import { findLinks } from "../links";
 import { APP_VERSION, CHANGELOG } from "../changelog";
@@ -75,20 +76,22 @@ function PinGate({ onOk }: { onOk: () => void }) {
   );
 }
 
-const KINDS: { value: Kind | "event"; label: string }[] = [
+const KINDS: { value: Kind | "event" | "activity"; label: string }[] = [
   { value: "homework", label: "Kodune töö" },
   { value: "project", label: "Suur töö" },
   { value: "test", label: "Kontrolltöö" },
   { value: "book", label: "Raamat" },
   { value: "retake", label: "Järeltöö" },
   { value: "event", label: "Kohustuslik aeg" },
+  { value: "activity", label: "Trenn või muu" },
 ];
 
 
 export function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; title?: string } }) {
   const { day, addAssignment, addEvent } = useStore();
   const fx = useCelebrate();
-  const [kind, setKind] = useState<Kind | "event">(prefill?.kind ?? "homework");
+  const [kind, setKind] = useState<Kind | "event" | "activity">(prefill?.kind ?? "homework");
+  const ev = kind === "event" || kind === "activity";
   const [subject, setSubject] = useState(prefill?.subject ?? "");
   const [title, setTitle] = useState(prefill?.title ?? "");
   const [due, setDue] = useState<Day>(addDays(day, 2));
@@ -111,9 +114,9 @@ export function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; 
 
   const submit = () => {
     const subj = subject.trim();
-    if (kind === "event") {
+    if (ev) {
       if (!title.trim()) return fx.toast("Kirjuta, mis see on.");
-      addEvent({ title: title.trim(), day: due, time: time.trim(), weekly });
+      addEvent({ title: title.trim(), day: due, time: time.trim(), weekly, ...(kind === "activity" ? { activity: true } : {}) });
       fx.toast("Lisatud.");
       return reset();
     }
@@ -144,7 +147,7 @@ export function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; 
     reset();
   };
 
-  const dueLabel = { homework: "Tähtaeg", project: "Tähtaeg", test: "Kontrolltöö päev", book: "Loetud peab olema", retake: "Järeltöö päev", event: "Päev" }[kind];
+  const dueLabel = { homework: "Tähtaeg", project: "Tähtaeg", test: "Kontrolltöö päev", book: "Loetud peab olema", retake: "Järeltöö päev", event: "Päev", activity: "Päev" }[kind];
 
   return (
     <Card>
@@ -152,15 +155,15 @@ export function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; 
         Lisa ülesanne, mida e-päevikus pole (näiteks õpetaja ütles selle ainult tunnis). TASA jagab selle sammudeks enne tähtaega.
       </Muted>
       <Choice value={kind} options={KINDS} onChange={(k) => setKind(k)} />
-      {kind !== "event" ? (
+      {!ev ? (
         <Field label="Aine" value={subject} onChangeText={setSubject} placeholder="nt Filmiõpetus" maxLength={30} />
       ) : null}
-      {kind === "homework" || kind === "project" || kind === "event" || kind === "book" ? (
+      {kind === "homework" || kind === "project" || ev || kind === "book" ? (
         <Field
-          label={kind === "book" ? "Raamatu nimi" : kind === "event" ? "Mis see on?" : "Mis on vaja teha?"}
+          label={kind === "book" ? "Raamatu nimi" : ev ? "Mis see on?" : "Mis on vaja teha?"}
           value={title}
           onChangeText={setTitle}
-          placeholder={kind === "book" ? "nt „Kevade“" : kind === "event" ? "nt Matemaatika konsultatsioon" : "nt Lühifilmi stsenaarium, 1 lk"}
+          placeholder={kind === "book" ? "nt „Kevade“" : kind === "activity" ? "nt Jalgpallitrenn" : kind === "event" ? "nt Matemaatika konsultatsioon" : "nt Lühifilmi stsenaarium, 1 lk"}
           maxLength={60}
         />
       ) : null}
@@ -174,7 +177,7 @@ export function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; 
         </View>
       ) : null}
 
-      <DayPicker label={dueLabel} value={due} onChange={setDue} from={kind === "event" ? day : addDays(day, 1)} refDay={day} days={kind === "test" || kind === "book" ? 30 : 21} />
+      <DayPicker label={dueLabel} value={due} onChange={setDue} from={ev ? day : addDays(day, 1)} refDay={day} days={kind === "test" || kind === "book" ? 30 : 21} />
 
       {kind === "homework" || kind === "project" || kind === "test" ? (
         <Choice
@@ -197,7 +200,7 @@ export function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; 
         </Row>
       ) : null}
 
-      {kind === "event" ? (
+      {ev ? (
         <>
           <Field label="Kellaaeg" value={time} onChangeText={setTime} placeholder="nt 15:00–15:45" maxLength={20} />
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -207,7 +210,7 @@ export function AddForm({ prefill }: { prefill?: { kind: Kind; subject: string; 
         </>
       ) : null}
 
-      {kind !== "event" ? <LinksField links={links} setLinks={setLinks} /> : null}
+      {!ev ? <LinksField links={links} setLinks={setLinks} /> : null}
 
       <Btn title="Lisa plaani" onPress={submit} />
     </Card>
@@ -281,7 +284,7 @@ export function PlannedList() {
           <View style={{ flex: 1, gap: 2 }}>
             <T>{e.title}</T>
             <Muted>
-              Kohustuslik · {e.weekly ? `iga ${["esmaspäev", "teisipäev", "kolmapäev", "neljapäev", "reede", "laupäev", "pühapäev"][(new Date(e.day + "T12:00").getDay() + 6) % 7]}` : shortDate(e.day)} {e.time}
+              {e.activity ? "Tegevus" : "Kohustuslik"} · {e.weekly ? `iga ${["esmaspäev", "teisipäev", "kolmapäev", "neljapäev", "reede", "laupäev", "pühapäev"][(new Date(e.day + "T12:00").getDay() + 6) % 7]}` : shortDate(e.day)} {e.time}
             </Muted>
           </View>
           <Btn small kind="ghost" title="Eemalda" onPress={() => removeEvent(e.id)} />
@@ -602,6 +605,30 @@ function WhatsNew() {
   );
 }
 
+/** Shown only when the student chose to tell the parent that the last weeks have been hard. No moods are shown. */
+function HardWeeksNote() {
+  const { state, shareSeen } = useStore();
+  const note = parentNote(state);
+  if (!note) return null;
+  const name = state.child.name.split(/\s+/)[0] || "Õpilane";
+  return (
+    <Card style={{ marginTop: 14, gap: 8, backgroundColor: C.violetSoft }}>
+      <T bold style={{ fontSize: 17 }}>{name} tahtis, et teaksid: viimased nädalad on olnud rasked.</T>
+      <Muted>
+        {shortDate(note.since)}. {name} valis ise, et see teade sulle tuleb. Päevade kaupa vastuseid TASA ei näita.
+      </Muted>
+      {[
+        "Küsi rahulikult, kuidas tal läheb. Kuula ja ära nõua selgitust.",
+        "Vaadake koos, kas päevas on liiga palju. Õppimise aega päevas saad muuta allpool.",
+        "Kui mure jätkub, räägi klassijuhataja või kooli tugispetsialistiga. Nõu leiad ka peaasjad.ee lehelt.",
+      ].map((x) => (
+        <T key={x} style={{ fontSize: 15, lineHeight: 22 }}>• {x}</T>
+      ))}
+      <Btn small title="Selge, loetud" onPress={shareSeen} style={{ alignSelf: "flex-start" }} />
+    </Card>
+  );
+}
+
 function Privacy() {
   const { wipe } = useStore();
   const [sure, setSure] = useState(false);
@@ -612,6 +639,7 @@ function Privacy() {
         "Kõik andmed on ainult selles telefonis. TASA ei saada neid kuhugi. Androidis ei lähe need Google'i automaatsesse varukoopiasse. iPhone'is võib telefoni enda iCloudi varukoopia need sisaldada, kui see on sisse lülitatud.",
         "E-päeviku parooli ei küsita kunagi. Ülesanded lisad sina e-päevikust: ekraanipildiga, kopeerides või käsitsi.",
         "Õpetajad ei näe midagi. Diagnoose ei salvestata.",
+        "Õpilase päeva tunde vastuseid lapsevanem ei näe. Kui õpilane on mitu nädalat valinud „väga raske“, küsib TASA temalt, kas lapsevanem võib teada. Ainult siis, kui ta ütleb jah, näed siin ühte lauset: viimased nädalad on olnud rasked.",
         "Kui kustutad TASA telefonist, kaovad ka TASA andmed. TASA-l pole serverit, kust neid tagasi saaks. Et andmed alles jääksid (ka uue telefoni jaoks), salvesta allpool varukoopia fail.",
         "Rakenduse uuendamine andmeid ei kustuta. Androidis ei kustuta neid ka „Tühjenda vahemälu“, aga rakenduse andmete või salvestusruumi kustutamine kustutab.",
       ].map((t) => (
@@ -709,6 +737,7 @@ function ParentHome({ onLock }: { onLock: () => void }) {
       </View>
       <Muted style={{ fontSize: 16 }}>Laps seda vaadet ei näe. Hindeid näed e-päevikust, TASA näitab pingutust.</Muted>
       <WhatsNewNotice />
+      <HardWeeksNote />
 
       <Section>See nädal</Section>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>

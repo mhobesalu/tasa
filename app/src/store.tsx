@@ -8,7 +8,7 @@ import { freezeToday } from "./logic";
 import { buildPlan, type Plan } from "./planner";
 import { sampleData } from "./sample";
 import { emptyState } from "./state";
-import { makeLighter, setMood as withMood } from "./mood";
+import { answerShare, makeLighter, markShareSeen, setMood as withMood, withdrawShare } from "./mood";
 import { matchSubject, renameSubject, tidySubjects } from "./subjects";
 import type { AppState, Assignment, FixedEvent, Mood, RewardConfig } from "./types";
 
@@ -57,6 +57,12 @@ interface Ctx {
   setMood: (m: Mood | null) => void;
   /** the student asked for a lighter plan tomorrow */
   lighterTomorrow: () => void;
+  /** the student's answer to "may your parent know the last weeks have been hard?" */
+  answerShare: (yes: boolean) => void;
+  /** the student takes a yes back before the parent has seen it */
+  withdrawShare: () => void;
+  /** the parent has read the note */
+  shareSeen: () => void;
   /** the student's own daily study time, only when the parent allows it */
   setBudget: (m: number) => void;
   wipe: () => Promise<void>;
@@ -279,6 +285,9 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
     setMood: (m) => setState((s) => (s ? withMood(s, day, m) : s)),
     setBudget: (m) => parentUpdate((s) => (s.studentBudget ? { ...s, budget: m } : s)),
     lighterTomorrow: () => setState((s) => (s ? makeLighter(s, addDays(day, 1)) : s)),
+    answerShare: (yes) => setState((s) => (s ? answerShare(s, day, yes) : s)),
+    withdrawShare: () => setState((s) => (s ? withdrawShare(s) : s)),
+    shareSeen: () => setState((s) => (s ? markShareSeen(s, day) : s)),
     wipe: async () => {
       await AsyncStorage.removeItem(KEY).catch(() => {});
       setState(emptyState(today()));

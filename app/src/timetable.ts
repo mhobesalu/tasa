@@ -1,6 +1,7 @@
 // Which weekdays a subject has lessons. Learned from homework due dates (an
 // e-diary due date is always a lesson day), unless the parent set it by hand.
 import { addDays, weekdayIndex, type Day } from "./dates";
+import { isSubjectName, shortSubject } from "./subjects";
 import type { AppState } from "./types";
 
 const key = (s: string) => s.trim().toLowerCase();
@@ -43,4 +44,24 @@ export function knownSubjects(state: AppState): string[] {
 
 export function setDays(state: AppState, subject: string, days: number[]): AppState {
   return { ...state, timetable: { ...(state.timetable ?? {}), [key(subject)]: [...days].sort() } };
+}
+
+/**
+ * The subjects that have a lesson on `day`, as short names ("est", "mat", "keem").
+ * From the timetable the parent set, or learned from homework due dates. Empty on weekends
+ * and when TASA doesn't know the timetable yet.
+ */
+export function subjectsOn(state: AppState, day: Day): { name: string; short: string }[] {
+  const w = weekdayIndex(day);
+  if (w >= 5) return [];
+  const out: { name: string; short: string }[] = [];
+  const seen = new Set<string>();
+  for (const name of knownSubjects(state)) {
+    if (!isSubjectName(name) || !lessonDays(state, name).days.includes(w)) continue;
+    const short = shortSubject(name);
+    if (seen.has(short)) continue;
+    seen.add(short);
+    out.push({ name, short });
+  }
+  return out;
 }
