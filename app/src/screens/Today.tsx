@@ -293,7 +293,7 @@ function ActivityModal({ open, onClose }: { open: boolean; onClose: () => void }
     <Modal transparent animationType="slide" visible onRequestClose={onClose}>
       <Pressable style={st.scrim} onPress={onClose} accessibilityLabel="Sulge">
         <Pressable style={st.sheet} onPress={() => {}}>
-          <H size={24}>Lisa oma asi</H>
+          <H size={24}>Soovid midagi veel lisada?</H>
           <Muted>Trenn, huviring, arstiaeg või muu. See ei ole kodutöö: linnukest ega preemiat siin pole, see on päeva meeldetuletuseks.</Muted>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
             {ACT_PRESETS.map((p) => (

@@ -9,6 +9,10 @@ Rules for whoever changes the app (people and coding agents):
 - When a build goes to TestFlight / Google Play with new changes, raise `version` in `app.json` and start a new entry with the same number (a test checks they match).
 - Write for parents, in plain words. Describe security and privacy fixes only in general terms ("Turva- ja privaatsusparandused"), never how a weakness worked.
 
+## 0.4.1 (November 2026)
+
+- The window for adding your own activity is now titled "Soovid midagi veel lisada?".
+
 ## 0.4.0 (November 2026)
 
 - New: under the day's title, that day's lessons in short form (e.g. est, mat, keem, füüs), from the timetable or learned from homework due dates.
