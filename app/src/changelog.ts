@@ -13,6 +13,13 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.4.1",
+    date: "november 2026",
+    changes: [
+      "Oma asja lisamise aknal on nüüd pealkiri „Soovid midagi veel lisada?“.",
+    ],
+  },
+  {
     version: "0.4.0",
     date: "november 2026",
     changes: [
