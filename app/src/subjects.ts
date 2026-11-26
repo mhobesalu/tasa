@@ -68,3 +68,45 @@ export function tidySubjects(state: AppState): AppState {
   }
   return s;
 }
+
+/** Short names as students write them in Estonian schools. Matched at the start of the subject name. */
+const SHORT: [RegExp, string][] = [
+  [/^eesti keel/, "est"],
+  [/^kirjandus/, "kirj"],
+  [/^matemaatika/, "mat"],
+  [/^inglise/, "ingl"],
+  [/^vene/, "vene"],
+  [/^saksa/, "saksa"],
+  [/^prantsuse/, "pr"],
+  [/^soome/, "soome"],
+  [/^hispaania/, "hisp"],
+  [/^ajalugu/, "aj"],
+  [/^ühiskonna/, "ühisk"],
+  [/^inimese/, "inim"],
+  [/^loodus/, "lood"],
+  [/^bioloogia/, "bio"],
+  [/^geograafia/, "geo"],
+  [/^keemia/, "keem"],
+  [/^füüsika/, "füüs"],
+  [/^kehaline/, "keh"],
+  [/^muusika/, "muus"],
+  [/^kunst/, "kunst"],
+  [/^tööõpetus/, "töö"],
+  [/^käsitöö/, "käsit"],
+  [/^tehnoloogia/, "tehn"],
+  [/^informaatika/, "info"],
+  [/^arvuti/, "arvuti"],
+  [/^usundi/, "usund"],
+  [/^majandus/, "maj"],
+  [/^psühholoogia/, "psühh"],
+  [/^filosoofia/, "fil"],
+  [/^klassijuhataja/, "kl.j"],
+];
+
+/** "Eesti keel" -> "est", "Matemaatika" -> "mat", "Robootika ring" -> "robo". */
+export function shortSubject(name: string): string {
+  const k = key(name);
+  for (const [re, s] of SHORT) if (re.test(k)) return s;
+  const first = k.split(" ")[0] ?? k;
+  return first.length <= 6 ? first : first.slice(0, 4);
+}
