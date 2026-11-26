@@ -13,6 +13,15 @@ export interface Release {
 
 export const CHANGELOG: Release[] = [
   {
+    version: "0.4.0",
+    date: "november 2026",
+    changes: [
+      "Uus: päeva pealkirja all on selle päeva tunnid lühidalt (nt est, mat, keem, füüs). Need tulevad tunniplaanist või kodutööde tähtaegadest.",
+      "Uus: „Lisa trenn või muu oma asi“. Õpilane saab päeva lisada trenni, huviringi, arstiaja või muu, ka iga nädal samal ajal. Kord ära jäävat trenni saab eemaldada ainult sellest päevast.",
+      "Uus: kui õpilane on kahe nädala jooksul mitu korda valinud „Väga raske“, küsib TASA temalt, kas ta tahab, et lapsevanem teaks. Ainult kui ta ütleb jah, näeb lapsevanem oma vaates üht lauset. Muid enesetunde vastuseid lapsevanem endiselt ei näe.",
+    ],
+  },
+  {
     version: "0.3.1",
     date: "november 2026",
     changes: [

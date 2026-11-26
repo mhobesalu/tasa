@@ -46,6 +46,10 @@ export interface FixedEvent {
   day: Day;
   time: string; // "15:00–15:45"
   weekly: boolean;
+  /** true = the student's own thing (trenn, huviring, arstiaeg …), not a school requirement */
+  activity?: boolean;
+  /** days a weekly item doesn't happen (e.g. no practice this week) */
+  skip?: Day[];
 }
 
 export interface RewardConfig {
@@ -102,6 +106,14 @@ export interface AppState {
   timetable?: Record<string, number[]>;
   /** The student's own "how did today feel" (1 = hästi … 4 = väga raske). Only on this phone, never shown to the parent. */
   moods?: Record<Day, Mood>;
+  /** The last day the student was asked "Kas tahad, et lapsevanem teaks?" after many very hard days. */
+  moodAsked?: Day;
+  /**
+   * Set only when the student answered yes. The parent view then shows one sentence
+   * ("viimased nädalad on olnud rasked") and nothing else: no answers, no days.
+   * The parent clears it with "Selge"; the student can take it back before that.
+   */
+  moodNote?: { day: Day };
   /** Days the student asked to be lighter after heavy days: the planner uses a smaller budget there. */
   lighter?: Day[];
   /** The app version whose "Mis on uut" the parent has already seen (see changelog.ts). */

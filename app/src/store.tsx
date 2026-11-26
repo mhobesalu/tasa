@@ -8,7 +8,7 @@ import { freezeToday } from "./logic";
 import { buildPlan, type Plan } from "./planner";
 import { sampleData } from "./sample";
 import { emptyState } from "./state";
-import { makeLighter, setMood as withMood } from "./mood";
+import { answerShare, clearShare, makeLighter, setMood as withMood } from "./mood";
 import { matchSubject, renameSubject, tidySubjects } from "./subjects";
 import type { AppState, Assignment, FixedEvent, Mood, RewardConfig } from "./types";
 
@@ -50,11 +50,17 @@ interface Ctx {
   setPages: (id: string, from: number, to: number) => void;
   addEvent: (e: Omit<FixedEvent, "id">) => void;
   removeEvent: (id: string) => void;
+  /** a weekly item doesn't happen on this one day (e.g. no practice this week) */
+  skipEvent: (id: string, day: Day) => void;
   toggleExcuse: (stepId: string) => void;
   saveReward: (r: Omit<RewardConfig, "since">) => void;
   pay: (amount: number, note: string) => void;
   /** the student's own check-in for today (null clears it); never shown to the parent */
   setMood: (m: Mood | null) => void;
+  /** the student's answer to "Kas tahad, et lapsevanem teaks?" */
+  answerShare: (yes: boolean) => void;
+  /** the student takes the note back, or the parent has read it */
+  clearShare: () => void;
   /** the student asked for a lighter plan tomorrow */
   lighterTomorrow: () => void;
   /** the student's own daily study time, only when the parent allows it */
@@ -257,6 +263,12 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
     addEvent: (e) =>
       parentUpdate((s) => ({ ...s, seq: s.seq + 1, events: [...s.events, { ...e, id: `e${s.seq + 1}` }] })),
     removeEvent: (id) => parentUpdate((s) => ({ ...s, events: s.events.filter((e) => e.id !== id) })),
+    skipEvent: (id, d) =>
+      parentUpdate((s) => ({
+        ...s,
+        // forget skipped days that are long gone
+        events: s.events.map((e) => (e.id === id ? { ...e, skip: [...new Set([...(e.skip ?? []), d])].filter((x) => x >= addDays(day, -7)) } : e)),
+      })),
     toggleExcuse: (id) =>
       parentUpdate((s) => {
         const excused = { ...s.excused };
@@ -278,6 +290,8 @@ export function StoreProvider({ children, onReady }: { children: React.ReactNode
       parentUpdate((s) => ({ ...s, payouts: [{ day, amount, note }, ...s.payouts] })),
     setMood: (m) => setState((s) => (s ? withMood(s, day, m) : s)),
     setBudget: (m) => parentUpdate((s) => (s.studentBudget ? { ...s, budget: m } : s)),
+    answerShare: (yes) => setState((s) => (s ? answerShare(s, day, yes) : s)),
+    clearShare: () => setState((s) => (s ? clearShare(s) : s)),
     lighterTomorrow: () => setState((s) => (s ? makeLighter(s, addDays(day, 1)) : s)),
     wipe: async () => {
       await AsyncStorage.removeItem(KEY).catch(() => {});

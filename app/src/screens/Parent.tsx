@@ -281,7 +281,7 @@ export function PlannedList() {
           <View style={{ flex: 1, gap: 2 }}>
             <T>{e.title}</T>
             <Muted>
-              Kohustuslik · {e.weekly ? `iga ${["esmaspäev", "teisipäev", "kolmapäev", "neljapäev", "reede", "laupäev", "pühapäev"][(new Date(e.day + "T12:00").getDay() + 6) % 7]}` : shortDate(e.day)} {e.time}
+              {e.activity ? "Oma asi" : "Kohustuslik"} · {e.weekly ? `iga ${["esmaspäev", "teisipäev", "kolmapäev", "neljapäev", "reede", "laupäev", "pühapäev"][(new Date(e.day + "T12:00").getDay() + 6) % 7]}` : shortDate(e.day)} {e.time}
             </Muted>
           </View>
           <Btn small kind="ghost" title="Eemalda" onPress={() => removeEvent(e.id)} />
@@ -564,6 +564,31 @@ function Settings() {
   );
 }
 
+/**
+ * Only when the student chose "Jah, las lapsevanem teab" after many very hard days.
+ * One sentence and gentle tips; the student's daily answers are never shown here.
+ */
+function MoodNoteNotice() {
+  const { state, clearShare } = useStore();
+  if (!state.moodNote) return null;
+  const name = state.child.name.split(/\s+/)[0] || "Õpilane";
+  return (
+    <Card style={{ marginTop: 14, gap: 6, borderWidth: 2, borderColor: C.sun }}>
+      <T bold>{name} soovis, et sa teaksid: viimased nädalad on olnud rasked.</T>
+      <Muted>{name} otsustas ise, et sa seda näed ({shortDate(state.moodNote.day)}). Muid vastuseid TASA sulle ei näita.</Muted>
+      {[
+        "Küsi rahulikult, kuidas tal läheb, ja kuula. Hinnetest ja tegemata töödest räägi mõni teine kord.",
+        "Vaadake koos, kas plaan on liiga täis. Päeva õppeaega saad muuta allpool „Seaded“ juures.",
+        "Kui raskus jääb, räägi klassijuhataja või kooli tugispetsialistiga.",
+        "Nõu saad ka Peaasjad.ee-st ja Lasteabist (116 111, tasuta, ööpäev läbi).",
+      ].map((t) => (
+        <T key={t} style={{ fontSize: 15, lineHeight: 22 }}>• {t}</T>
+      ))}
+      <Btn small kind="ghost" title="Selge, loetud" onPress={clearShare} style={{ marginTop: 4 }} />
+    </Card>
+  );
+}
+
 /** Once after an update: what changed in this version. */
 function WhatsNewNotice() {
   const { state, parentUpdate } = useStore();
@@ -612,6 +637,7 @@ function Privacy() {
         "Kõik andmed on ainult selles telefonis. TASA ei saada neid kuhugi. Androidis ei lähe need Google'i automaatsesse varukoopiasse. iPhone'is võib telefoni enda iCloudi varukoopia need sisaldada, kui see on sisse lülitatud.",
         "E-päeviku parooli ei küsita kunagi. Ülesanded lisad sina e-päevikust: ekraanipildiga, kopeerides või käsitsi.",
         "Õpetajad ei näe midagi. Diagnoose ei salvestata.",
+        "Õpilase enesetunde vastuseid sa ei näe. Kui õpilane on kahe nädala jooksul mitu korda valinud „Väga raske“, küsib TASA temalt, kas ta tahab, et sa teaksid. Ainult kui ta ütleb jah, näed siin üht lauset: viimased nädalad on olnud rasked.",
         "Kui kustutad TASA telefonist, kaovad ka TASA andmed. TASA-l pole serverit, kust neid tagasi saaks. Et andmed alles jääksid (ka uue telefoni jaoks), salvesta allpool varukoopia fail.",
         "Rakenduse uuendamine andmeid ei kustuta. Androidis ei kustuta neid ka „Tühjenda vahemälu“, aga rakenduse andmete või salvestusruumi kustutamine kustutab.",
       ].map((t) => (
@@ -708,6 +734,7 @@ function ParentHome({ onLock }: { onLock: () => void }) {
         <Btn small kind="ghost" title="Lukusta" onPress={onLock} />
       </View>
       <Muted style={{ fontSize: 16 }}>Laps seda vaadet ei näe. Hindeid näed e-päevikust, TASA näitab pingutust.</Muted>
+      <MoodNoteNotice />
       <WhatsNewNotice />
 
       <Section>See nädal</Section>

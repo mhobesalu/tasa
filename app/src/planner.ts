@@ -345,15 +345,22 @@ export interface DayEvent {
   key: string;
   title: string;
   when: string;
-  tag: "req" | "test" | "retake" | "due";
+  tag: "req" | "act" | "test" | "retake" | "due";
+  /** the FixedEvent behind it (own activities can be removed from the day view) */
+  eventId?: string;
+  weekly?: boolean;
 }
 
 export function eventsOn(s: Pick<AppState, "assignments" | "events">, day: Day, ref: Day): DayEvent[] {
   const out: DayEvent[] = [];
-  for (const e of s.events) {
+  // by time of day, items without a time last
+  const clock = (t: string) => t.match(/\d{1,2}[:.]\d{2}/)?.[0].replace(".", ":").padStart(5, "0") ?? "99";
+  const events = [...s.events].sort((a, b) => clock(a.time).localeCompare(clock(b.time)));
+  for (const e of events) {
     const n = diffDays(e.day, day);
+    if (e.skip?.includes(day)) continue;
     if (n === 0 || (e.weekly && n > 0 && n % 7 === 0)) {
-      out.push({ key: e.id, title: e.title, when: `${relDate(day, ref)} ${e.time}`.trim(), tag: "req" });
+      out.push({ key: e.id, title: e.title, when: `${relDate(day, ref)} ${e.time}`.trim(), tag: e.activity ? "act" : "req", eventId: e.id, weekly: e.weekly });
     }
   }
   for (const a of s.assignments) {

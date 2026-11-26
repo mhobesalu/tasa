@@ -44,3 +44,10 @@ export function knownSubjects(state: AppState): string[] {
 export function setDays(state: AppState, subject: string, days: number[]): AppState {
   return { ...state, timetable: { ...(state.timetable ?? {}), [key(subject)]: [...days].sort() } };
 }
+
+/** Subjects with a lesson on this day (from the timetable the parent set, or learned from due dates). */
+export function lessonsOn(state: AppState, day: Day): string[] {
+  const w = weekdayIndex(day);
+  if (w >= 5) return [];
+  return knownSubjects(state).filter((s) => lessonDays(state, s).days.includes(w));
+}

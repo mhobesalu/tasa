@@ -1,15 +1,17 @@
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useMemo, useState } from "react";
-import { Linking, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Modal, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import { useCelebrate } from "../components/Celebrate";
 import { DayPicker } from "../components/DayPicker";
 import { LinkList, LinkText } from "../components/Links";
-import { Btn, Card, H, Muted, Pill, Section, T, Tick } from "../components/ui";
+import { Btn, Card, Field, H, Muted, Pill, Section, T, Tick } from "../components/ui";
 import { addDays, diffDays, longDate, mondayOf, WEEKDAY_SHORT, type Day } from "../dates";
 import { dayFull, dayItems, rewardSummary, weekStillPossible, type TodayItem } from "../logic";
-import { HELP_LINKS, MOODS, offerLighter } from "../mood";
+import { HELP_LINKS, MOODS, offerLighter, offerShare } from "../mood";
 import { buildPlan, eventsOn, type DayEvent } from "../planner";
 import { useStore } from "../store";
+import { shortSubject } from "../subjects";
+import { lessonsOn } from "../timetable";
 import { C, F } from "../theme";
 
 const LINES = ["Boom! 🎉", "Tubli!", "Üks samm korras!", "Sõudsid jälle natuke edasi.", "Nii see käibki!", "Vaata, kui hästi läheb!", "Super, järgmine!"];
@@ -40,14 +42,36 @@ function Meta({ x, day }: { x: TodayItem | (TodayItem & { leftover: false }); da
   );
 }
 
-export function EventRow({ e }: { e: DayEvent }) {
+export function EventRow({ e, day }: { e: DayEvent; day?: Day }) {
+  const { removeEvent, skipEvent } = useStore();
+  const [ask, setAsk] = useState(false);
+  // the student's own things (trenn, arstiaeg …) can be taken off the day view; school requirements only in the parent view
+  const canRemove = !!day && e.tag === "act" && !!e.eventId;
   return (
-    <View style={st.req}>
+    <View style={[st.req, { flexWrap: "wrap" }]}>
       <Pill tag={e.tag === "due" ? "dueToday" : e.tag} label={e.tag === "due" ? "Ära anda" : undefined} />
       <T style={{ flex: 1, fontSize: 15 }}>
         <T bold style={{ fontSize: 15 }}>{e.title}</T>
         {e.when ? `, ${e.when}` : ""}
       </T>
+      {canRemove && !ask ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={`Eemalda: ${e.title}`} onPress={() => setAsk(true)} hitSlop={8} style={st.x}>
+          <Text style={{ color: C.muted, fontSize: 18, fontFamily: F.bodyBold }}>✕</Text>
+        </Pressable>
+      ) : null}
+      {canRemove && ask ? (
+        <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap", width: "100%" }}>
+          {e.weekly ? (
+            <>
+              <Btn small kind="ghost" title="Ainult sel päeval" onPress={() => { skipEvent(e.eventId!, day!); setAsk(false); }} />
+              <Btn small kind="danger" title="Iga nädal" onPress={() => removeEvent(e.eventId!)} />
+            </>
+          ) : (
+            <Btn small kind="danger" title="Jah, eemalda" onPress={() => removeEvent(e.eventId!)} />
+          )}
+          <Btn small kind="ghost" title="Ei" onPress={() => setAsk(false)} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -60,6 +84,7 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
   const [open, setOpen] = useState(true);
   const [showRest, setShowRest] = useState(false);
   const [timerFor, setTimerFor] = useState<TodayItem | null>(null);
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => { setOffset(0); setShowRest(false); }, [day]);
 
@@ -104,7 +129,7 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
 
   return (
     <View>
-      <DayHead title="Täna" sub={longDate(day)} onPrev={() => setOffset(-1)} onNext={() => setOffset(1)} />
+      <DayHead title="Täna" sub={longDate(day)} lessons={lessonsOn(state, day)} onPrev={() => setOffset(-1)} onNext={() => setOffset(1)} />
       {doneN && next ? (
         <Muted style={{ marginTop: 6 }}>
           {doneN === 1 ? "1 samm juba tehtud ✓" : `${doneN} sammu juba tehtud ✓`}
@@ -113,7 +138,10 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
 
       {state.reward.on ? <RewardCard open={open} setOpen={setOpen} /> : null}
 
-      {events.length ? <View style={{ gap: 8, marginTop: 12 }}>{events.map((e) => <EventRow key={e.key} e={e} />)}</View> : null}
+      {events.length ? <View style={{ gap: 8, marginTop: 12 }}>{events.map((e) => <EventRow key={e.key} e={e} day={day} />)}</View> : null}
+      <Pressable accessibilityRole="button" onPress={() => setAdding(true)} style={st.addAct}>
+        <Text style={st.restTxt}>＋ Lisa trenn või muu oma asi</Text>
+      </Pressable>
 
       {next ? (
         <View style={st.now} accessible={false}>
@@ -170,6 +198,7 @@ export function TodayScreen({ onAdd }: { onAdd?: () => void }) {
       ) : null}
 
       <RetakeDayModal subject={askFor} onClose={() => setAskFor(null)} />
+      <ActivityModal open={adding} onClose={() => setAdding(false)} />
       <TimerModal item={timerFor} onClose={() => setTimerFor(null)} onDone={(id) => { setTimerFor(null); doTick(id); }} />
     </View>
   );
@@ -214,7 +243,7 @@ export function ItemRow({ x, day, first, onTick, readOnly }: { x: TodayItem; day
   );
 }
 
-function DayHead({ title, sub, onPrev, onNext }: { title: string; sub: string; onPrev?: () => void; onNext?: () => void }) {
+function DayHead({ title, sub, lessons, onPrev, onNext }: { title: string; sub: string; lessons?: string[]; onPrev?: () => void; onNext?: () => void }) {
   return (
     <View>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -223,7 +252,76 @@ function DayHead({ title, sub, onPrev, onNext }: { title: string; sub: string; o
         <NavBtn label="Järgmine päev" sym="›" onPress={onNext} />
       </View>
       <Muted style={{ textAlign: "center", fontSize: 16 }}>{sub}</Muted>
+      {lessons?.length ? (
+        <View accessible accessibilityLabel={`Tunnid: ${lessons.join(", ")}`} style={st.lessons}>
+          {lessons.map((l) => (
+            <View key={l} style={st.lesson}>
+              <Text style={st.lessonTxt}>{shortSubject(l)}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
     </View>
+  );
+}
+
+const ACT_PRESETS = ["⚽ Trenn", "🎨 Huviring", "🎵 Muusikakool", "🩺 Arstiaeg", "🎂 Sünnipäev"];
+
+/** The student (or parent) adds their own thing for a day: practice, a hobby group, a doctor's visit … */
+function ActivityModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { day, addEvent } = useStore();
+  const fx = useCelebrate();
+  const [title, setTitle] = useState("");
+  const [time, setTime] = useState("");
+  const [on, setOn] = useState<Day>(day);
+  const [weekly, setWeekly] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    setTitle("");
+    setTime("");
+    setOn(day);
+    setWeekly(false);
+  }, [open, day]);
+  if (!open) return null;
+  const save = () => {
+    if (!title.trim()) return fx.toast("Kirjuta, mis see on.");
+    addEvent({ title: title.trim(), day: on, time: time.trim(), weekly, activity: true });
+    fx.toast(on === day ? "Lisatud tänasesse päeva." : "Lisatud.");
+    onClose();
+  };
+  return (
+    <Modal transparent animationType="slide" visible onRequestClose={onClose}>
+      <Pressable style={st.scrim} onPress={onClose} accessibilityLabel="Sulge">
+        <Pressable style={st.sheet} onPress={() => {}}>
+          <H size={24}>Lisa oma asi</H>
+          <Muted>Trenn, huviring, arstiaeg või muu. See ei ole kodutöö: linnukest ega preemiat siin pole, see on päeva meeldetuletuseks.</Muted>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+            {ACT_PRESETS.map((p) => (
+              <Pressable
+                key={p}
+                accessibilityRole="button"
+                accessibilityState={{ selected: title === p }}
+                onPress={() => setTitle(p)}
+                style={[st.preset, title === p && { borderColor: C.lake, backgroundColor: C.lakeSoft }]}
+              >
+                <T style={{ fontSize: 15 }}>{p}</T>
+              </Pressable>
+            ))}
+          </View>
+          <Field label="Mis see on?" value={title} onChangeText={setTitle} placeholder="nt ⚽ Jalgpallitrenn" maxLength={60} style={{ flexGrow: 0, flexBasis: "auto" }} />
+          <Field label="Kellaaeg (kui tahad)" value={time} onChangeText={setTime} placeholder="nt 17:00–18:30" maxLength={20} style={{ flexGrow: 0, flexBasis: "auto" }} />
+          <DayPicker label="Päev" value={on} onChange={setOn} from={day} refDay={day} days={14} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Switch value={weekly} onValueChange={setWeekly} trackColor={{ true: C.lake, false: C.line }} accessibilityLabel="Iga nädal samal päeval" />
+            <T>Iga nädal samal päeval</T>
+          </View>
+          <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap", marginTop: 4 }}>
+            <Btn title="Lisa" onPress={save} />
+            <Btn title="Tühista" kind="ghost" onPress={onClose} />
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 }
 
@@ -262,6 +360,7 @@ function OtherDay({ offset, setOffset }: { offset: number; setOffset: (n: number
       <DayHead
         title={offset < 0 ? "Eile" : "Homme"}
         sub={longDate(d)}
+        lessons={lessonsOn(state, d)}
         onPrev={offset > 0 ? () => setOffset(0) : undefined}
         onNext={offset < 0 ? () => setOffset(0) : undefined}
       />
@@ -280,7 +379,7 @@ function OtherDay({ offset, setOffset }: { offset: number; setOffset: (n: number
           {items.length ? (dayFull(state, d) ? "Terve päev tehtud samal päeval ✓" : `${items.filter((x) => x.done).length} / ${items.length} tehtud`) : "Eile polnud midagi plaanis."}
         </Muted>
       )}
-      {events.length ? <View style={{ gap: 8, marginTop: 12 }}>{events.map((e) => <EventRow key={e.key} e={e} />)}</View> : null}
+      {events.length ? <View style={{ gap: 8, marginTop: 12 }}>{events.map((e) => <EventRow key={e.key} e={e} day={offset > 0 ? d : undefined} />)}</View> : null}
       {items.length ? (
         <>
           <Section>
@@ -372,9 +471,12 @@ function RewardCard({ open, setOpen }: { open: boolean; setOpen: (b: boolean) =>
 
 /** Optional end-of-day check-in. Only on this phone; the parent view never shows it. Used only to offer a lighter day. */
 function MoodCard() {
-  const { state, day, setMood, lighterTomorrow } = useStore();
+  const { state, day, setMood, lighterTomorrow, answerShare, clearShare } = useStore();
   const fx = useCelebrate();
+  const [saidNo, setSaidNo] = useState(false);
+  useEffect(() => setSaidNo(false), [day]);
   const mood = state.moods?.[day];
+  const askShare = offerShare(state, day);
   const heavy = (mood ?? 0) >= 3;
   const offer = offerLighter(state, day);
   const tomorrowLight = state.lighter?.includes(addDays(day, 1));
@@ -414,6 +516,24 @@ function MoodCard() {
         </View>
       ) : tomorrowLight ? (
         <Muted>Homme on kergem päev.</Muted>
+      ) : null}
+      {askShare ? (
+        <View style={st.share}>
+          <T bold style={{ fontSize: 16 }}>Viimased nädalad on olnud väga rasked. Kas tahad, et lapsevanem teaks?</T>
+          <T style={{ fontSize: 15 }}>Kui ütled jah, näeb lapsevanem oma vaates ainult seda lauset: „Viimased nädalad on olnud rasked.“ Sinu igapäevaseid vastuseid ta ei näe. Võid selle ka hiljem tagasi võtta.</T>
+          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+            <Btn small title="Jah, las lapsevanem teab" onPress={() => { answerShare(true); fx.toast("Lapsevanem saab teada. Hea, et ütlesid."); }} />
+            <Btn small kind="ghost" title="Ei, praegu mitte" onPress={() => { answerShare(false); setSaidNo(true); }} />
+          </View>
+        </View>
+      ) : null}
+      {state.moodNote ? (
+        <View style={{ gap: 6 }}>
+          <Muted>Lapsevanem saab teada, et viimased nädalad on olnud rasked. Muud ta ei näe.</Muted>
+          <Btn small kind="ghost" title="Võta tagasi" onPress={() => { clearShare(); fx.toast("Võetud tagasi. Lapsevanem seda ei näe."); }} style={{ alignSelf: "flex-start" }} />
+        </View>
+      ) : saidNo ? (
+        <T style={{ fontSize: 15 }}>Selge, see jääb sinu teada. Kui tahad, räägi kellegagi, keda usaldad: sõbra, klassijuhataja või kooli tugispetsialistiga.</T>
       ) : null}
       {heavy ? (
         <View style={{ gap: 6 }}>
@@ -511,6 +631,13 @@ const st = StyleSheet.create({
   chk: { width: 36, height: 36, borderRadius: 12, borderWidth: 2.5, borderColor: C.lake, alignItems: "center", justifyContent: "center", marginTop: 1 },
   nav: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   req: { flexDirection: "row", gap: 10, alignItems: "center", padding: 12, borderRadius: 14, backgroundColor: C.card, borderWidth: 1, borderColor: C.line },
+  lessons: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, marginTop: 8 },
+  lesson: { backgroundColor: C.lakeSoft, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 3 },
+  lessonTxt: { color: C.lakeInk, fontFamily: F.bodyBold, fontSize: 14 },
+  addAct: { alignSelf: "center", paddingVertical: 8, paddingHorizontal: 12, minHeight: 44, justifyContent: "center", marginTop: 4 },
+  x: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
+  preset: { borderWidth: 2, borderColor: C.line, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8, minHeight: 44, justifyContent: "center", backgroundColor: C.card },
+  share: { gap: 8, padding: 14, borderRadius: 14, backgroundColor: C.lakeSoft },
   mood: { flex: 1, alignItems: "center", gap: 2, paddingVertical: 8, borderRadius: 14, borderWidth: 2, borderColor: C.line, minHeight: 64 },
   dot: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: C.line, alignItems: "center", justifyContent: "center" },
   scrim: { flex: 1, backgroundColor: "rgba(15,20,35,.45)", justifyContent: "flex-end" },
