@@ -9,15 +9,19 @@ Rules for whoever changes the app (people and coding agents):
 - When a build goes to TestFlight / Google Play with new changes, raise `version` in `app.json` and start a new entry with the same number (a test checks they match).
 - Write for parents, in plain words. Describe security and privacy fixes only in general terms ("Turva- ja privaatsusparandused"), never how a weakness worked.
 
-## 0.2.1 (November 2026)
+## 0.3.1 (November 2026)
 
-- Adding from the e-diary now suggests a screenshot first, and the "Ekraanipildilt" button comes first.
-- The privacy notes in the parent view say more exactly how tasks get into TASA.
+- Fix: when grades are added from a screenshot, the phone's clock (e.g. "09") is no longer read as a subject, so no wrong retake step appears.
 
 ## 0.3.0 (November 2026)
 
 - New: backup file. The parent can save all TASA data to one file and restore it on a new phone ("Andmed ja privaatsus"). The PIN and the student's mood answers are not put in the file.
 - Android no longer copies TASA data to the automatic Google backup: the data is only on the phone and in the backup file, if the parent saves one. (iPhone: the phone's own iCloud backup may still include it.)
+
+## 0.2.1 (November 2026)
+
+- Adding from the e-diary now suggests a screenshot first, and the "Ekraanipildilt" button comes first.
+- The privacy notes in the parent view say more exactly how tasks get into TASA.
 
 ## 0.2.0 (November 2026)
 
